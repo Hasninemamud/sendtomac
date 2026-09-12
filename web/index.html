@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1c1917">
+  <meta name="description" content="Send a file from Android to a Mac on the same Wi-Fi. Scan a code. No app.">
+  <title>SendToMac</title>
+  <link rel="icon" href="/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #efece6;
+      color: #1c1917;
+    }
+    a { color: inherit; }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 28px 24px 64px; }
+    nav { display: flex; align-items: center; gap: 10px; }
+    nav img { width: 32px; height: 32px; border-radius: 8px; }
+    nav span { font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
+    .hero { display: grid; grid-template-columns: 1.4fr 0.8fr; gap: 48px; align-items: end; margin-top: 72px; }
+    h1 {
+      margin: 0;
+      font-size: 56px;
+      line-height: 0.98;
+      letter-spacing: -0.045em;
+      font-weight: 650;
+    }
+    .lede { margin: 18px 0 0; max-width: 36rem; font-size: 18px; line-height: 1.45; color: #4a463f; }
+    .cta {
+      display: inline-block;
+      margin-top: 28px;
+      background: #1c1917;
+      color: #efece6;
+      text-decoration: none;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .mark { justify-self: end; }
+    .mark img { width: 168px; height: 168px; border-radius: 36px; display: block; }
+    ol { list-style: none; margin: 72px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; border-top: 1px solid #ddd8d0; padding-top: 28px; }
+    li strong { display: block; font-size: 13px; letter-spacing: 0.08em; color: #6f6a63; font-weight: 600; margin-bottom: 8px; }
+    li span { display: block; font-size: 17px; line-height: 1.35; letter-spacing: -0.02em; }
+    footer { margin-top: 48px; color: #6f6a63; font-size: 13px; line-height: 1.45; max-width: 36rem; }
+    @media (max-width: 720px) {
+      .hero { grid-template-columns: 1fr; gap: 28px; margin-top: 40px; }
+      h1 { font-size: 40px; }
+      .mark { justify-self: start; }
+      .mark img { width: 88px; height: 88px; border-radius: 20px; }
+      ol { grid-template-columns: 1fr; gap: 18px; margin-top: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <img src="/icon.svg" alt="">
+      <span>SendToMac</span>
+    </nav>
+    <section class="hero">
+      <div>
+        <h1>From the phone. Onto the Mac.</h1>
+        <p class="lede">Same Wi-Fi. Scan the code. Send a photo, a file, or a note. No app, no account, and the file does not go to a public server.</p>
+        <a class="cta" href="/share">Open on this Mac</a>
+      </div>
+      <div class="mark">
+        <img src="/icon-512.png" alt="SendToMac icon">
+      </div>
+    </section>
+    <ol>
+      <li><strong>01</strong><span>Open this page on the Mac.</span></li>
+      <li><strong>02</strong><span>Scan the code with the Android camera.</span></li>
+      <li><strong>03</strong><span>Pick the file. It downloads on the other device.</span></li>
+    </ol>
+    <footer>Leave the Mac page open while you send. If macOS asks, allow incoming connections for Python. A guest Wi-Fi that hides devices from each other will not work.</footer>
+  </div>
+</body>
+</html>

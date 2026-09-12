@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1c1917">
+  <title>SendToMac</title>
+  <link rel="icon" href="/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #efece6;
+      color: #1c1917;
+      padding: calc(20px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+    }
+    main, header { max-width: 880px; margin: 0 auto; }
+    .kicker { margin: 0; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6f6a63; }
+    .brand { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; text-decoration: none; color: inherit; width: fit-content; }
+    .brand img { width: 22px; height: 22px; border-radius: 6px; }
+    h1 { margin: 4px 0 6px; font-size: 32px; letter-spacing: -0.03em; font-weight: 650; }
+    #status { margin: 0; color: #6f6a63; line-height: 1.45; max-width: 42rem; }
+    .layout { display: grid; grid-template-columns: 240px 1fr; gap: 28px; margin-top: 22px; align-items: start; }
+    #qr { width: 220px; height: 220px; background: #fff; border-radius: 12px; }
+    #qr svg { width: 220px; height: 220px; display: block; }
+    .url { margin: 12px 0 0; font-size: 13px; word-break: break-all; color: #6f6a63; }
+    .code { margin: 10px 0; font-size: 15px; }
+    .code strong { letter-spacing: 0.16em; }
+    button, input, textarea, .ghost { font: inherit; }
+    button, .ghost {
+      border: 1px solid #d8d2c8;
+      background: transparent;
+      color: inherit;
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 0 14px;
+    }
+    button.primary {
+      border: 0;
+      background: #1c1917;
+      color: #efece6;
+      width: 100%;
+      min-height: 52px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+    button.primary:disabled { opacity: 0.4; }
+    textarea, input[type="text"] {
+      width: 100%;
+      border: 1px solid #d8d2c8;
+      background: #f7f5f1;
+      border-radius: 12px;
+      font-size: 16px;
+      padding: 12px;
+      color: inherit;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    .row { display: flex; gap: 8px; margin-top: 10px; }
+    .ghost { display: flex; align-items: center; justify-content: center; flex: 1; }
+    .ghost input { display: none; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip { background: #e4dfd6; border-radius: 999px; padding: 6px 10px; font-size: 13px; }
+    #progress, .item { margin-top: 12px; font-size: 14px; }
+    .item { border-top: 1px solid #ddd8d0; padding-top: 10px; }
+    .ok { color: #1f6b4a; }
+    .bad { color: #8f2d2d; }
+    .join { margin-top: 18px; display: flex; gap: 8px; }
+    .join input { flex: 1; }
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+      h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><img src="/icon.svg" alt=""><span class="kicker">SendToMac</span></a>
+    <h1 id="title">Same Wi-Fi</h1>
+    <p id="status">Open this page on the Mac. Scan the code with the phone. Then pick a file.</p>
+  </header>
+  <main id="pair">
+    <div class="layout">
+      <div>
+        <div id="qr"></div>
+        <p class="url" id="link"></p>
+        <p class="code">Code <strong id="code">····</strong></p>
+        <button type="button" id="copy">Copy link</button>
+      </div>
+      <div>
+        <p>Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.</p>
+        <form class="join" id="joinForm">
+          <input id="joinCode" type="text" inputmode="text" autocapitalize="none" autocomplete="off" spellcheck="false" maxlength="8" placeholder="Have a code?">
+          <button type="submit">Join</button>
+        </form>
+      </div>
+    </div>
+  </main>
+  <main id="share" hidden>
+    <form id="sendForm">
+      <textarea id="note" placeholder="Or a note, link, or address"></textarea>
+      <div class="row">
+        <label class="ghost">Photos or files<input id="files" type="file" multiple></label>
+        <label class="ghost">Camera<input id="camera" type="file" accept="image/*" capture="environment"></label>
+      </div>
+      <div class="chips" id="chips"></div>
+      <button class="primary" id="send" type="submit">Send</button>
+    </form>
+    <p id="progress"></p>
+    <div id="inbox"></div>
+  </main>
+  <script src="/vendor/qrcode.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const wanted = (params.get("r") || "").toLowerCase();
+    const pairEl = document.getElementById("pair");
+    const shareEl = document.getElementById("share");
+    const statusEl = document.getElementById("status");
+    const progressEl = document.getElementById("progress");
+    const picked = [];
+    let ws, room = wanted, token = "", mode = "relay", role = "offer", connected = false;
+    let pc, channel, pendingIce = [], remoteSet = false, sendChain = Promise.resolve();
+    let incoming = null;
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = kind || "";
+    }
+
+    function showShare() {
+      pairEl.hidden = true;
+      shareEl.hidden = false;
+      document.getElementById("title").textContent = "Connected";
+      setStatus("Same Wi-Fi. Pick a file or write a note, then send.", "ok");
+    }
+
+    function drawQr(url) {
+      const el = document.getElementById("qr");
+      const qr = qrcode(0, "M");
+      qr.addData(url);
+      qr.make();
+      el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 10, scalable: true });
+      document.getElementById("link").textContent = url;
+      document.getElementById("copy").onclick = async () => {
+        await navigator.clipboard.writeText(url);
+        document.getElementById("copy").textContent = "Copied";
+      };
+    }
+
+    function addFiles(list) {
+      for (const file of list) picked.push(file);
+      const box = document.getElementById("chips");
+      box.replaceChildren();
+      for (const file of picked) {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = file.name;
+        box.appendChild(chip);
+      }
+    }
+
+    document.getElementById("files").addEventListener("change", (e) => {
+      addFiles(e.target.files);
+      e.target.value = "";
+    });
+    document.getElementById("camera").addEventListener("change", (e) => {
+      addFiles(e.target.files);
+      e.target.value = "";
+    });
+    document.getElementById("joinForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const code = document.getElementById("joinCode").value.trim().toLowerCase();
+      if (code) location.search = "?r=" + encodeURIComponent(code);
+    });
+
+    function saveBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      const row = document.createElement("div");
+      row.className = "item";
+      row.textContent = "Received " + name;
+      document.getElementById("inbox").prepend(row);
+    }
+
+    function connectSocket() {
+      const proto = location.protocol === "https:" ? "wss://" : "ws://";
+      ws = new WebSocket(proto + location.host + "/ws");
+      ws.onopen = () => {
+        ws.send(JSON.stringify(wanted ? { type: "join", room: wanted } : { type: "create", room: room || "" }));
+      };
+      ws.onmessage = (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === "error") {
+          pairEl.hidden = false;
+          setStatus(msg.error, "bad");
+          return;
+        }
+        if (msg.type === "ready") {
+          room = msg.room;
+          token = msg.token;
+          mode = msg.mode;
+          role = msg.role;
+          document.getElementById("code").textContent = room;
+          if (!wanted && msg.base) drawQr(msg.base + "/?r=" + room);
+          if (!wanted && !msg.base) setStatus("This Mac has no Wi-Fi address yet.", "bad");
+          if (wanted) setStatus("Connecting…");
+          else setStatus("Scan this with the phone camera. Leave this page open.");
+          if (!msg.waiting) onPeer();
+          return;
+        }
+        if (msg.type === "peer") onPeer();
+        if (msg.type === "left") {
+          connected = false;
+          setStatus("The other device left. Scan again.", "bad");
+          shareEl.hidden = true;
+          pairEl.hidden = false;
+        }
+        if (msg.type === "text") showText(msg.text);
+        if (msg.type === "file") downloadRelay(msg);
+        if (msg.type === "signal") onSignal(msg.data);
+      };
+      ws.onclose = () => {
+        if (!connected) setTimeout(connectSocket, 1200);
+      };
+    }
+
+    function onPeer() {
+      if (mode === "relay") {
+        connected = true;
+        showShare();
+        return;
+      }
+      setStatus("Connecting on this Wi-Fi…");
+      startWebRTC();
+    }
+
+    function startWebRTC() {
+      if (pc) return;
+      pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+      pc.onicecandidate = (e) => {
+        if (e.candidate) signal({ kind: "ice", candidate: e.candidate });
+      };
+      pc.ondatachannel = (e) => bindChannel(e.channel);
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "failed") {
+          setStatus("Not on the same Wi-Fi, or this network blocks devices from seeing each other. Use a normal Wi-Fi, or join the phone hotspot from the Mac and scan again.", "bad");
+        }
+      };
+      if (role === "offer") {
+        bindChannel(pc.createDataChannel("files", { ordered: true }));
+        pc.createOffer().then((offer) => pc.setLocalDescription(offer)).then(() => {
+          signal({ kind: "offer", sdp: pc.localDescription });
+        });
+      }
+    }
+
+    function signal(data) {
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: "signal", data }));
+    }
+
+    async function onSignal(data) {
+      if (!data) return;
+      if (!pc) startWebRTC();
+      if (data.kind === "offer" || data.kind === "answer") {
+        await pc.setRemoteDescription(data.sdp);
+        remoteSet = true;
+        for (const c of pendingIce) await pc.addIceCandidate(c);
+        pendingIce = [];
+        if (data.kind === "offer") {
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          signal({ kind: "answer", sdp: pc.localDescription });
+        }
+      } else if (data.kind === "ice" && data.candidate) {
+        if (!remoteSet) pendingIce.push(data.candidate);
+        else await pc.addIceCandidate(data.candidate);
+      }
+    }
+
+    function bindChannel(ch) {
+      channel = ch;
+      channel.binaryType = "arraybuffer";
+      channel.onopen = () => {
+        connected = true;
+        showShare();
+      };
+      channel.onmessage = onChannel;
+    }
+
+    function onChannel(ev) {
+      if (typeof ev.data === "string") {
+        const msg = JSON.parse(ev.data);
+        if (msg.t === "text") showText(msg.text);
+        if (msg.t === "file") incoming = { name: msg.name, mime: msg.mime, parts: [], got: 0, size: msg.size };
+        if (msg.t === "end" && incoming) {
+          saveBlob(new Blob(incoming.parts, { type: incoming.mime || "application/octet-stream" }), incoming.name);
+          incoming = null;
+          progressEl.textContent = "";
+        }
+        return;
+      }
+      if (!incoming) return;
+      incoming.parts.push(ev.data);
+      incoming.got += ev.data.byteLength;
+      if (incoming.size) progressEl.textContent = "Receiving " + Math.round((incoming.got / incoming.size) * 100) + "%";
+    }
+
+    function showText(text) {
+      const row = document.createElement("div");
+      row.className = "item";
+      const p = document.createElement("p");
+      p.textContent = text;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "Copy";
+      btn.onclick = () => navigator.clipboard.writeText(text);
+      row.append(p, btn);
+      document.getElementById("inbox").prepend(row);
+    }
+
+    function enqueue(fn) {
+      sendChain = sendChain.then(fn, fn);
+      return sendChain;
+    }
+
+    async function sendDirect(file) {
+      channel.send(JSON.stringify({ t: "file", name: file.name, size: file.size, mime: file.type }));
+      const size = 16 * 1024;
+      for (let offset = 0; offset < file.size; offset += size) {
+        while (channel.bufferedAmount > 1024 * 1024) await new Promise((r) => setTimeout(r, 20));
+        channel.send(await file.slice(offset, offset + size).arrayBuffer());
+        progressEl.textContent = "Sending " + file.name + " " + Math.min(100, Math.round(((offset + size) / file.size) * 100)) + "%";
+      }
+      channel.send(JSON.stringify({ t: "end" }));
+    }
+
+    function sendRelay(file) {
+      return new Promise((resolve, reject) => {
+        const body = new FormData();
+        body.append("token", token);
+        body.append("file", file, file.name);
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/upload");
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable) progressEl.textContent = "Sending " + file.name + " " + Math.round((ev.loaded / ev.total) * 100) + "%";
+        };
+        xhr.onload = () => (xhr.status < 300 ? resolve() : reject(new Error("The other device did not get that")));
+        xhr.onerror = () => reject(new Error("Could not reach the other device"));
+        xhr.send(body);
+      });
+    }
+
+    function downloadRelay(meta) {
+      const a = document.createElement("a");
+      a.href = "/api/file/" + encodeURIComponent(meta.id) + "?token=" + encodeURIComponent(token);
+      a.download = meta.name;
+      a.click();
+      const row = document.createElement("div");
+      row.className = "item";
+      row.textContent = "Received " + meta.name;
+      document.getElementById("inbox").prepend(row);
+    }
+
+    document.getElementById("sendForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const note = document.getElementById("note").value.trim();
+      if (!connected) {
+        progressEl.textContent = "Wait until the other device has scanned.";
+        progressEl.className = "bad";
+        return;
+      }
+      if (!note && !picked.length) return;
+      const files = picked.splice(0);
+      document.getElementById("chips").replaceChildren();
+      document.getElementById("send").disabled = true;
+      enqueue(async () => {
+        if (note) {
+          if (mode === "webrtc" && channel && channel.readyState === "open") channel.send(JSON.stringify({ t: "text", text: note }));
+          else ws.send(JSON.stringify({ type: "text", text: note }));
+          document.getElementById("note").value = "";
+        }
+        for (const file of files) {
+          if (mode === "webrtc") await sendDirect(file);
+          else await sendRelay(file);
+        }
+        progressEl.textContent = "Sent.";
+        progressEl.className = "ok";
+        document.getElementById("send").disabled = false;
+      }).catch((err) => {
+        progressEl.textContent = err.message || "Send failed.";
+        progressEl.className = "bad";
+        document.getElementById("send").disabled = false;
+      });
+    });
+
+    if (wanted) {
+      pairEl.hidden = true;
+      document.getElementById("title").textContent = "Joining";
+      setStatus("Connecting to the other device…");
+    }
+    connectSocket();
+  </script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SendToMac</title>
+  <link rel="icon" href="/icon-192.png">
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #efece6;
+      color: #1c1917;
+    }
+    header, main { max-width: 980px; margin: 0 auto; padding: 28px 24px; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding-bottom: 0; }
+    .kicker { margin: 0; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6f6a63; }
+    h1 { margin: 4px 0 0; font-size: 28px; letter-spacing: -0.03em; font-weight: 650; }
+    h2 { margin: 0 0 12px; font-size: 15px; font-weight: 650; }
+    button, .textbtn {
+      font: inherit;
+      border: 1px solid #d8d2c8;
+      background: transparent;
+      border-radius: 10px;
+      min-height: 36px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    button.danger { color: #8f2d2d; }
+    main { display: grid; grid-template-columns: 320px 1fr; gap: 28px; align-items: start; }
+    #qr { width: 220px; height: 220px; background: #fff; border-radius: 12px; }
+    #qr svg { width: 220px; height: 220px; display: block; }
+    .lead { margin: 14px 0 8px; line-height: 1.4; }
+    .url { margin: 0; font-size: 13px; word-break: break-all; color: #6f6a63; }
+    .actions { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+    .code { margin: 8px 0 16px; font-size: 14px; }
+    .code strong { letter-spacing: 0.14em; font-size: 16px; }
+    fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+    label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.35; }
+    .hint, .empty { color: #6f6a63; font-size: 13px; line-height: 1.45; }
+    .item { border-top: 1px solid #ddd8d0; padding: 12px 0; }
+    .item .when { color: #6f6a63; font-size: 12px; }
+    .item p { margin: 4px 0; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
+    .item .actions button { margin-right: 6px; margin-top: 4px; }
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="kicker">SendToMac</p>
+      <h1 id="name">This Mac</h1>
+    </div>
+    <button id="quit" class="danger" type="button">Quit receiver</button>
+  </header>
+  <main>
+    <section>
+      <div id="qr"></div>
+      <p class="lead">Scan with the Android camera. No app. No account. Works when device discovery does not.</p>
+      <p class="url" id="url"></p>
+      <div class="actions">
+        <button type="button" id="copyUrl">Copy link</button>
+        <button type="button" id="login">Start at login</button>
+      </div>
+      <p class="code">Pairing code <strong id="code"></strong></p>
+      <fieldset id="prefs"></fieldset>
+      <p class="hint">If the phone cannot open the page, allow incoming connections for Python when macOS asks. Guest Wi-Fi that blocks phones from each other will fail every app — turn on the phone hotspot, join it from this Mac, and scan again.</p>
+    </section>
+    <section>
+      <h2>Arrived</h2>
+      <div id="list"></div>
+    </section>
+  </main>
+  <script src="/vendor/qrcode.js"></script>
+  <script>
+    const prefsMeta = [
+      ["copyText", "Copy text to the clipboard"],
+      ["openLinks", "Open a lone link or email"],
+      ["revealFiles", "Show files in Finder"],
+      ["copyImages", "Copy a single photo so you can paste it"],
+      ["sound", "Play a sound"],
+      ["pasteFront", "Also paste into the front app (macOS will ask for Accessibility)"]
+    ];
+    let lastUrl = "";
+
+    function drawQr(url) {
+      const el = document.getElementById("qr");
+      const qr = qrcode(0, "M");
+      qr.addData(url);
+      qr.make();
+      el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 10, scalable: true });
+    }
+
+    function renderPrefs(prefs) {
+      const box = document.getElementById("prefs");
+      box.replaceChildren();
+      for (const [key, label] of prefsMeta) {
+        const row = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = !!prefs[key];
+        input.addEventListener("change", () => {
+          fetch("/api/prefs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ [key]: input.checked })
+          });
+        });
+        row.append(input, document.createTextNode(label));
+        box.appendChild(row);
+      }
+    }
+
+    function renderInbox(items) {
+      const list = document.getElementById("list");
+      list.replaceChildren();
+      if (!items.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty";
+        empty.textContent = "Nothing yet. Scan the code and send a note from the phone.";
+        list.appendChild(empty);
+        return;
+      }
+      for (const item of items) {
+        const wrap = document.createElement("article");
+        wrap.className = "item";
+        const when = document.createElement("div");
+        when.className = "when";
+        when.textContent = new Date(item.at).toLocaleString();
+        const body = document.createElement("p");
+        body.textContent = item.summary;
+        wrap.append(when, body);
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        if (item.text) {
+          const copy = document.createElement("button");
+          copy.type = "button";
+          copy.textContent = "Copy again";
+          copy.addEventListener("click", () => act(item.id, "copy"));
+          actions.appendChild(copy);
+        }
+        if (item.files && item.files.length) {
+          const reveal = document.createElement("button");
+          reveal.type = "button";
+          reveal.textContent = "Show in Finder";
+          reveal.addEventListener("click", () => act(item.id, "reveal"));
+          actions.appendChild(reveal);
+          const open = document.createElement("button");
+          open.type = "button";
+          open.textContent = "Open";
+          open.addEventListener("click", () => act(item.id, "open"));
+          actions.appendChild(open);
+        }
+        wrap.appendChild(actions);
+        list.appendChild(wrap);
+      }
+    }
+
+    function act(id, action) {
+      fetch("/api/item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action })
+      });
+    }
+
+    async function refresh() {
+      const res = await fetch("/api/bootstrap");
+      if (!res.ok) throw new Error("stopped");
+      const data = await res.json();
+      document.getElementById("name").textContent = data.name;
+      document.getElementById("code").textContent = data.code;
+      document.getElementById("url").textContent = data.primaryUrl || "No Wi-Fi address yet. Join a network, or this phone’s hotspot, then scan.";
+      document.getElementById("login").textContent = data.loginItem ? "Stop starting at login" : "Start at login";
+      if (data.primaryUrl && data.primaryUrl !== lastUrl) {
+        lastUrl = data.primaryUrl;
+        drawQr(data.primaryUrl);
+      }
+      if (!document.getElementById("prefs").childElementCount) renderPrefs(data.prefs);
+      const inbox = await fetch("/api/inbox");
+      const items = await inbox.json();
+      renderInbox(items.items || []);
+    }
+
+    document.getElementById("copyUrl").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(lastUrl);
+      document.getElementById("copyUrl").textContent = "Copied";
+      setTimeout(() => { document.getElementById("copyUrl").textContent = "Copy link"; }, 1200);
+    });
+
+    document.getElementById("login").addEventListener("click", async () => {
+      const res = await fetch("/api/login-item", { method: "POST" });
+      const data = await res.json();
+      alert(data.message || data.error);
+      document.getElementById("prefs").replaceChildren();
+      refresh().catch(() => {});
+    });
+
+    document.getElementById("quit").addEventListener("click", () => {
+      fetch("/api/shutdown", { method: "POST" }).finally(() => {
+        document.body.innerHTML = "<p style='font-family:sans-serif;padding:28px'>Receiver stopped.</p>";
+      });
+    });
+
+    refresh().catch(() => {
+      document.getElementById("list").textContent = "Receiver is not responding.";
+    });
+    setInterval(() => refresh().catch(() => {}), 2000);
+  </script>
+</body>
+</html>

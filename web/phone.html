@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1c1917">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Send to Mac">
+  <title>Send to Mac</title>
+  <link rel="icon" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #efece6;
+      color: #1c1917;
+      padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+    }
+    .kicker {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6f6a63;
+    }
+    h1 { margin: 4px 0 18px; font-size: 32px; font-weight: 650; letter-spacing: -0.03em; }
+    textarea, button, .ghost {
+      font: inherit;
+      width: 100%;
+    }
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+      border: 1px solid #d8d2c8;
+      background: #f7f5f1;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 16px;
+      line-height: 1.4;
+      color: inherit;
+    }
+    textarea:focus { outline: 2px solid #1c1917; border-color: #1c1917; }
+    .row { display: flex; gap: 8px; margin-top: 10px; }
+    .ghost, button.secondary {
+      border: 1px solid #d8d2c8;
+      background: transparent;
+      color: inherit;
+      border-radius: 12px;
+      min-height: 48px;
+      font-size: 15px;
+      padding: 10px 12px;
+    }
+    .ghost input { display: none; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip {
+      background: #e4dfd6;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .dock { margin-top: 16px; }
+    #send {
+      border: 0;
+      background: #1c1917;
+      color: #efece6;
+      border-radius: 14px;
+      min-height: 54px;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    #send:disabled { opacity: 0.45; }
+    #status { min-height: 1.4em; margin: 14px 0 0; font-size: 15px; }
+    #status.ok { color: #1f6b4a; }
+    #status.bad { color: #8f2d2d; }
+    .foot { margin-top: 22px; color: #6f6a63; font-size: 13px; line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <p class="kicker">Send to</p>
+  <h1 id="macName">Mac</h1>
+  <form id="form">
+    <button type="button" class="secondary" id="pasteSend">Send what’s copied</button>
+    <textarea id="text" placeholder="Or paste a link, note, address, or code"></textarea>
+    <div class="row">
+      <label class="ghost">Photos or files<input id="files" type="file" multiple></label>
+      <label class="ghost">Camera<input id="camera" type="file" accept="image/*" capture="environment"></label>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="dock">
+      <button type="submit" id="send">Send to Mac</button>
+    </div>
+  </form>
+  <p id="status"></p>
+  <p class="foot">Text lands on the Mac clipboard. A link opens. Photos and files show up in Finder. Add this page to your Home screen so next time it is one tap.</p>
+  <script>
+    const code = location.pathname.split("/").filter(Boolean).pop();
+    const textEl = document.getElementById("text");
+    const statusEl = document.getElementById("status");
+    const chipsEl = document.getElementById("chips");
+    const sendBtn = document.getElementById("send");
+    const picked = [];
+
+    const link = document.createElement("link");
+    link.rel = "manifest";
+    link.href = "/m/" + encodeURIComponent(code) + "/manifest.webmanifest";
+    document.head.appendChild(link);
+
+    fetch("/api/peer?code=" + encodeURIComponent(code))
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((data) => {
+        document.getElementById("macName").textContent = data.name;
+        document.title = "Send to " + data.name;
+      })
+      .catch(() => {});
+
+    function addFiles(list) {
+      for (const file of list) picked.push(file);
+      chipsEl.replaceChildren();
+      for (const file of picked) {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = file.name + " · " + Math.max(1, Math.round(file.size / 1024)) + " KB";
+        chipsEl.appendChild(chip);
+      }
+    }
+
+    document.getElementById("files").addEventListener("change", (e) => {
+      addFiles(e.target.files);
+      e.target.value = "";
+    });
+    document.getElementById("camera").addEventListener("change", (e) => {
+      addFiles(e.target.files);
+      e.target.value = "";
+    });
+
+    window.addEventListener("paste", (e) => {
+      const files = e.clipboardData && e.clipboardData.files;
+      if (files && files.length) {
+        e.preventDefault();
+        addFiles(files);
+      }
+    });
+
+    function setStatus(msg, kind) {
+      statusEl.textContent = msg;
+      statusEl.className = kind || "";
+    }
+
+    document.getElementById("pasteSend").addEventListener("click", async () => {
+      try {
+        const value = await navigator.clipboard.readText();
+        if (!value) {
+          setStatus("Nothing copied. Paste into the box instead.", "bad");
+          return;
+        }
+        textEl.value = value;
+        document.getElementById("form").requestSubmit();
+      } catch (err) {
+        setStatus("Clipboard blocked. Paste into the box instead.", "bad");
+      }
+    });
+
+    document.getElementById("form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = textEl.value.trim();
+      if (!text && !picked.length) {
+        setStatus("Add text or a file first.", "bad");
+        return;
+      }
+      const body = new FormData();
+      body.append("code", code);
+      body.append("text", text);
+      for (const file of picked) body.append("file", file, file.name);
+      const xhr = new XMLHttpRequest();
+      sendBtn.disabled = true;
+      setStatus(picked.length ? "Sending… keep this page open." : "Sending…", "");
+      xhr.upload.onprogress = (ev) => {
+        if (!ev.lengthComputable) return;
+        setStatus("Sending " + Math.round((ev.loaded / ev.total) * 100) + "%", "");
+      };
+      xhr.onload = () => {
+        sendBtn.disabled = false;
+        let data = {};
+        try { data = JSON.parse(xhr.responseText); } catch (err) {}
+        if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
+          textEl.value = "";
+          picked.length = 0;
+          chipsEl.replaceChildren();
+          setStatus(data.summary, "ok");
+          return;
+        }
+        setStatus(data.error || "The Mac did not accept that.", "bad");
+      };
+      xhr.onerror = () => {
+        sendBtn.disabled = false;
+        setStatus("Can’t reach the Mac. Same Wi-Fi, or put the Mac on this phone’s hotspot and scan again.", "bad");
+      };
+      xhr.open("POST", "/api/share");
+      xhr.send(body);
+    });
+  </script>
+</body>
+</html>
