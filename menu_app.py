@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import objc
 from AppKit import (
     NSApplication,
@@ -93,11 +96,27 @@ class MenuApp(NSObject):
             self.httpd.shutdown()
             self.httpd.server_close()
 
-    def install_status(self):
+    def status_image(self):
+        roots = []
+        if getattr(sys, "frozen", False):
+            roots.append(Path(sys.executable).resolve().parent.parent / "Resources" / "web")
+        roots.append(Path(__file__).resolve().parent / "web")
+        for root in roots:
+            path = root / "menu-icon.png"
+            if path.is_file():
+                image = NSImage.alloc().initWithContentsOfFile_(str(path))
+                if image is not None:
+                    image.setTemplate_(False)
+                    image.setSize_((18, 18))
+                    return image
         image = NSImage.imageWithSystemSymbolName_accessibilityDescription_("laptopcomputer", "SendToMac")
         if image is None:
             image = NSImage.alloc().init()
         image.setTemplate_(True)
+        return image
+
+    def install_status(self):
+        image = self.status_image()
         item = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
         button = item.button()
         button.setImage_(image)

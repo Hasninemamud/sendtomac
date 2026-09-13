@@ -550,7 +550,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/ping":
             self.send_json(200, {"ok": True, "app": APP})
             return
-        if path == "/icon-192.png" or path == "/apple-touch-icon.png" or path == "/favicon.ico":
+        if path in {"/icon-192.png", "/apple-touch-icon.png", "/favicon.ico"}:
+            file = WEB / ("favicon.ico" if path == "/favicon.ico" else "icon-192.png")
+            if file.is_file():
+                kind = "image/x-icon" if path == "/favicon.ico" else "image/png"
+                self.send_file(file, kind)
+                return
             self.send_bytes(200, ICON, "image/png", cache=True)
             return
         if path == "/vendor/qrcode.js":
