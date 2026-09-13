@@ -1,0 +1,16 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/share", "destination": "/share/index.html" },
+    { "source": "/privacy", "destination": "/privacy/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.(css|js|png|ico|svg)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
+  ]
+}

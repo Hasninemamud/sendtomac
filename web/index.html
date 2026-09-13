@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <script>
     try {
+      if (new URLSearchParams(location.search).get("r")) location.replace("/share" + location.search);
       var saved = localStorage.getItem("sendtomac-theme");
       if (saved === "night" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches))
         document.documentElement.dataset.theme = "night";

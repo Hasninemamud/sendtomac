@@ -137,7 +137,7 @@
     const statusEl = document.getElementById("status");
     const progressEl = document.getElementById("progress");
     const picked = [];
-    let ws, room = wanted, token = "", mode = "relay", role = "offer", connected = false;
+    let ws, room = wanted, token = "", mode = "relay", role = "offer", connected = false, socketTries = 0;
     let pc, channel, pendingIce = [], remoteSet = false, sendChain = Promise.resolve();
     let incoming = null;
 
@@ -224,7 +224,7 @@
           mode = msg.mode;
           role = msg.role;
           document.getElementById("code").textContent = room;
-          if (!wanted && msg.base) drawQr(msg.base + "/?r=" + room);
+          if (!wanted && msg.base) drawQr(msg.base + "/share?r=" + room);
           if (!wanted && !msg.base) setStatus("This Mac has no Wi-Fi address yet.", "bad");
           if (wanted) setStatus("Connecting…");
           else setStatus("Scan this with the phone camera. Leave this page open.");
@@ -243,7 +243,12 @@
         if (msg.type === "signal") onSignal(msg.data);
       };
       ws.onclose = () => {
-        if (!connected) setTimeout(connectSocket, 1200);
+        if (connected) return;
+        if (++socketTries > 2) {
+          setStatus("This host only serves the pages. Pairing runs on your Wi-Fi: on the Mac, run start.command and open the address it prints.", "bad");
+          return;
+        }
+        setTimeout(connectSocket, 1200);
       };
     }
 

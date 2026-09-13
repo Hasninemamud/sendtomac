@@ -28,7 +28,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / "web"
-VENDOR = ROOT / "vendor"
 HOME = Path.home() / ".sendtomac"
 CONFIG_PATH = HOME / "config.json"
 INBOX_PATH = HOME / "inbox.json"
@@ -555,7 +554,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_bytes(200, ICON, "image/png", cache=True)
             return
         if path == "/vendor/qrcode.js":
-            self.send_file(VENDOR / "qrcode.js", "text/javascript; charset=utf-8")
+            self.send_file(WEB / "vendor" / "qrcode.js", "text/javascript; charset=utf-8")
             return
         if path == "/api/bootstrap":
             if not self.local():

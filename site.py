@@ -30,9 +30,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PAGE = ROOT / "web" / "site.html"
+PAGE = ROOT / "web" / "share" / "index.html"
 LANDING = ROOT / "web" / "index.html"
-PRIVACY = ROOT / "web" / "privacy.html"
+PRIVACY = ROOT / "web" / "privacy" / "index.html"
 ICONS = {
     "/icon.svg": (ROOT / "web" / "icon.svg", "image/svg+xml"),
     "/icon-192.png": (ROOT / "web" / "icon-192.png", "image/png"),
@@ -41,7 +41,7 @@ ICONS = {
     "/favicon.ico": (ROOT / "web" / "favicon.ico", "image/x-icon"),
     "/macbook.png": (ROOT / "web" / "macbook.png", "image/png"),
 }
-VENDOR = ROOT / "vendor" / "qrcode.js"
+VENDOR = ROOT / "web" / "vendor" / "qrcode.js"
 PORT = 8790
 PUBLIC = os.environ.get("SENDTOMAC_PUBLIC") == "1"
 MAX_FILE = 500 * 1024 * 1024
@@ -378,13 +378,13 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(200, path.read_bytes(), content_type, cache=True)
                 return
         query = urllib.parse.parse_qs(parsed.query)
-        if parsed.path == "/privacy":
+        if parsed.path in {"/privacy", "/privacy/", "/privacy.html"}:
             self.send_bytes(200, PRIVACY.read_bytes(), "text/html; charset=utf-8")
             return
         if parsed.path in {"/", "/index.html"} and not query.get("r"):
             self.send_bytes(200, LANDING.read_bytes(), "text/html; charset=utf-8")
             return
-        if parsed.path in {"/", "/index.html", "/share"}:
+        if parsed.path in {"/", "/index.html", "/share", "/share/", "/site.html"}:
             if not PAGE.is_file():
                 self.send_obj(500, {"ok": False, "error": "Missing page"})
                 return
