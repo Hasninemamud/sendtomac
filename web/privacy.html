@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script>
+    try {
+      var saved = localStorage.getItem("sendtomac-theme");
+      if (saved === "night" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches))
+        document.documentElement.dataset.theme = "night";
+    } catch (e) {}
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1c1917">
+  <title>Privacy — SendToMac</title>
+  <link rel="icon" href="/icon-192.png?v=2" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+  <link rel="stylesheet" href="/theme.css">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: inherit; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 28px 24px 72px; }
+    nav { display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand img { width: 32px; height: 32px; border-radius: 8px; }
+    .brand span { font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
+    .nav-links { display: flex; align-items: center; gap: 16px; }
+    nav .back { font-size: 14px; color: var(--muted); text-decoration: none; }
+    h1 { margin: 48px 0 8px; font-size: 40px; letter-spacing: -0.04em; font-weight: 650; }
+    .updated { margin: 0 0 28px; color: var(--muted); font-size: 14px; }
+    h2 { margin: 28px 0 8px; font-size: 16px; letter-spacing: -0.02em; }
+    p { margin: 0 0 12px; line-height: 1.5; color: var(--soft); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="/"><img src="/icon-192.png?v=2" alt=""><span>SendToMac</span></a>
+      <div class="nav-links">
+        <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></g></svg>
+        </button>
+        <a class="back" href="/">Back</a>
+      </div>
+    </nav>
+    <h1>Privacy policy</h1>
+    <p class="updated">September 13, 2026</p>
+
+    <h2>What this is</h2>
+    <p>SendToMac lets two devices on the same Wi-Fi send a file, a photo, or a short note after one scans a code. There is no account and no ad network.</p>
+
+    <h2>On your own Mac</h2>
+    <p>When you run SendToMac on a Mac, that Mac serves the page. The file moves between the phone and the Mac on the local network. It is not uploaded to a public cloud.</p>
+    <p>While the other device is downloading, the Mac may keep a temporary copy so the transfer can finish. That copy is deleted after the download, or within about 15 minutes if it is not downloaded. Closing the page ends the pair. Pairing codes are kept in memory only.</p>
+
+    <h2>Notes</h2>
+    <p>A short note is passed between the two open pages so it can be copied. It is not written to a file and is not kept after the page closes.</p>
+
+    <h2>A public copy of the site</h2>
+    <p>If someone hosts SendToMac on the public internet over HTTPS, that host only pairs the devices. File bytes are meant to go directly between the phone and the Mac and are not stored on the host. The handshake that connects the devices, and a short note, do pass through the host. Do not send secrets through a host you do not trust.</p>
+
+    <h2>What is not collected</h2>
+    <p>No account. No analytics. No tracking cookies. No sale of data. The page does not ask for your name, email, or phone number.</p>
+
+    <h2>The pairing link</h2>
+    <p>The code in the page address identifies the pair. Anyone who has that link, and can reach the page, can try to join while it is open. Do not share the code with someone you do not want to receive from.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="https://github.com/Hasninemamud/sendtomac">github.com/Hasninemamud/sendtomac</a>.    </p>
+  </div>
+  <script src="/theme.js"></script>
+</body>
+</html>

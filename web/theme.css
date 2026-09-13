@@ -1,0 +1,49 @@
+:root {
+  color-scheme: light;
+  --bg: #efece6;
+  --ink: #1c1917;
+  --muted: #6f6a63;
+  --soft: #4a463f;
+  --line: #d8d2c8;
+  --rule: #ddd8d0;
+  --field: #f7f5f1;
+  --chip: #e4dfd6;
+  --cta: #1c1917;
+  --on-cta: #efece6;
+  --ok: #1f6b4a;
+  --bad: #8f2d2d;
+}
+html[data-theme="night"] {
+  color-scheme: dark;
+  --bg: #141311;
+  --ink: #efece6;
+  --muted: #a8a29a;
+  --soft: #c9c3ba;
+  --line: #3a3632;
+  --rule: #322e2a;
+  --field: #1c1a18;
+  --chip: #2c2825;
+  --cta: #efece6;
+  --on-cta: #141311;
+  --ok: #8fceb0;
+  --bad: #e7a0a0;
+}
+body { background: var(--bg); color: var(--ink); }
+.theme {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  padding: 0;
+  cursor: pointer;
+}
+.theme svg { width: 18px; height: 18px; display: block; }
+.theme .icon-sun { display: none; }
+html[data-theme="night"] .theme .icon-moon { display: none; }
+html[data-theme="night"] .theme .icon-sun { display: block; }
+html[data-theme="night"] .brand img { outline: 1px solid var(--line); outline-offset: 0; }
+html[data-theme="night"] .macbook { filter: invert(1); }

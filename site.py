@@ -32,12 +32,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 PAGE = ROOT / "web" / "site.html"
 LANDING = ROOT / "web" / "index.html"
+PRIVACY = ROOT / "web" / "privacy.html"
 ICONS = {
     "/icon.svg": (ROOT / "web" / "icon.svg", "image/svg+xml"),
     "/icon-192.png": (ROOT / "web" / "icon-192.png", "image/png"),
     "/icon-512.png": (ROOT / "web" / "icon-512.png", "image/png"),
     "/apple-touch-icon.png": (ROOT / "web" / "apple-touch-icon.png", "image/png"),
     "/favicon.ico": (ROOT / "web" / "favicon.ico", "image/x-icon"),
+    "/macbook.png": (ROOT / "web" / "macbook.png", "image/png"),
 }
 VENDOR = ROOT / "vendor" / "qrcode.js"
 PORT = 8790
@@ -364,12 +366,21 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/vendor/qrcode.js" and VENDOR.is_file():
             self.send_bytes(200, VENDOR.read_bytes(), "text/javascript; charset=utf-8")
             return
+        if parsed.path == "/theme.css":
+            self.send_bytes(200, (ROOT / "web" / "theme.css").read_bytes(), "text/css; charset=utf-8")
+            return
+        if parsed.path == "/theme.js":
+            self.send_bytes(200, (ROOT / "web" / "theme.js").read_bytes(), "text/javascript; charset=utf-8")
+            return
         if parsed.path in ICONS:
             path, content_type = ICONS[parsed.path]
             if path.is_file():
                 self.send_bytes(200, path.read_bytes(), content_type, cache=True)
                 return
         query = urllib.parse.parse_qs(parsed.query)
+        if parsed.path == "/privacy":
+            self.send_bytes(200, PRIVACY.read_bytes(), "text/html; charset=utf-8")
+            return
         if parsed.path in {"/", "/index.html"} and not query.get("r"):
             self.send_bytes(200, LANDING.read_bytes(), "text/html; charset=utf-8")
             return

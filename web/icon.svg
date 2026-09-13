@@ -1,9 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SendToMac">
-  <rect width="64" height="64" rx="14" fill="#1c1917"/>
-  <rect x="8" y="15" width="14" height="34" rx="3.5" fill="#efece6"/>
-  <rect x="11" y="19" width="8" height="18" rx="1.2" fill="#1c1917"/>
-  <rect x="26" y="30" width="8" height="4" fill="#efece6"/>
-  <path d="M33 25.5 L42 32 L33 38.5 Z" fill="#efece6"/>
-  <rect x="45" y="17" width="13" height="30" rx="2.4" fill="none" stroke="#efece6" stroke-width="2.4"/>
-  <path d="M45 23.5h13" stroke="#efece6" stroke-width="2.4"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+  <defs>
+    <filter id="inv" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#1c1917"/>
+  <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAZKADAAQAAAABAAAAZAAAAAAvu95BAAACkUlEQVR4Ae2cPUoDYRRFo6BiaelfLXYuQ5ciWrgb16ClVha2aqFuQdHaImqv74GBd4f86BhyB3I+ePBdZjJzc05IUk2vx4IABCAAAQhAAAIQgAAEIAABCEAAAhCAAAQgAAEIQAACEFgOBMcxdzGfMV/Mnxgks9uYo5hk+a+1Ea9+jEHCdBg8BMv1tkbSJjKmI6J+oO+D61IbKfk1VS/Efno8DtsIyd+MKuEicn6FuddrFKi9xu1f3GXj/psxl43ON216fTQukhfuwjqIEr+RkjL2u1A4OmzF1A/O+6heC6MO/FygHh53bj2P/XACKaSuoTwX6xns/QQQ4ncgDRAiOPwBIX4H0gAhgsMfEOJ3IA0QIjj8ASF+B9IAIYLDHxDidyANECI4/AEhfgfSACGCwx8Q4ncgDRAiOPwBIX4H0gAhgsMfEOJ3IA0QIjj8ASF+B9IAIYLDHxDidyANECI4/AEhfgfSACGCwx8Q4ncgDRAiOPwBIX4H0gAhgsMfEOJ3IA0QIjj8ASF+B9IAIYLDHxDidyANECI4/AEhfgfSACGCwx8Q4ncgDRAiOPwBIX4H0gAhgsMfEOJ3IA0QIjj8ASF+B9IAIYLDHxDidyANECI4/AEhfgfSACGCwx8Q4ncgDRAiOPwhhdSHM9Z9s109Nsv9aRRZaZZpkfMaea1Zdq/3alaux+reVrCWmLR/indzErMbs9p8Z2Nynpuvydc+x0y6j/14PhkzS7A6QoDfkI6IGNRIIfnAZFY3CPRTyHU3utAiCFzlb8hOzG3MWgzLR+Atbr03uP12bM5j+jH2fxpz1iGZn8Xk8+FZEIAABCAAAQhAAAIQgAAEIAABCEAAAhCAAAQgAAEIQAACEIDAXBP4Bv8lfFdEZhJ+AAAAAElFTkSuQmCC" x="28" y="156" width="248" height="200" filter="url(#inv)"/>
+  <path d="M292 256h46" stroke="#efece6" stroke-width="14" stroke-linecap="round"/>
+  <path d="M312 236 L286 256 L312 276" fill="none" stroke="#efece6" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="360" y="118" width="112" height="276" rx="28" fill="none" stroke="#efece6" stroke-width="14"/>
+  <circle cx="416" cy="158" r="8" fill="#efece6"/>
+  <rect x="392" y="348" width="48" height="10" rx="5" fill="#efece6"/>
 </svg>
