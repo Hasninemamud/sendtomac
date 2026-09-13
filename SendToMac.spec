@@ -6,7 +6,7 @@ TARGET_ARCH = os.environ.get("SENDTOMAC_ARCH", "universal2")
 
 datas = [("web", "web")]
 binaries = []
-hiddenimports = ["webview", "webview.platforms.cocoa"]
+hiddenimports = ["webview", "webview.platforms.cocoa", "menu_app"]
 for package in ("webview", "objc", "Foundation", "AppKit", "WebKit", "CoreFoundation"):
     extra_datas, extra_binaries, extra_hidden = collect_all(package)
     datas += extra_datas
@@ -63,6 +63,7 @@ app = BUNDLE(
         "CFBundleName": "SendToMac",
         "NSHighResolutionCapable": True,
         "LSMinimumSystemVersion": "11.0",
+        "LSUIElement": True,
         "NSLocalNetworkUsageDescription": "SendToMac uses your Wi-Fi so the phone can scan the code and send a file.",
     },
 )

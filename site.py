@@ -629,24 +629,18 @@ def main() -> None:
     existing = PORT if ping(PORT) else None
     if as_app():
         if existing and "--no-open" not in sys.argv:
-            subprocess.run(["osascript", "-e", 'tell application "SendToMac" to activate'], check=False)
+            from menu_app import signal_running
+            signal_running()
             return
-        started: list[Server] = []
+        from menu_app import run_menu_app
 
-        def ready() -> None:
+        def start_server():
             threading.Thread(target=purge, daemon=True).start()
             httpd = serve(PORT)
-            started.append(httpd)
             threading.Thread(target=httpd.serve_forever, daemon=True).start()
-            import webview
-            webview.windows[0].load_url(f"http://127.0.0.1:{httpd.server_address[1]}/share?app=1")
+            return httpd, httpd.server_address[1]
 
-        try:
-            open_window(ready=ready)
-        finally:
-            if started:
-                started[0].shutdown()
-                started[0].server_close()
+        run_menu_app(start_server)
         return
     if existing and "--no-open" not in sys.argv:
         ip = lan_ip()
