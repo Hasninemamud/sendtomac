@@ -79,6 +79,8 @@
     .bad { color: var(--bad); }
     .join { margin-top: 18px; display: flex; gap: 8px; }
     .join input { flex: 1; }
+    html[data-app="app"] .cam { display: none; }
+    html[data-app="app"] .brand { pointer-events: none; }
     @media (max-width: 720px) {
       .layout { grid-template-columns: 1fr; }
       h1 { font-size: 28px; }
@@ -120,7 +122,7 @@
       <textarea id="note" placeholder="Or a note, link, or address"></textarea>
       <div class="row">
         <label class="ghost">Photos or files<input id="files" type="file" multiple></label>
-        <label class="ghost">Camera<input id="camera" type="file" accept="image/*" capture="environment"></label>
+        <label class="ghost cam">Camera<input id="camera" type="file" accept="image/*" capture="environment"></label>
       </div>
       <div class="chips" id="chips"></div>
       <button class="primary" id="send" type="submit">Send</button>
@@ -131,7 +133,12 @@
   <script src="/vendor/qrcode.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
+    const inApp = params.get("app") === "1";
     const wanted = (params.get("r") || "").toLowerCase();
+    if (inApp) {
+      document.documentElement.dataset.app = "app";
+      document.getElementById("status").textContent = "Scan this code with the phone. Same Wi-Fi. Then send the file.";
+    }
     const pairEl = document.getElementById("pair");
     const shareEl = document.getElementById("share");
     const statusEl = document.getElementById("status");
@@ -189,20 +196,42 @@
     document.getElementById("joinForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const code = document.getElementById("joinCode").value.trim().toLowerCase();
-      if (code) location.search = "?r=" + encodeURIComponent(code);
+      if (code) {
+        const next = new URLSearchParams();
+        next.set("r", code);
+        if (inApp) next.set("app", "1");
+        location.search = "?" + next.toString();
+      }
     });
 
+    function noteReceived(name, folder) {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.textContent = folder ? "Saved " + name + " to " + folder : "Received " + name;
+      document.getElementById("inbox").prepend(row);
+    }
+
+    async function keepOnMac(blob, name) {
+      const body = new FormData();
+      body.append("file", blob, name);
+      const res = await fetch("/api/save", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Could not save that file");
+      noteReceived(data.name || name, data.folder);
+    }
+
     function saveBlob(blob, name) {
+      if (inApp) {
+        keepOnMac(blob, name).catch((err) => setStatus(err.message || "Could not save that file", "bad"));
+        return;
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = name;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
-      const row = document.createElement("div");
-      row.className = "item";
-      row.textContent = "Received " + name;
-      document.getElementById("inbox").prepend(row);
+      noteReceived(name);
     }
 
     function connectSocket() {
@@ -379,14 +408,18 @@
     }
 
     function downloadRelay(meta) {
+      if (inApp) {
+        fetch("/api/file/" + encodeURIComponent(meta.id) + "?token=" + encodeURIComponent(token))
+          .then((res) => res.blob())
+          .then((blob) => keepOnMac(blob, meta.name))
+          .catch((err) => setStatus(err.message || "Could not save that file", "bad"));
+        return;
+      }
       const a = document.createElement("a");
       a.href = "/api/file/" + encodeURIComponent(meta.id) + "?token=" + encodeURIComponent(token);
       a.download = meta.name;
       a.click();
-      const row = document.createElement("div");
-      row.className = "item";
-      row.textContent = "Received " + meta.name;
-      document.getElementById("inbox").prepend(row);
+      noteReceived(meta.name);
     }
 
     document.getElementById("sendForm").addEventListener("submit", (e) => {

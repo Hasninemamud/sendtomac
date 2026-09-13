@@ -1,11 +1,21 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+datas = [("web", "web")]
+binaries = []
+hiddenimports = ["webview", "webview.platforms.cocoa"]
+for package in ("webview", "objc", "Foundation", "AppKit", "WebKit", "CoreFoundation"):
+    extra_datas, extra_binaries, extra_hidden = collect_all(package)
+    datas += extra_datas
+    binaries += extra_binaries
+    hiddenimports += extra_hidden
 
 a = Analysis(
     ["site.py"],
     pathex=[],
-    binaries=[],
-    datas=[("web", "web")],
-    hiddenimports=[],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

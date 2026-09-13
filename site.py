@@ -402,7 +402,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_obj(404, {"ok": False, "error": "Not found"})
 
     def do_POST(self) -> None:  # noqa: N802
-        if urllib.parse.urlparse(self.path).path != "/api/upload":
+        path = urllib.parse.urlparse(self.path).path
+        if path == "/api/save":
+            self.handle_save()
+            return
+        if path != "/api/upload":
             self.send_obj(404, {"ok": False, "error": "Not found"})
             return
         try:
@@ -421,6 +425,22 @@ class Handler(BaseHTTPRequestHandler):
             self.send_obj(200, result)
         except PermissionError as exc:
             self.send_obj(403, {"ok": False, "error": str(exc)})
+        except ValueError as exc:
+            self.send_obj(400, {"ok": False, "error": str(exc)})
+
+    def handle_save(self) -> None:
+        if self.client_address[0] not in {"127.0.0.1", "::1"}:
+            self.send_obj(403, {"ok": False, "error": "Mac only"})
+            return
+        try:
+            _fields, files = parse_multipart(self.headers.get("Content-Type", ""), self.read_body())
+            if not files:
+                raise ValueError("No file")
+            incoming = files[0]
+            if len(incoming["data"]) > MAX_FILE:
+                raise ValueError("File is over 500 MB")
+            name = save_download(incoming["filename"], incoming["data"])
+            self.send_obj(200, {"ok": True, "name": name, "folder": "Downloads/SendToMac"})
         except ValueError as exc:
             self.send_obj(400, {"ok": False, "error": str(exc)})
 
@@ -562,13 +582,42 @@ def serve(port: int) -> Server:
     raise SystemExit(f"No free port near {port}: {last}")
 
 
+SAVE_DIR = Path.home() / "Downloads" / "SendToMac"
+
+
 def as_app() -> bool:
     return getattr(sys, "frozen", False) or "--app" in sys.argv
 
 
+def save_download(filename: str, data: bytes) -> str:
+    SAVE_DIR.mkdir(parents=True, exist_ok=True)
+    stem = Path(safe_name(filename))
+    dest = SAVE_DIR / stem.name
+    n = 2
+    while dest.exists():
+        dest = SAVE_DIR / f"{stem.stem}-{n}{stem.suffix}"
+        n += 1
+    dest.write_bytes(data)
+    return dest.name
+
+
 def open_url(base: str) -> None:
-    page = "/share" if as_app() else "/"
-    webbrowser.open(base.rstrip("/") + page)
+    webbrowser.open(base.rstrip("/") + "/")
+
+
+def open_window(url: str) -> None:
+    import webview
+    webview.create_window(
+        "SendToMac",
+        url,
+        width=420,
+        height=680,
+        min_size=(380, 560),
+        resizable=True,
+        background_color="#efece6",
+        text_select=True,
+    )
+    webview.start()
 
 
 def main() -> None:
@@ -576,6 +625,20 @@ def main() -> None:
         run_self_test()
         return
     existing = PORT if ping(PORT) else None
+    if as_app():
+        if existing and "--no-open" not in sys.argv:
+            subprocess.run(["osascript", "-e", 'tell application "SendToMac" to activate'], check=False)
+            return
+        threading.Thread(target=purge, daemon=True).start()
+        httpd = serve(PORT)
+        bound = httpd.server_address[1]
+        threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        try:
+            open_window(f"http://127.0.0.1:{bound}/share?app=1")
+        finally:
+            httpd.shutdown()
+            httpd.server_close()
+        return
     if existing and "--no-open" not in sys.argv:
         ip = lan_ip()
         base = f"http://{ip or '127.0.0.1'}:{existing}"
