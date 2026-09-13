@@ -1,5 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
 from PyInstaller.utils.hooks import collect_all
+
+TARGET_ARCH = os.environ.get("SENDTOMAC_ARCH", "universal2")
 
 datas = [("web", "web")]
 binaries = []
@@ -36,7 +39,7 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
+    target_arch=TARGET_ARCH,
     codesign_identity=None,
     entitlements_file=None,
     icon="icon.icns",

@@ -3,6 +3,9 @@ __pycache__/
 *.pyc
 .venv/
 build/
+build-intel/
 dist/
+dist-intel/
+.venv-intel/
 *.icns
 icon.iconset/

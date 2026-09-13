@@ -605,19 +605,21 @@ def open_url(base: str) -> None:
     webbrowser.open(base.rstrip("/") + "/")
 
 
-def open_window(url: str) -> None:
+def open_window(url: str | None = None, ready=None) -> None:
     import webview
+    page = {"url": url} if url else {"html": "<html><body style='margin:0;background:#efece6'></body></html>"}
     webview.create_window(
         "SendToMac",
-        url,
         width=420,
         height=680,
         min_size=(380, 560),
         resizable=True,
         background_color="#efece6",
         text_select=True,
+        **page,
     )
-    webview.start()
+    # GUI must start on the main thread before the server, or the Intel build never shows the window.
+    webview.start(ready)
 
 
 def main() -> None:
@@ -629,15 +631,22 @@ def main() -> None:
         if existing and "--no-open" not in sys.argv:
             subprocess.run(["osascript", "-e", 'tell application "SendToMac" to activate'], check=False)
             return
-        threading.Thread(target=purge, daemon=True).start()
-        httpd = serve(PORT)
-        bound = httpd.server_address[1]
-        threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        started: list[Server] = []
+
+        def ready() -> None:
+            threading.Thread(target=purge, daemon=True).start()
+            httpd = serve(PORT)
+            started.append(httpd)
+            threading.Thread(target=httpd.serve_forever, daemon=True).start()
+            import webview
+            webview.windows[0].load_url(f"http://127.0.0.1:{httpd.server_address[1]}/share?app=1")
+
         try:
-            open_window(f"http://127.0.0.1:{bound}/share?app=1")
+            open_window(ready=ready)
         finally:
-            httpd.shutdown()
-            httpd.server_close()
+            if started:
+                started[0].shutdown()
+                started[0].server_close()
         return
     if existing and "--no-open" not in sys.argv:
         ip = lan_ip()
