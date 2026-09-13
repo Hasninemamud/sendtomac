@@ -245,7 +245,7 @@
       ws.onclose = () => {
         if (connected) return;
         if (++socketTries > 2) {
-          setStatus("This host only serves the pages. Pairing runs on your Wi-Fi: on the Mac, run start.command and open the address it prints.", "bad");
+          setStatus("Open the SendToMac app on the Mac. Leave it open, then scan the code. Same Wi-Fi.", "bad");
           return;
         }
         setTimeout(connectSocket, 1200);

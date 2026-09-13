@@ -29,7 +29,16 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+def app_root() -> Path:
+    if getattr(sys, "frozen", False):
+        resources = Path(sys.executable).resolve().parent.parent / "Resources"
+        if (resources / "web").is_dir():
+            return resources
+        return Path(getattr(sys, "_MEIPASS"))
+    return Path(__file__).resolve().parent
+
+
+ROOT = app_root()
 PAGE = ROOT / "web" / "share" / "index.html"
 LANDING = ROOT / "web" / "index.html"
 PRIVACY = ROOT / "web" / "privacy" / "index.html"
@@ -533,15 +542,33 @@ def ping(port: int) -> bool:
         return False
 
 
-def serve(port: int) -> ThreadingHTTPServer:
-    ThreadingHTTPServer.allow_reuse_address = True
+class Server(ThreadingHTTPServer):
+    # HTTPServer.server_bind reverse-looks up 0.0.0.0 and can stall on mDNS.
+    def server_bind(self) -> None:
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
+        self.server_address = self.socket.getsockname()
+        self.server_name = "sendtomac"
+        self.server_port = self.server_address[1]
+
+
+def serve(port: int) -> Server:
     last = None
     for candidate in range(port, port + 12):
         try:
-            return ThreadingHTTPServer(("0.0.0.0", candidate), Handler)
+            return Server(("0.0.0.0", candidate), Handler)
         except OSError as exc:
             last = exc
     raise SystemExit(f"No free port near {port}: {last}")
+
+
+def as_app() -> bool:
+    return getattr(sys, "frozen", False) or "--app" in sys.argv
+
+
+def open_url(base: str) -> None:
+    page = "/share" if as_app() else "/"
+    webbrowser.open(base.rstrip("/") + page)
 
 
 def main() -> None:
@@ -551,18 +578,19 @@ def main() -> None:
     existing = PORT if ping(PORT) else None
     if existing and "--no-open" not in sys.argv:
         ip = lan_ip()
-        webbrowser.open(f"http://{ip or '127.0.0.1'}:{existing}/")
-        print(f"Already running at http://{ip or '127.0.0.1'}:{existing}/")
+        base = f"http://{ip or '127.0.0.1'}:{existing}"
+        open_url(base)
+        print(f"Already running at {base}/")
         return
     threading.Thread(target=purge, daemon=True).start()
     httpd = serve(PORT)
     bound = httpd.server_address[1]
     ip = lan_ip()
-    url = f"http://{ip}:{bound}/" if ip else f"http://127.0.0.1:{bound}/"
-    print(f"SendToMac website: {url}", flush=True)
-    print("Open that on the Mac. Scan the QR with the phone. Same Wi-Fi.", flush=True)
+    url = f"http://{ip}:{bound}" if ip else f"http://127.0.0.1:{bound}"
+    print(f"SendToMac: {url}/share", flush=True)
+    print("Leave this running. Scan the QR with the phone. Same Wi-Fi.", flush=True)
     if "--no-open" not in sys.argv:
-        webbrowser.open(url)
+        open_url(url)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
