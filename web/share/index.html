@@ -98,6 +98,23 @@
       .layout { grid-template-columns: 1fr; }
       h1 { font-size: 28px; }
     }
+    html[data-app="app"] body { padding: 10px 12px 12px; }
+    html[data-app="app"] .bar { margin-bottom: 2px; }
+    html[data-app="app"] .brand .mark { width: 22px; height: 22px; }
+    html[data-app="app"] h1 { font-size: 18px; margin: 0 0 2px; }
+    html[data-app="app"] #status { font-size: 12px; line-height: 1.3; }
+    html[data-app="app"] .layout { grid-template-columns: 148px 1fr; gap: 12px; margin-top: 8px; }
+    html[data-app="app"] #qr,
+    html[data-app="app"] #qr svg { width: 140px; height: 140px; }
+    html[data-app="app"] .url { display: none; }
+    html[data-app="app"] .code { margin: 6px 0; font-size: 12px; }
+    html[data-app="app"] #copy, html[data-app="app"] .join button { min-height: 30px; font-size: 12px; padding: 0 8px; }
+    html[data-app="app"] .layout p { margin: 0; font-size: 12px; line-height: 1.35; }
+    html[data-app="app"] .join { margin-top: 8px; }
+    html[data-app="app"] .join input { min-height: 30px; font-size: 13px; padding: 6px 8px; }
+    html[data-app="app"] .dropzone { min-height: 40px; margin-top: 8px; padding: 6px; font-size: 12px; border-radius: 10px; }
+    html[data-app="app"] textarea { min-height: 64px; font-size: 13px; padding: 8px; }
+    html[data-app="app"] button.primary { min-height: 36px; font-size: 14px; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -148,10 +165,14 @@
   <script>
     const params = new URLSearchParams(location.search);
     const inApp = params.get("app") === "1";
+    const localKey = params.get("k") || "";
     const wanted = (params.get("r") || "").toLowerCase();
     if (inApp) {
       document.documentElement.dataset.app = "app";
       document.getElementById("status").textContent = "Scan this code with the phone. Or drop a file on this window.";
+    }
+    function macHeaders() {
+      return localKey ? { "X-SendToMac-Key": localKey } : {};
     }
     const pairEl = document.getElementById("pair");
     const shareEl = document.getElementById("share");
@@ -209,7 +230,9 @@
       e.target.value = "";
     });
     function addStaged(token, name) {
-      return fetch("/api/staged/" + encodeURIComponent(token))
+      return fetch("/api/staged/" + encodeURIComponent(token) + (localKey ? "?k=" + encodeURIComponent(localKey) : ""), {
+        headers: macHeaders(),
+      })
         .then((res) => {
           if (!res.ok) throw new Error("Could not read that file");
           return res.blob();
@@ -246,6 +269,7 @@
         const next = new URLSearchParams();
         next.set("r", code);
         if (inApp) next.set("app", "1");
+        if (localKey) next.set("k", localKey);
         location.search = "?" + next.toString();
       }
     });
@@ -260,7 +284,7 @@
     async function keepOnMac(blob, name) {
       const body = new FormData();
       body.append("file", blob, name);
-      const res = await fetch("/api/save", { method: "POST", body });
+      const res = await fetch("/api/save", { method: "POST", body, headers: macHeaders() });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Could not save that file");
       noteReceived(data.name || name, data.folder);

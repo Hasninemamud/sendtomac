@@ -47,7 +47,7 @@ from Foundation import NSBundle, NSDistributedNotificationCenter, NSObject, NSTi
 from WebKit import WKWebView, WKWebViewConfiguration
 
 SHOW_NOTE = "app.sendtomac.show"
-POPOVER_SIZE = (380, 560)
+POPOVER_SIZE = (560, 400)
 CHORD = NSEventModifierFlagCommand | NSEventModifierFlagOption
 CHORD_HOLD = 0.28
 _AX = {}
@@ -288,9 +288,10 @@ def stage_into(web, paths):
     parts = []
     for raw in paths:
         path = Path(raw)
-        if not path.is_file():
+        try:
+            token = stage_local(path)
+        except ValueError:
             continue
-        token = stage_local(path)
         parts.append("addStaged(" + json.dumps(token) + "," + json.dumps(path.name) + ")")
     if parts:
         web.evaluateJavaScript_completionHandler_(";".join(parts), None)
@@ -341,8 +342,13 @@ class MenuApp(NSObject):
 
     def applicationDidFinishLaunching_(self, _notification):
         self.install_status()
-        self.httpd, port = self.start_server()
+        started = self.start_server()
+        self.httpd = started[0]
+        port = started[1]
+        local_key = started[2] if len(started) > 2 else ""
         self.url = f"http://127.0.0.1:{port}/share?app=1"
+        if local_key:
+            self.url += f"&k={local_key}"
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             self, "showFromNote:", SHOW_NOTE, None
         )

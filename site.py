@@ -60,14 +60,22 @@ PORT = 8790
 PUBLIC = os.environ.get("SENDTOMAC_PUBLIC") == "1"
 MAX_FILE = 500 * 1024 * 1024
 MAX_TEXT = 20_000
+MAX_ROOMS = 64
 ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 TEMP = Path(tempfile.gettempdir()) / "sendtomac-site"
+LOCAL_KEY = secrets.token_urlsafe(24)
+DANGEROUS_SUFFIX = {
+    ".html", ".htm", ".shtml", ".svg", ".xml", ".xhtml",
+    ".js", ".mjs", ".command", ".app", ".dmg", ".pkg", ".mpkg",
+    ".scpt", ".applescript", ".workflow", ".action",
+}
 
 LOCK = threading.Lock()
 ROOMS: dict[str, dict] = {}
 FILES: dict[str, dict] = {}
 TOKEN_PEER: dict[str, tuple[str, str]] = {}
+CREATE_HITS: dict[str, list[float]] = {}
 
 
 def room_code() -> str:
@@ -89,11 +97,11 @@ def lan_ip() -> str | None:
 
 
 def share_base(host_header: str, port: int) -> str | None:
-    host = (host_header or "").split(",")[0].strip()
-    hostname = host.split(":")[0]
-    if hostname and hostname not in {"localhost", "127.0.0.1", "::1"}:
-        scheme = "https" if PUBLIC else "http"
-        return f"{scheme}://{host}"
+    if PUBLIC:
+        host = (host_header or "").split(",")[0].strip()
+        hostname = host.split(":")[0]
+        if hostname and hostname not in {"localhost", "127.0.0.1", "::1"}:
+            return f"https://{host}"
     ip = lan_ip()
     if not ip:
         return None
@@ -104,10 +112,31 @@ def transfer_mode() -> str:
     return "webrtc" if PUBLIC else "relay"
 
 
+def is_loopback(addr: str) -> bool:
+    return addr in {"127.0.0.1", "::1"} or addr.startswith("::ffff:127.")
+
+
 def safe_name(name: str) -> str:
     name = os.path.basename(name or "").replace("\x00", "")
     name = re.sub(r"[^A-Za-z0-9._ -]", "_", name).strip(" .")
-    return (name or "file")[:120]
+    name = (name or "file")[:120]
+    lower = name.lower()
+    for suffix in DANGEROUS_SUFFIX:
+        if lower.endswith(suffix):
+            return name + ".download"
+    return name
+
+
+def allow_create(ip: str) -> bool:
+    now = time.time()
+    with LOCK:
+        hits = [t for t in CREATE_HITS.get(ip, []) if now - t < 60]
+        if len(hits) >= 20:
+            CREATE_HITS[ip] = hits
+            return False
+        hits.append(now)
+        CREATE_HITS[ip] = hits
+        return len(ROOMS) < MAX_ROOMS
 
 
 def ws_accept(key: str) -> str:
@@ -274,7 +303,7 @@ def take_file(file_id: str, token: str) -> dict | None:
         meta = FILES.get(file_id)
         if not meta or meta["for"] != peer["id"]:
             return None
-        return meta
+        return FILES.pop(file_id)
 
 
 def purge() -> None:
@@ -355,6 +384,39 @@ class Handler(BaseHTTPRequestHandler):
 
     def send_obj(self, code: int, payload) -> None:
         self.send_bytes(code, json.dumps(payload).encode(), "application/json; charset=utf-8")
+
+    def request_key(self) -> str:
+        key = self.headers.get("X-SendToMac-Key") or ""
+        if key:
+            return key
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        return (query.get("k") or [""])[0]
+
+    def local_ok(self) -> bool:
+        if not is_loopback(self.client_address[0]):
+            return False
+        key = self.request_key()
+        return bool(key) and secrets.compare_digest(key, LOCAL_KEY)
+
+    def origin_ok(self) -> bool:
+        if PUBLIC:
+            return True
+        origin = self.headers.get("Origin")
+        if not origin:
+            return True
+        parsed = urllib.parse.urlparse(origin)
+        host = (parsed.hostname or "").lower()
+        port = parsed.port
+        our_port = self.server.server_address[1]
+        if port is None:
+            port = 443 if parsed.scheme == "https" else 80
+        if port != our_port:
+            return False
+        allowed = {"127.0.0.1", "localhost", "::1"}
+        ip = lan_ip()
+        if ip:
+            allowed.add(ip.lower())
+        return host in allowed
 
     def read_body(self) -> bytes:
         length = int(self.headers.get("Content-Length") or 0)
@@ -439,7 +501,7 @@ class Handler(BaseHTTPRequestHandler):
     def handle_staged(self, token: str) -> None:
         from staging import take_staged
 
-        if self.client_address[0] not in {"127.0.0.1", "::1"}:
+        if not self.local_ok():
             self.send_obj(403, {"ok": False, "error": "Mac only"})
             return
         meta = take_staged(token)
@@ -447,21 +509,30 @@ class Handler(BaseHTTPRequestHandler):
             self.send_obj(404, {"ok": False, "error": "Missing file"})
             return
         path = Path(meta["path"])
+        if path.is_symlink():
+            self.send_obj(404, {"ok": False, "error": "Missing file"})
+            return
+        path = path.resolve()
         if not path.is_file():
             self.send_obj(404, {"ok": False, "error": "Missing file"})
             return
+        size = path.stat().st_size
+        if size > MAX_FILE:
+            self.send_obj(400, {"ok": False, "error": "File is over 500 MB"})
+            return
         data = path.read_bytes()
-        quoted = urllib.parse.quote(meta["name"])
+        quoted = urllib.parse.quote(safe_name(meta["name"]))
         self.send_response(200)
-        self.send_header("Content-Type", meta.get("mime") or "application/octet-stream")
+        self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Content-Disposition", f"inline; filename=\"{meta['name']}\"; filename*=UTF-8''{quoted}")
+        self.send_header("Content-Disposition", f"attachment; filename=\"{safe_name(meta['name'])}\"; filename*=UTF-8''{quoted}")
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         self.wfile.write(data)
 
     def handle_save(self) -> None:
-        if self.client_address[0] not in {"127.0.0.1", "::1"}:
+        if not self.local_ok():
             self.send_obj(403, {"ok": False, "error": "Mac only"})
             return
         try:
@@ -478,12 +549,21 @@ class Handler(BaseHTTPRequestHandler):
 
     def handle_download(self, parsed) -> None:
         file_id = parsed.path.rsplit("/", 1)[-1]
+        if not re.fullmatch(r"[A-Za-z0-9_-]{8,64}", file_id or ""):
+            self.send_obj(404, {"ok": False, "error": "File expired"})
+            return
         token = (urllib.parse.parse_qs(parsed.query).get("token") or [""])[0]
         meta = take_file(file_id, token)
         if not meta or not os.path.isfile(meta["path"]):
             self.send_obj(404, {"ok": False, "error": "File expired"})
             return
-        data = Path(meta["path"]).read_bytes()
+        try:
+            data = Path(meta["path"]).read_bytes()
+        finally:
+            try:
+                os.remove(meta["path"])
+            except OSError:
+                pass
         quoted = urllib.parse.quote(meta["name"])
         self.send_response(200)
         self.send_header("Content-Type", meta["mime"])
@@ -493,17 +573,14 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         self.wfile.write(data)
-        try:
-            os.remove(meta["path"])
-        except OSError:
-            pass
-        with LOCK:
-            FILES.pop(file_id, None)
 
     def handle_ws(self) -> None:
         key = self.headers.get("Sec-WebSocket-Key")
         if not key:
             self.send_obj(400, {"ok": False, "error": "Not a websocket"})
+            return
+        if not self.origin_ok():
+            self.send_obj(403, {"ok": False, "error": "Blocked origin"})
             return
         self.wfile.write(
             (
@@ -534,7 +611,7 @@ class Handler(BaseHTTPRequestHandler):
                 if msg.get("type") in {"create", "join"}:
                     peer, room_id = self.hello(msg, peer)
                     continue
-                if not peer:
+                if not peer or not room_id:
                     continue
                 if msg.get("type") == "signal":
                     for other in other_peers(ROOMS[room_id], peer["id"]):
@@ -560,6 +637,9 @@ class Handler(BaseHTTPRequestHandler):
                 write_frame(self.wfile, 1, json.dumps({"type": "error", "error": "That code expired. Scan again."}).encode())
                 return existing or new_peer(self.wfile), ""
         else:
+            if not allow_create(self.client_address[0]):
+                write_frame(self.wfile, 1, json.dumps({"type": "error", "error": "Too many rooms. Try again in a minute."}).encode())
+                return existing or new_peer(self.wfile), ""
             room = ensure_room(requested if re.fullmatch(r"[a-z0-9]{8}", requested) else None)
         peer = existing or new_peer(self.wfile)
         err = add_peer(room, peer)
@@ -623,11 +703,16 @@ def as_app() -> bool:
 
 def save_download(filename: str, data: bytes) -> str:
     SAVE_DIR.mkdir(parents=True, exist_ok=True)
+    root = SAVE_DIR.resolve()
     stem = Path(safe_name(filename))
-    dest = SAVE_DIR / stem.name
+    dest = (root / stem.name).resolve()
+    if dest.parent != root:
+        raise ValueError("Bad filename")
     n = 2
     while dest.exists():
-        dest = SAVE_DIR / f"{stem.stem}-{n}{stem.suffix}"
+        dest = (root / f"{stem.stem}-{n}{stem.suffix}").resolve()
+        if dest.parent != root:
+            raise ValueError("Bad filename")
         n += 1
     dest.write_bytes(data)
     return dest.name
@@ -670,7 +755,7 @@ def main() -> None:
             threading.Thread(target=purge, daemon=True).start()
             httpd = serve(PORT)
             threading.Thread(target=httpd.serve_forever, daemon=True).start()
-            return httpd, httpd.server_address[1]
+            return httpd, httpd.server_address[1], LOCAL_KEY
 
         run_menu_app(start_server)
         return
@@ -705,6 +790,7 @@ def run_self_test() -> None:
     assert fields["token"] == "abc"
     assert files[0]["data"] == b"hi"
     assert safe_name("../x") == "x"
+    assert safe_name("note.html").endswith(".download")
     print("self-test ok")
 
 
