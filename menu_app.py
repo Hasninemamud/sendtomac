@@ -2,20 +2,33 @@
 
 from __future__ import annotations
 
+import ctypes
+import json
 import sys
+from ctypes import CFUNCTYPE, POINTER, Structure, byref, c_int32, c_uint32, c_void_p
 from pathlib import Path
 
 import objc
 from AppKit import (
     NSApplication,
     NSApplicationActivationPolicyAccessory,
+    NSDragOperationCopy,
+    NSEvent,
+    NSEventMaskFlagsChanged,
+    NSEventMaskKeyDown,
+    NSEventModifierFlagCapsLock,
+    NSEventModifierFlagCommand,
     NSEventModifierFlagControl,
+    NSEventModifierFlagDeviceIndependentFlagsMask,
+    NSEventModifierFlagOption,
     NSEventTypeRightMouseUp,
     NSImage,
     NSMakeRect,
     NSMenu,
     NSMenuItem,
+    NSPasteboardTypeFileURL,
     NSPopover,
+    NSPopoverBehaviorSemitransient,
     NSPopoverBehaviorTransient,
     NSStatusBar,
     NSVariableStatusItemLength,
@@ -24,11 +37,87 @@ from AppKit import (
     NSViewHeightSizable,
     NSViewWidthSizable,
 )
-from Foundation import NSDistributedNotificationCenter, NSObject, NSTimer, NSURL, NSURLRequest
+from Foundation import NSBundle, NSDistributedNotificationCenter, NSObject, NSTimer, NSURL, NSURLRequest
 from WebKit import WKWebView, WKWebViewConfiguration
 
 SHOW_NOTE = "app.sendtomac.show"
 POPOVER_SIZE = (380, 560)
+CHORD = NSEventModifierFlagCommand | NSEventModifierFlagOption
+CHORD_HOLD = 0.28
+_AX = {}
+_CARBON_HANDLER = None
+_CARBON_REFS = []
+
+
+class _EventTypeSpec(Structure):
+    _fields_ = [("eventClass", c_uint32), ("eventKind", c_uint32)]
+
+
+class _EventHotKeyID(Structure):
+    _fields_ = [("signature", c_uint32), ("id", c_uint32)]
+
+
+def install_carbon_hotkey(callback) -> None:
+    global _CARBON_HANDLER
+    try:
+        carbon = ctypes.CDLL("/System/Library/Frameworks/Carbon.framework/Carbon")
+        carbon.GetApplicationEventTarget.restype = c_void_p
+        carbon.InstallEventHandler.argtypes = [
+            c_void_p, c_void_p, c_uint32, POINTER(_EventTypeSpec), c_void_p, POINTER(c_void_p)
+        ]
+        carbon.InstallEventHandler.restype = c_int32
+        carbon.RegisterEventHotKey.argtypes = [
+            c_uint32, c_uint32, _EventHotKeyID, c_void_p, c_uint32, POINTER(c_void_p)
+        ]
+        carbon.RegisterEventHotKey.restype = c_int32
+
+        def handler(_call, _event, _user):
+            callback()
+            return 0
+
+        _CARBON_HANDLER = CFUNCTYPE(c_int32, c_void_p, c_void_p, c_void_p)(handler)
+        spec = _EventTypeSpec(0x6B657962, 6)
+        target = carbon.GetApplicationEventTarget()
+        installed = c_void_p()
+        if carbon.InstallEventHandler(target, _CARBON_HANDLER, 1, byref(spec), None, byref(installed)) != 0:
+            return
+        pairs = ((0x37, 2048), (0x36, 2048), (0x3A, 256), (0x3D, 256))
+        for index, (key, mods) in enumerate(pairs, 1):
+            ref = c_void_p()
+            carbon.RegisterEventHotKey(key, mods, _EventHotKeyID(0x53544D43, index), target, 0, byref(ref))
+            _CARBON_REFS.append(ref)
+    except Exception:
+        return
+
+
+def accessibility_ok(prompt=False):
+    if "AXIsProcessTrustedWithOptions" not in _AX:
+        try:
+            bundle = NSBundle.bundleWithPath_(
+                "/System/Library/Frameworks/ApplicationServices.framework"
+            )
+            if bundle is not None:
+                bundle.load()
+            objc.loadBundleFunctions(
+                bundle,
+                _AX,
+                [
+                    ("AXIsProcessTrusted", b"Z"),
+                    ("AXIsProcessTrustedWithOptions", b"Z@"),
+                ],
+            )
+        except Exception:
+            return False
+    check = _AX.get("AXIsProcessTrustedWithOptions")
+    if check is None:
+        return False
+    try:
+        if prompt:
+            return bool(check({"AXTrustedCheckOptionPrompt": True}))
+        trusted = _AX.get("AXIsProcessTrusted")
+        return bool(trusted() if trusted else check(None))
+    except Exception:
+        return False
 
 
 class OpenPanelDelegate(NSObject):
@@ -48,6 +137,66 @@ class OpenPanelDelegate(NSObject):
             handler(None)
 
 
+class DropWebView(WKWebView):
+    def initWithFrame_configuration_(self, frame, config):
+        self = objc.super(DropWebView, self).initWithFrame_configuration_(frame, config)
+        if self is None:
+            return None
+        self.registerForDraggedTypes_([NSPasteboardTypeFileURL, "NSFilenamesPboardType"])
+        return self
+
+    def draggingEntered_(self, _sender):
+        return NSDragOperationCopy
+
+    def draggingUpdated_(self, _sender):
+        return NSDragOperationCopy
+
+    def prepareForDragOperation_(self, _sender):
+        return True
+
+    def performDragOperation_(self, sender):
+        paths = dropped_paths(sender)
+        if not paths:
+            return False
+        self.window().makeKeyAndOrderFront_(None) if self.window() else None
+        stage_into(self, paths)
+        return True
+
+
+def dropped_paths(sender):
+    board = sender.draggingPasteboard()
+    urls = board.readObjectsForClasses_options_([NSURL], None) or []
+    paths = [url.path() for url in urls if url.isFileURL()]
+    if paths:
+        return paths
+    names = board.propertyListForType_("NSFilenamesPboardType") or []
+    return list(names)
+
+
+class NavDelegate(NSObject):
+    def webView_decidePolicyForNavigationAction_decisionHandler_(self, web, action, handler):
+        url = action.request().URL()
+        if url is not None and url.isFileURL() and url.path():
+            handler(0)
+            stage_into(web, [url.path()])
+            return
+        handler(1)
+
+
+def stage_into(web, paths):
+    from staging import stage_local
+
+    parts = []
+    for raw in paths:
+        path = Path(raw)
+        if not path.is_file():
+            continue
+        token = stage_local(path)
+        parts.append("addStaged(" + json.dumps(token) + "," + json.dumps(path.name) + ")")
+    if parts:
+        web.evaluateJavaScript_completionHandler_(";".join(parts), None)
+
+
 class ShareController(NSViewController):
     def initWithURL_(self, url):
         self = objc.super(ShareController, self).init()
@@ -55,11 +204,13 @@ class ShareController(NSViewController):
             return None
         self.url = url
         self.picker = OpenPanelDelegate.alloc().init()
+        self.nav = NavDelegate.alloc().init()
         frame = NSMakeRect(0, 0, POPOVER_SIZE[0], POPOVER_SIZE[1])
         view = NSView.alloc().initWithFrame_(frame)
-        web = WKWebView.alloc().initWithFrame_configuration_(frame, WKWebViewConfiguration.alloc().init())
+        web = DropWebView.alloc().initWithFrame_configuration_(frame, WKWebViewConfiguration.alloc().init())
         web.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
         web.setUIDelegate_(self.picker)
+        web.setNavigationDelegate_(self.nav)
         web.loadRequest_(NSURLRequest.requestWithURL_(NSURL.URLWithString_(url)))
         view.addSubview_(web)
         self.setView_(view)
@@ -78,6 +229,10 @@ class MenuApp(NSObject):
         self.popover = None
         self.page = None
         self.url = None
+        self.hotkey_timer = None
+        self.chord_used = False
+        self.shortcut_monitors = []
+        self.shortcut_on = False
         return self
 
     def applicationDidFinishLaunching_(self, _notification):
@@ -87,6 +242,8 @@ class MenuApp(NSObject):
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             self, "showFromNote:", SHOW_NOTE, None
         )
+        self.install_shortcut()
+        self.register_login()
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
             0.15, self, "showPopover:", None, False
         )
@@ -120,7 +277,7 @@ class MenuApp(NSObject):
         item = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
         button = item.button()
         button.setImage_(image)
-        button.setToolTip_("SendToMac")
+        button.setToolTip_("SendToMac — press Option + Command")
         button.setTarget_(self)
         button.setAction_("toggle:")
         menu = NSMenu.alloc().init()
@@ -132,6 +289,104 @@ class MenuApp(NSObject):
         menu.addItem_(quit_item)
         self.menu = menu
         self.status = item
+
+    def install_shortcut(self):
+        install_carbon_hotkey(lambda: self.performSelectorOnMainThread_withObject_waitUntilDone_(
+            "openFromShortcut:", None, False
+        ))
+        self.attach_shortcut()
+        self.register_login()
+        if not accessibility_ok(prompt=False):
+            accessibility_ok(prompt=True)
+
+    def register_login(self):
+        if not getattr(sys, "frozen", False):
+            return
+        try:
+            bundle = NSBundle.bundleWithPath_("/System/Library/Frameworks/ServiceManagement.framework")
+            if bundle is None or not bundle.load():
+                return
+            service = objc.lookUpClass("SMAppService").mainAppService()
+            if int(service.status()) == 1:
+                return
+            service.registerAndReturnError_(None)
+        except Exception:
+            return
+
+    def openFromShortcut_(self, _sender):
+        NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            0.05, self, "showPopover:", None, False
+        )
+
+    def attach_shortcut(self):
+        if self.shortcut_on:
+            return
+        self.shortcut_on = True
+        handlers = (
+            (NSEventMaskFlagsChanged, self.flagsChanged_, self.localFlagsChanged_),
+            (NSEventMaskKeyDown, self.cancelHotkey_, self.localKeyDown_),
+        )
+        for mask, global_handler, local_handler in handlers:
+            watched = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(mask, global_handler)
+            local = NSEvent.addLocalMonitorForEventsMatchingMask_handler_(mask, local_handler)
+            if watched is not None:
+                self.shortcut_monitors.append(watched)
+            if local is not None:
+                self.shortcut_monitors.append(local)
+
+    def chord_down(self, event=None):
+        raw = event.modifierFlags() if event is not None else NSEvent.modifierFlags()
+        flags = raw & NSEventModifierFlagDeviceIndependentFlagsMask
+        flags &= ~NSEventModifierFlagCapsLock
+        return flags == CHORD
+
+    def flagsChanged_(self, event):
+        if self.chord_down(event):
+            if self.chord_used:
+                return
+            self.chord_used = True
+            self.openFromShortcut_(None)
+        else:
+            self.chord_used = False
+
+    def localFlagsChanged_(self, event):
+        self.flagsChanged_(event)
+        return event
+
+    def localKeyDown_(self, event):
+        self.cancelHotkey_(None)
+        return event
+
+    def armHotkey(self):
+        if self.hotkey_timer is not None:
+            return
+        self.chord_used = False
+        self.hotkey_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            CHORD_HOLD, self, "hotkeyFired:", None, False
+        )
+
+    def cancelHotkey_(self, _event):
+        self.chord_used = True
+        if self.hotkey_timer is None:
+            return
+        self.hotkey_timer.invalidate()
+        self.hotkey_timer = None
+
+    def releaseChord(self):
+        armed = self.hotkey_timer is not None
+        if self.hotkey_timer is not None:
+            self.hotkey_timer.invalidate()
+            self.hotkey_timer = None
+        if armed and not self.chord_used:
+            self.showPopover_(None)
+        self.chord_used = False
+
+    def hotkeyFired_(self, _timer):
+        self.hotkey_timer = None
+        if self.chord_used or not self.chord_down():
+            return
+        self.chord_used = True
+        self.showPopover_(None)
 
     def toggle_(self, _sender):
         event = NSApplication.sharedApplication().currentEvent()
@@ -153,12 +408,13 @@ class MenuApp(NSObject):
         if self.popover is None:
             page = ShareController.alloc().initWithURL_(self.url)
             pop = NSPopover.alloc().init()
-            pop.setBehavior_(NSPopoverBehaviorTransient)
+            pop.setBehavior_(NSPopoverBehaviorSemitransient)
             pop.setAnimates_(True)
             pop.setContentSize_(POPOVER_SIZE)
             pop.setContentViewController_(page)
             self.page = page
             self.popover = pop
+        NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
         button = self.status.button()
         self.popover.showRelativeToRect_ofView_preferredEdge_(button.bounds(), button, 1)
 

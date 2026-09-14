@@ -48,6 +48,7 @@ ICONS = {
     "/icon-512.png": (ROOT / "web" / "icon-512.png", "image/png"),
     "/apple-touch-icon.png": (ROOT / "web" / "apple-touch-icon.png", "image/png"),
     "/favicon.ico": (ROOT / "web" / "favicon.ico", "image/x-icon"),
+    "/logo.png": (ROOT / "web" / "logo.png", "image/png"),
     "/macbook.png": (ROOT / "web" / "macbook.png", "image/png"),
 }
 VENDOR = ROOT / "web" / "vendor" / "qrcode.js"
@@ -381,10 +382,13 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/theme.js":
             self.send_bytes(200, (ROOT / "web" / "theme.js").read_bytes(), "text/javascript; charset=utf-8")
             return
+        if parsed.path.startswith("/api/staged/"):
+            self.handle_staged(parsed.path.rsplit("/", 1)[-1])
+            return
         if parsed.path in ICONS:
             path, content_type = ICONS[parsed.path]
             if path.is_file():
-                self.send_bytes(200, path.read_bytes(), content_type, cache=True)
+                self.send_bytes(200, path.read_bytes(), content_type)
                 return
         query = urllib.parse.parse_qs(parsed.query)
         if parsed.path in {"/privacy", "/privacy/", "/privacy.html"}:
@@ -427,6 +431,30 @@ class Handler(BaseHTTPRequestHandler):
             self.send_obj(403, {"ok": False, "error": str(exc)})
         except ValueError as exc:
             self.send_obj(400, {"ok": False, "error": str(exc)})
+
+    def handle_staged(self, token: str) -> None:
+        from staging import take_staged
+
+        if self.client_address[0] not in {"127.0.0.1", "::1"}:
+            self.send_obj(403, {"ok": False, "error": "Mac only"})
+            return
+        meta = take_staged(token)
+        if not meta:
+            self.send_obj(404, {"ok": False, "error": "Missing file"})
+            return
+        path = Path(meta["path"])
+        if not path.is_file():
+            self.send_obj(404, {"ok": False, "error": "Missing file"})
+            return
+        data = path.read_bytes()
+        quoted = urllib.parse.quote(meta["name"])
+        self.send_response(200)
+        self.send_header("Content-Type", meta.get("mime") or "application/octet-stream")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Content-Disposition", f"inline; filename=\"{meta['name']}\"; filename*=UTF-8''{quoted}")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(data)
 
     def handle_save(self) -> None:
         if self.client_address[0] not in {"127.0.0.1", "::1"}:
