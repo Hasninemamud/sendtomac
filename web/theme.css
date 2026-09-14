@@ -45,5 +45,20 @@ body { background: var(--bg); color: var(--ink); }
 .theme .icon-sun { display: none; }
 html[data-theme="night"] .theme .icon-moon { display: none; }
 html[data-theme="night"] .theme .icon-sun { display: block; }
-html[data-theme="night"] .brand img { outline: 1px solid var(--line); outline-offset: 0; }
+.brand .mark {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: block;
+  background: var(--ink);
+  -webkit-mask: url("/menu-ink.png?v=6") center / contain no-repeat;
+  mask: url("/menu-ink.png?v=6") center / contain no-repeat;
+  position: relative;
+}
+.brand .mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/menu-bars.png?v=6") center / contain no-repeat;
+}
 html[data-theme="night"] .macbook { filter: invert(1); }

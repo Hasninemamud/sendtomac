@@ -242,6 +242,9 @@ class MenuApp(NSObject):
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             self, "showFromNote:", SHOW_NOTE, None
         )
+        NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(
+            self, "appearanceChanged:", "AppleInterfaceThemeChangedNotification", None
+        )
         self.install_shortcut()
         self.register_login()
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
@@ -253,17 +256,35 @@ class MenuApp(NSObject):
             self.httpd.shutdown()
             self.httpd.server_close()
 
+    def menu_is_dark(self):
+        try:
+            match = NSApplication.sharedApplication().effectiveAppearance().bestMatchFromAppearancesWithNames_((
+                "NSAppearanceNameAqua",
+                "NSAppearanceNameDarkAqua",
+            ))
+            return match == "NSAppearanceNameDarkAqua"
+        except Exception:
+            return False
+
+    def appearanceChanged_(self, _notification):
+        if self.status is None:
+            return
+        button = self.status.button()
+        if button is not None:
+            button.setImage_(self.status_image())
+
     def status_image(self):
         roots = []
         if getattr(sys, "frozen", False):
             roots.append(Path(sys.executable).resolve().parent.parent / "Resources" / "web")
         roots.append(Path(__file__).resolve().parent / "web")
+        name = "menu-icon.png"
         for root in roots:
-            path = root / "menu-icon.png"
+            path = root / name
             if path.is_file():
                 image = NSImage.alloc().initWithContentsOfFile_(str(path))
                 if image is not None:
-                    image.setTemplate_(False)
+                    image.setTemplate_(True)
                     image.setSize_((18, 18))
                     return image
         image = NSImage.imageWithSystemSymbolName_accessibilityDescription_("laptopcomputer", "SendToMac")

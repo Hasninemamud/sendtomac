@@ -49,6 +49,10 @@ ICONS = {
     "/apple-touch-icon.png": (ROOT / "web" / "apple-touch-icon.png", "image/png"),
     "/favicon.ico": (ROOT / "web" / "favicon.ico", "image/x-icon"),
     "/logo.png": (ROOT / "web" / "logo.png", "image/png"),
+    "/menu-icon.png": (ROOT / "web" / "menu-icon.png", "image/png"),
+    "/menu-icon-light.png": (ROOT / "web" / "menu-icon-light.png", "image/png"),
+    "/menu-ink.png": (ROOT / "web" / "menu-ink.png", "image/png"),
+    "/menu-bars.png": (ROOT / "web" / "menu-bars.png", "image/png"),
     "/macbook.png": (ROOT / "web" / "macbook.png", "image/png"),
 }
 VENDOR = ROOT / "web" / "vendor" / "qrcode.js"

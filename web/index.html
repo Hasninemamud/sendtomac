@@ -28,7 +28,6 @@
     .wrap { max-width: 920px; margin: 0 auto; padding: 28px 24px 64px; }
     nav { display: flex; align-items: center; justify-content: space-between; }
     .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .brand img { width: 32px; height: 32px; border-radius: 8px; }
     .brand span { font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
     .nav-links { display: flex; align-items: center; gap: 16px; }
     nav .legal { font-size: 14px; color: var(--muted); text-decoration: none; }
@@ -130,7 +129,7 @@
 <body>
   <div class="wrap">
     <nav>
-      <a class="brand" href="/"><img src="/logo.png?v=4" alt=""><span>SendToMac</span></a>
+      <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>SendToMac</span></a>
       <div class="nav-links">
         <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
           <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg>
