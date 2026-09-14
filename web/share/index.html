@@ -80,7 +80,19 @@
     .join input { flex: 1; }
     html[data-app="app"] .cam, html[data-app="app"] .legal { display: none; }
     html[data-app="app"] .brand { pointer-events: none; }
-    #share.drop, body.drop #share { outline: 2px dashed var(--cta); outline-offset: 6px; border-radius: 16px; }
+    #share.drop, body.drop #share, .dropzone.over { outline: 2px dashed var(--cta); outline-offset: 4px; }
+    .dropzone {
+      margin-top: 16px;
+      border: 1.5px dashed var(--line);
+      border-radius: 16px;
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      padding: 14px;
+    }
+    .dropzone strong { color: var(--ink); display: block; margin-bottom: 4px; }
     .drop-hint { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
     @media (max-width: 720px) {
       .layout { grid-template-columns: 1fr; }
@@ -127,11 +139,11 @@
       </div>
       <div class="chips" id="chips"></div>
       <button class="primary" id="send" type="submit">Send</button>
-      <p class="drop-hint">Or drop a file here.</p>
     </form>
     <p id="progress"></p>
     <div id="inbox"></div>
   </main>
+  <div id="dropzone" class="dropzone"><strong>Drop a file here</strong>It sends when the other device is connected.</div>
   <script src="/vendor/qrcode.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
@@ -139,7 +151,7 @@
     const wanted = (params.get("r") || "").toLowerCase();
     if (inApp) {
       document.documentElement.dataset.app = "app";
-      document.getElementById("status").textContent = "Scan this code with the phone. Same Wi-Fi. Then send the file.";
+      document.getElementById("status").textContent = "Scan this code with the phone. Or drop a file on this window.";
     }
     const pairEl = document.getElementById("pair");
     const shareEl = document.getElementById("share");
@@ -159,7 +171,8 @@
       pairEl.hidden = true;
       shareEl.hidden = false;
       document.getElementById("title").textContent = "Connected";
-      setStatus("Same Wi-Fi. Pick a file or write a note, then send.", "ok");
+      setStatus("Same Wi-Fi. Drop a file, or pick one, then send.", "ok");
+      if (picked.length) sendNow(false);
     }
 
     function drawQr(url) {
@@ -203,28 +216,28 @@
         })
         .then((blob) => {
           addFiles([new File([blob], name, { type: blob.type || "application/octet-stream" })]);
-          if (!connected) setStatus(name + " is ready. Scan the code, then send.", "ok");
+          if (connected) sendNow(false);
+          else setStatus(name + " is ready. Scan the code, then it sends.", "ok");
         })
         .catch((err) => setStatus(err.message || "Could not read that file", "bad"));
     }
     window.addStaged = addStaged;
-    const shareElEarly = document.getElementById("share");
+    const zone = document.getElementById("dropzone");
     function takeDrop(e) {
       const files = e.dataTransfer && e.dataTransfer.files;
       if (!files || !files.length) return;
       e.preventDefault();
-      shareElEarly.classList.remove("drop");
       addFiles(files);
-      if (!connected) setStatus("File ready. Scan the code, then send.", "ok");
+      zone.classList.remove("over");
+      if (connected) sendNow(false);
+      else setStatus("File ready. Scan the code, then it sends.", "ok");
     }
     window.addEventListener("dragover", (e) => {
       if (!e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes("Files")) return;
       e.preventDefault();
-      shareElEarly.classList.add("drop");
+      zone.classList.add("over");
     });
-    window.addEventListener("dragleave", (e) => {
-      if (e.target === document.documentElement || e.target === document.body) shareElEarly.classList.remove("drop");
-    });
+    window.addEventListener("dragleave", () => zone.classList.remove("over"));
     window.addEventListener("drop", takeDrop);
     document.getElementById("joinForm").addEventListener("submit", (e) => {
       e.preventDefault();
@@ -455,11 +468,10 @@
       noteReceived(meta.name);
     }
 
-    document.getElementById("sendForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const note = document.getElementById("note").value.trim();
+    function sendNow(includeNote) {
+      const note = includeNote ? document.getElementById("note").value.trim() : "";
       if (!connected) {
-        progressEl.textContent = "Wait until the other device has scanned.";
+        progressEl.textContent = "Scan the code first. The file sends after that.";
         progressEl.className = "bad";
         return;
       }
@@ -485,6 +497,11 @@
         progressEl.className = "bad";
         document.getElementById("send").disabled = false;
       });
+    }
+
+    document.getElementById("sendForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      sendNow(true);
     });
 
     if (wanted) {

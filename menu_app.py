@@ -26,7 +26,9 @@ from AppKit import (
     NSMakeRect,
     NSMenu,
     NSMenuItem,
+    NSPasteboard,
     NSPasteboardTypeFileURL,
+    NSPointInRect,
     NSPopover,
     NSPopoverBehaviorSemitransient,
     NSPopoverBehaviorTransient,
@@ -137,6 +139,63 @@ class OpenPanelDelegate(NSObject):
             handler(None)
 
 
+class DropOverlay(NSView):
+    def initWithFrame_(self, frame):
+        self = objc.super(DropOverlay, self).initWithFrame_(frame)
+        if self is None:
+            return None
+        self.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        self.registerForDraggedTypes_([NSPasteboardTypeFileURL, "NSFilenamesPboardType"])
+        self.web = None
+        return self
+
+    def hitTest_(self, point):
+        if not file_drag_active():
+            return None
+        local = self.convertPoint_fromView_(point, self.superview())
+        if not NSPointInRect(local, self.bounds()):
+            return None
+        return self
+
+    def draggingEntered_(self, _sender):
+        self.mark(True)
+        return NSDragOperationCopy
+
+    def draggingUpdated_(self, _sender):
+        return NSDragOperationCopy
+
+    def draggingExited_(self, _sender):
+        self.mark(False)
+
+    def prepareForDragOperation_(self, _sender):
+        return True
+
+    def performDragOperation_(self, sender):
+        self.mark(False)
+        paths = dropped_paths(sender)
+        if not paths or self.web is None:
+            return False
+        stage_into(self.web, paths)
+        return True
+
+    def mark(self, on):
+        if self.web is None:
+            return
+        flag = "true" if on else "false"
+        self.web.evaluateJavaScript_completionHandler_(
+            "document.getElementById('dropzone')&&document.getElementById('dropzone').classList.toggle('over'," + flag + ")",
+            None,
+        )
+
+
+def file_drag_active():
+    board = NSPasteboard.pasteboardWithName_("NSDragPboard")
+    if board is None:
+        return False
+    types = list(board.types() or [])
+    return NSPasteboardTypeFileURL in types or "NSFilenamesPboardType" in types
+
+
 class DropWebView(WKWebView):
     def initWithFrame_configuration_(self, frame, config):
         self = objc.super(DropWebView, self).initWithFrame_configuration_(frame, config)
@@ -211,8 +270,11 @@ class ShareController(NSViewController):
         web.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
         web.setUIDelegate_(self.picker)
         web.setNavigationDelegate_(self.nav)
+        overlay = DropOverlay.alloc().initWithFrame_(frame)
+        overlay.web = web
         web.loadRequest_(NSURLRequest.requestWithURL_(NSURL.URLWithString_(url)))
         view.addSubview_(web)
+        view.addSubview_(overlay)
         self.setView_(view)
         self.setPreferredContentSize_(POPOVER_SIZE)
         return self
