@@ -5,7 +5,7 @@ from __future__ import annotations
 import ctypes
 import json
 import sys
-from ctypes import CFUNCTYPE, POINTER, Structure, byref, c_int32, c_uint32, c_void_p
+from ctypes import CFUNCTYPE, POINTER, Structure, byref, c_int32, c_uint32, c_uint64, c_void_p
 from pathlib import Path
 
 import objc
@@ -16,11 +16,15 @@ from AppKit import (
     NSEvent,
     NSEventMaskFlagsChanged,
     NSEventMaskKeyDown,
+    NSEventMaskLeftMouseUp,
+    NSEventMaskRightMouseDown,
+    NSEventMaskRightMouseUp,
     NSEventModifierFlagCapsLock,
     NSEventModifierFlagCommand,
     NSEventModifierFlagControl,
     NSEventModifierFlagDeviceIndependentFlagsMask,
     NSEventModifierFlagOption,
+    NSEventTypeRightMouseDown,
     NSEventTypeRightMouseUp,
     NSImage,
     NSMakeRect,
@@ -49,6 +53,11 @@ CHORD_HOLD = 0.28
 _AX = {}
 _CARBON_HANDLER = None
 _CARBON_REFS = []
+_CG = None
+_CG_OPTION = 0x00080000
+_CG_COMMAND = 0x00100000
+_CG_SHIFT = 0x00020000
+_CG_CONTROL = 0x00040000
 
 
 class _EventTypeSpec(Structure):
@@ -64,6 +73,7 @@ def install_carbon_hotkey(callback) -> None:
     try:
         carbon = ctypes.CDLL("/System/Library/Frameworks/Carbon.framework/Carbon")
         carbon.GetApplicationEventTarget.restype = c_void_p
+        carbon.GetEventDispatcherTarget.restype = c_void_p
         carbon.InstallEventHandler.argtypes = [
             c_void_p, c_void_p, c_uint32, POINTER(_EventTypeSpec), c_void_p, POINTER(c_void_p)
         ]
@@ -78,18 +88,37 @@ def install_carbon_hotkey(callback) -> None:
             return 0
 
         _CARBON_HANDLER = CFUNCTYPE(c_int32, c_void_p, c_void_p, c_void_p)(handler)
-        spec = _EventTypeSpec(0x6B657962, 6)
-        target = carbon.GetApplicationEventTarget()
+        specs = (_EventTypeSpec * 2)(
+            _EventTypeSpec(0x6B657962, 5),
+            _EventTypeSpec(0x6B657962, 6),
+        )
+        target = carbon.GetEventDispatcherTarget() or carbon.GetApplicationEventTarget()
         installed = c_void_p()
-        if carbon.InstallEventHandler(target, _CARBON_HANDLER, 1, byref(spec), None, byref(installed)) != 0:
+        if carbon.InstallEventHandler(target, _CARBON_HANDLER, 2, specs, None, byref(installed)) != 0:
             return
         pairs = ((0x37, 2048), (0x36, 2048), (0x3A, 256), (0x3D, 256))
         for index, (key, mods) in enumerate(pairs, 1):
             ref = c_void_p()
-            carbon.RegisterEventHotKey(key, mods, _EventHotKeyID(0x53544D43, index), target, 0, byref(ref))
-            _CARBON_REFS.append(ref)
+            if carbon.RegisterEventHotKey(key, mods, _EventHotKeyID(0x53544D43, index), target, 0, byref(ref)) == 0:
+                _CARBON_REFS.append(ref)
     except Exception:
         return
+
+
+def chord_flags_down() -> bool:
+    global _CG
+    if _CG is None:
+        try:
+            cg = ctypes.CDLL("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")
+            cg.CGEventSourceFlagsState.argtypes = [c_int32]
+            cg.CGEventSourceFlagsState.restype = c_uint64
+            _CG = cg
+        except Exception:
+            _CG = False
+    if not _CG:
+        return False
+    flags = _CG.CGEventSourceFlagsState(1) & (_CG_OPTION | _CG_COMMAND | _CG_SHIFT | _CG_CONTROL)
+    return flags == (_CG_OPTION | _CG_COMMAND)
 
 
 def accessibility_ok(prompt=False):
@@ -188,6 +217,14 @@ class DropOverlay(NSView):
         )
 
 
+def quit_menu():
+    menu = NSMenu.alloc().init()
+    item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit SendToMac", "quit:", "")
+    item.setTarget_(NSApplication.sharedApplication().delegate())
+    menu.addItem_(item)
+    return menu
+
+
 def file_drag_active():
     board = NSPasteboard.pasteboardWithName_("NSDragPboard")
     if board is None:
@@ -203,6 +240,9 @@ class DropWebView(WKWebView):
             return None
         self.registerForDraggedTypes_([NSPasteboardTypeFileURL, "NSFilenamesPboardType"])
         return self
+
+    def menuForEvent_(self, _event):
+        return quit_menu()
 
     def draggingEntered_(self, _sender):
         return NSDragOperationCopy
@@ -292,7 +332,9 @@ class MenuApp(NSObject):
         self.page = None
         self.url = None
         self.hotkey_timer = None
+        self.chord_timer = None
         self.chord_used = False
+        self.chord_latched = False
         self.shortcut_monitors = []
         self.shortcut_on = False
         return self
@@ -360,24 +402,34 @@ class MenuApp(NSObject):
         item = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
         button = item.button()
         button.setImage_(image)
-        button.setToolTip_("SendToMac — press Option + Command")
+        button.setToolTip_("SendToMac. Right-click to quit.")
         button.setTarget_(self)
         button.setAction_("toggle:")
+        button.sendActionOn_(NSEventMaskLeftMouseUp | NSEventMaskRightMouseUp)
         menu = NSMenu.alloc().init()
         open_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Open", "showPopover:", "")
         open_item.setTarget_(self)
         quit_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit SendToMac", "quit:", "q")
         quit_item.setTarget_(self)
         menu.addItem_(open_item)
+        menu.addItem_(NSMenuItem.separatorItem())
         menu.addItem_(quit_item)
         self.menu = menu
         self.status = item
+        local = NSEvent.addLocalMonitorForEventsMatchingMask_handler_(
+            NSEventMaskRightMouseDown, self.localRightClick_
+        )
+        if local is not None:
+            self.shortcut_monitors.append(local)
 
     def install_shortcut(self):
         install_carbon_hotkey(lambda: self.performSelectorOnMainThread_withObject_waitUntilDone_(
             "openFromShortcut:", None, False
         ))
         self.attach_shortcut()
+        self.chord_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            0.05, self, "pollChord:", None, True
+        )
         self.register_login()
         if not accessibility_ok(prompt=False):
             accessibility_ok(prompt=True)
@@ -422,6 +474,14 @@ class MenuApp(NSObject):
         flags = raw & NSEventModifierFlagDeviceIndependentFlagsMask
         flags &= ~NSEventModifierFlagCapsLock
         return flags == CHORD
+
+    def pollChord_(self, _timer):
+        down = chord_flags_down()
+        if down and not self.chord_latched:
+            self.chord_latched = True
+            self.showPopover_(None)
+        elif not down:
+            self.chord_latched = False
 
     def flagsChanged_(self, event):
         if self.chord_down(event):
@@ -471,10 +531,22 @@ class MenuApp(NSObject):
         self.chord_used = True
         self.showPopover_(None)
 
+    def localRightClick_(self, event):
+        if self.popover is None or not self.popover.isShown():
+            return event
+        page = self.popover.contentViewController()
+        view = page.view() if page is not None else None
+        if view is None or view.window() is None or event.window() != view.window():
+            return event
+        NSMenu.popUpContextMenu_withEvent_forView_(self.menu, event, view)
+        return None
+
     def toggle_(self, _sender):
         event = NSApplication.sharedApplication().currentEvent()
         flags = event.modifierFlags() if event is not None else 0
-        if event is not None and (event.type() == NSEventTypeRightMouseUp or flags & NSEventModifierFlagControl):
+        right = event is not None and event.type() in {NSEventTypeRightMouseUp, NSEventTypeRightMouseDown}
+        if right or flags & NSEventModifierFlagControl:
+            self.status.button().highlight_(False)
             self.status.popUpStatusItemMenu_(self.menu)
             return
         if self.popover is not None and self.popover.isShown():
@@ -497,7 +569,11 @@ class MenuApp(NSObject):
             pop.setContentViewController_(page)
             self.page = page
             self.popover = pop
-        NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+        app = NSApplication.sharedApplication()
+        try:
+            app.activate()
+        except Exception:
+            app.activateIgnoringOtherApps_(True)
         button = self.status.button()
         self.popover.showRelativeToRect_ofView_preferredEdge_(button.bounds(), button, 1)
 
