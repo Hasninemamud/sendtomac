@@ -187,27 +187,27 @@ class DropOverlay(NSView):
         return self
 
     def draggingEntered_(self, _sender):
-        self.mark(True)
+        self._set_over(True)
         return NSDragOperationCopy
 
     def draggingUpdated_(self, _sender):
         return NSDragOperationCopy
 
     def draggingExited_(self, _sender):
-        self.mark(False)
+        self._set_over(False)
 
     def prepareForDragOperation_(self, _sender):
         return True
 
     def performDragOperation_(self, sender):
-        self.mark(False)
+        self._set_over(False)
         paths = dropped_paths(sender)
         if not paths or self.web is None:
             return False
         stage_into(self.web, paths)
         return True
 
-    def mark(self, on):
+    def _set_over(self, on):
         if self.web is None:
             return
         flag = "true" if on else "false"
