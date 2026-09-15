@@ -1,46 +1,65 @@
 :root {
   color-scheme: light;
-  --bg: #efece6;
-  --ink: #1c1917;
-  --muted: #6f6a63;
-  --soft: #4a463f;
-  --line: #d8d2c8;
-  --rule: #ddd8d0;
-  --field: #f7f5f1;
-  --chip: #e4dfd6;
-  --cta: #1c1917;
-  --on-cta: #efece6;
-  --ok: #1f6b4a;
+  --bg: #f5f2eb;
+  --bg-2: #ebe6dc;
+  --ink: #141414;
+  --muted: #6b6760;
+  --soft: #3a3732;
+  --line: rgba(20, 20, 20, 0.12);
+  --rule: rgba(20, 20, 20, 0.1);
+  --field: #faf8f4;
+  --chip: #ebe6dc;
+  --cta: #141414;
+  --on-cta: #f5f2eb;
+  --ok: #1f5c3a;
   --bad: #8f2d2d;
+  --accent: #141414;
+  --glow: rgba(20, 20, 20, 0.08);
+  --panel: #ebe6dc;
+  --shadow: none;
 }
 html[data-theme="night"] {
   color-scheme: dark;
-  --bg: #141311;
-  --ink: #efece6;
-  --muted: #a8a29a;
-  --soft: #c9c3ba;
-  --line: #3a3632;
-  --rule: #322e2a;
-  --field: #1c1a18;
-  --chip: #2c2825;
-  --cta: #efece6;
-  --on-cta: #141311;
-  --ok: #8fceb0;
+  --bg: #111111;
+  --bg-2: #1a1a1a;
+  --ink: #f3eee6;
+  --muted: #9c968c;
+  --soft: #d5cfc4;
+  --line: rgba(243, 238, 230, 0.14);
+  --rule: rgba(243, 238, 230, 0.1);
+  --field: #1a1a1a;
+  --chip: #222222;
+  --cta: #f3eee6;
+  --on-cta: #111111;
+  --ok: #9fd0b0;
   --bad: #e7a0a0;
+  --accent: #f3eee6;
+  --glow: rgba(243, 238, 230, 0.08);
+  --panel: #1a1a1a;
+  --shadow: none;
 }
-body { background: var(--bg); color: var(--ink); }
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
 .theme {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   display: inline-grid;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 50%;
   background: transparent;
   color: var(--ink);
   padding: 0;
   cursor: pointer;
+  flex: none;
+  aspect-ratio: 1 / 1;
+  transition: border-color 160ms ease, transform 160ms ease;
 }
+.theme:hover { border-color: var(--ink); transform: translateY(-1px); }
 .theme svg { width: 18px; height: 18px; display: block; }
 .theme .icon-sun { display: none; }
 html[data-theme="night"] .theme .icon-moon { display: none; }
@@ -60,5 +79,7 @@ html[data-theme="night"] .theme .icon-sun { display: block; }
   position: absolute;
   inset: 0;
   background: url("/menu-bars.png?v=6") center / contain no-repeat;
+  filter: grayscale(1) contrast(1.1);
+  opacity: 0.9;
 }
 html[data-theme="night"] .macbook { filter: invert(1); }

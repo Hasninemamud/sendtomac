@@ -42,6 +42,7 @@ from AppKit import (
     NSViewController,
     NSViewHeightSizable,
     NSViewWidthSizable,
+    NSWorkspace,
 )
 from Foundation import NSBundle, NSDistributedNotificationCenter, NSObject, NSTimer, NSURL, NSURLRequest
 from WebKit import WKWebView, WKWebViewConfiguration
@@ -279,6 +280,13 @@ class NavDelegate(NSObject):
             handler(0)
             stage_into(web, [url.path()])
             return
+        if url is not None:
+            host = (url.host() or "").lower()
+            scheme = (url.scheme() or "").lower()
+            if scheme in {"http", "https"} and host not in {"127.0.0.1", "localhost"}:
+                NSWorkspace.sharedWorkspace().openURL_(url)
+                handler(0)
+                return
         handler(1)
 
 

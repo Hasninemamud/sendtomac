@@ -448,6 +448,11 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/theme.js":
             self.send_bytes(200, (ROOT / "web" / "theme.js").read_bytes(), "text/javascript; charset=utf-8")
             return
+        if parsed.path.startswith("/fonts/") and ".." not in parsed.path:
+            font = ROOT / "web" / parsed.path.lstrip("/")
+            if font.is_file() and font.suffix.lower() == ".woff2":
+                self.send_bytes(200, font.read_bytes(), "font/woff2", cache=True)
+                return
         if parsed.path.startswith("/api/staged/"):
             self.handle_staged(parsed.path.rsplit("/", 1)[-1])
             return

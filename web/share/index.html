@@ -10,42 +10,184 @@
     } catch (e) {}
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#1c1917">
+  <meta name="theme-color" content="#111111">
   <title>SendToMac</title>
   <link rel="icon" href="/logo.png?v=4" type="image/png">
   <link rel="apple-touch-icon" href="/logo.png?v=4">
   <link rel="stylesheet" href="/theme.css">
   <style>
+    @font-face {
+      font-family: "Newsreader";
+      src: url("/fonts/newsreader-400.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Newsreader";
+      src: url("/fonts/newsreader-italic.woff2") format("woff2");
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Newsreader";
+      src: url("/fonts/newsreader-500.woff2") format("woff2");
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Newsreader";
+      src: url("/fonts/newsreader-600.woff2") format("woff2");
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Outfit";
+      src: url("/fonts/outfit-latin.woff2") format("woff2");
+      font-weight: 400 500;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Outfit";
+      src: url("/fonts/outfit-600.woff2") format("woff2");
+      font-weight: 600;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Outfit";
+      src: url("/fonts/outfit-700.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100dvh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      padding: calc(20px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+      font-family: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+      padding: calc(22px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
     }
     main, header { max-width: 880px; margin: 0 auto; }
-    .kicker { margin: 0; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-    .bar { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
-    .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; }
-    .bar .theme { margin-left: auto; }
-    .legal { font-size: 13px; color: var(--muted); text-decoration: none; }
-    h1 { margin: 4px 0 6px; font-size: 32px; letter-spacing: -0.03em; font-weight: 650; }
-    #status { margin: 0; color: var(--muted); line-height: 1.45; max-width: 42rem; }
-    .layout { display: grid; grid-template-columns: 240px 1fr; gap: 28px; margin-top: 22px; align-items: start; }
-    #qr { width: 220px; height: 220px; background: #fff; border-radius: 12px; }
+    .kicker {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .bar { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
+    .brand { display: flex; align-items: center; gap: 9px; text-decoration: none; color: inherit; }
+    .bar-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .site, .legal {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .site:hover, .legal:hover { color: var(--ink); text-decoration: underline; }
+    .theme {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
+      border-radius: 50%;
+      padding: 0;
+      flex: none;
+      aspect-ratio: 1 / 1;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-family: "Newsreader", "Iowan Old Style", Georgia, serif;
+      font-size: 36px;
+      letter-spacing: -0.03em;
+      font-weight: 500;
+      line-height: 1.05;
+    }
+    #status {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 40rem;
+      font-size: 15px;
+    }
+    #status.ok, #status.bad {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      max-width: none;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+    #status.ok { color: var(--ok); }
+    #status.bad { color: var(--bad); }
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 24px;
+      margin-top: 24px;
+      align-items: start;
+    }
+    .qr-wrap {
+      padding: 12px;
+      border-radius: 22px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      width: fit-content;
+    }
+    #qr {
+      width: 220px;
+      height: 220px;
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+    }
     #qr svg { width: 220px; height: 220px; display: block; }
     .url { margin: 12px 0 0; font-size: 13px; word-break: break-all; color: var(--muted); }
-    .code { margin: 10px 0; font-size: 15px; }
-    .code strong { letter-spacing: 0.16em; }
+    .code {
+      margin: 12px 0 0;
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .code strong {
+      letter-spacing: 0.16em;
+      color: var(--ink);
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .side-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
     button, input, textarea, .ghost { font: inherit; }
     button, .ghost {
       border: 1px solid var(--line);
-      background: transparent;
+      background: var(--panel);
       color: inherit;
-      border-radius: 12px;
+      border-radius: 999px;
       min-height: 44px;
-      padding: 0 14px;
+      padding: 0 16px;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease;
     }
+    button:hover, .ghost:hover { border-color: var(--ink); transform: translateY(-1px); }
     button.primary {
       border: 0;
       background: var(--cta);
@@ -56,76 +198,152 @@
       font-weight: 600;
       margin-top: 12px;
     }
-    button.primary:disabled { opacity: 0.4; }
+    button.primary:disabled { opacity: 0.4; transform: none; }
     textarea, input[type="text"] {
       width: 100%;
       border: 1px solid var(--line);
       background: var(--field);
-      border-radius: 12px;
+      border-radius: 16px;
       font-size: 16px;
-      padding: 12px;
+      padding: 12px 14px;
       color: inherit;
+      outline: none;
+    }
+    textarea:focus, input[type="text"]:focus {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px var(--glow);
     }
     textarea { min-height: 110px; resize: vertical; }
     .row { display: flex; gap: 8px; margin-top: 10px; }
     .ghost { display: flex; align-items: center; justify-content: center; flex: 1; }
     .ghost input { display: none; }
     .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .chip { background: var(--chip); border-radius: 999px; padding: 6px 10px; font-size: 13px; }
+    .chip {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
     #progress, .item { margin-top: 12px; font-size: 14px; }
-    .item { border-top: 1px solid var(--rule); padding-top: 10px; }
+    .item {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 12px 14px;
+    }
     .ok { color: var(--ok); }
     .bad { color: var(--bad); }
-    .join { margin-top: 18px; display: flex; gap: 8px; }
-    .join input { flex: 1; }
-    html[data-app="app"] .cam, html[data-app="app"] .legal { display: none; }
+    .join { margin-top: 16px; display: flex; gap: 8px; }
+    .join input { flex: 1; border-radius: 999px; }
+    html[data-app="app"] .cam { display: none; }
     html[data-app="app"] .brand { pointer-events: none; }
-    #share.drop, body.drop #share, .dropzone.over { outline: 2px dashed var(--cta); outline-offset: 4px; }
+    html[data-app="app"] .site {
+      pointer-events: auto;
+      font-size: 11px;
+    }
+    html[data-app="app"] .legal { display: none; }
+    html[data-app="app"] .theme {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      min-height: 30px;
+      border-radius: 50%;
+    }
+    #share.drop, body.drop #share, .dropzone.over {
+      border-color: var(--ink);
+      background: color-mix(in srgb, var(--ink) 6%, transparent);
+    }
     .dropzone {
       margin-top: 16px;
       border: 1.5px dashed var(--line);
-      border-radius: 16px;
-      min-height: 72px;
+      border-radius: 20px;
+      min-height: 76px;
       display: grid;
       place-items: center;
       text-align: center;
       color: var(--muted);
-      padding: 14px;
+      padding: 16px;
+      background: var(--panel);
+      transition: border-color 180ms ease, background 180ms ease;
     }
-    .dropzone strong { color: var(--ink); display: block; margin-bottom: 4px; }
+    .dropzone strong {
+      color: var(--ink);
+      display: block;
+      margin-bottom: 4px;
+      font-family: "Newsreader", Georgia, serif;
+      font-weight: 500;
+      font-size: 18px;
+    }
     .drop-hint { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+
     @media (max-width: 720px) {
-      .layout { grid-template-columns: 1fr; }
-      h1 { font-size: 28px; }
+      body { padding: calc(18px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); }
+      .layout { grid-template-columns: 1fr; gap: 18px; margin-top: 18px; }
+      h1 { font-size: 32px; max-width: 10ch; }
+      #status { font-size: 14px; }
+      .qr-wrap { margin: 0 auto; padding: 14px; border-radius: 24px; }
+      #qr, #qr svg { width: min(72vw, 240px); height: min(72vw, 240px); }
+      .code { justify-content: center; font-size: 13px; }
+      .code strong { font-size: 18px; letter-spacing: 0.18em; }
+      #copy { width: 100%; margin-top: 12px; }
+      .side-copy { text-align: center; font-size: 14px; }
+      .join { flex-direction: column; }
+      .join input, .join button { min-height: 48px; width: 100%; }
+      button, .ghost { min-height: 48px; font-size: 15px; }
+      button.primary { min-height: 54px; margin-top: 14px; }
+      textarea { min-height: 120px; font-size: 16px; border-radius: 18px; }
+      .dropzone { min-height: 88px; border-radius: 22px; }
+      .dropzone strong { font-size: 20px; }
+      .item { border-radius: 18px; }
     }
-    html[data-app="app"] body { padding: 10px 12px 12px; }
-    html[data-app="app"] .bar { margin-bottom: 2px; }
+
+    html[data-app="app"] body { padding: 12px 14px 14px; }
+    html[data-app="app"] .bar { margin-bottom: 6px; }
     html[data-app="app"] .brand .mark { width: 22px; height: 22px; }
-    html[data-app="app"] h1 { font-size: 18px; margin: 0 0 2px; }
-    html[data-app="app"] #status { font-size: 12px; line-height: 1.3; }
-    html[data-app="app"] .layout { grid-template-columns: 148px 1fr; gap: 12px; margin-top: 8px; }
+    html[data-app="app"] .kicker { font-size: 10px; letter-spacing: 0.12em; }
+    html[data-app="app"] h1 { font-size: 22px; margin: 0 0 4px; max-width: none; }
+    html[data-app="app"] #status { font-size: 12px; line-height: 1.4; }
+    html[data-app="app"] #status.ok,
+    html[data-app="app"] #status.bad { padding: 4px 9px; font-size: 11px; margin-top: 4px; }
+    html[data-app="app"] .layout { grid-template-columns: 156px 1fr; gap: 14px; margin-top: 10px; }
+    html[data-app="app"] .qr-wrap { padding: 8px; border-radius: 16px; }
     html[data-app="app"] #qr,
     html[data-app="app"] #qr svg { width: 140px; height: 140px; }
     html[data-app="app"] .url { display: none; }
-    html[data-app="app"] .code { margin: 6px 0; font-size: 12px; }
-    html[data-app="app"] #copy, html[data-app="app"] .join button { min-height: 30px; font-size: 12px; padding: 0 8px; }
-    html[data-app="app"] .layout p { margin: 0; font-size: 12px; line-height: 1.35; }
-    html[data-app="app"] .join { margin-top: 8px; }
-    html[data-app="app"] .join input { min-height: 30px; font-size: 13px; padding: 6px 8px; }
-    html[data-app="app"] .dropzone { min-height: 40px; margin-top: 8px; padding: 6px; font-size: 12px; border-radius: 10px; }
-    html[data-app="app"] textarea { min-height: 64px; font-size: 13px; padding: 8px; }
+    html[data-app="app"] .code { margin: 8px 0 0; font-size: 11px; }
+    html[data-app="app"] .code strong { font-size: 13px; letter-spacing: 0.14em; }
+    html[data-app="app"] #copy,
+    html[data-app="app"] .join button { min-height: 30px; font-size: 12px; padding: 0 12px; }
+    html[data-app="app"] .side-copy { font-size: 12px; line-height: 1.4; text-align: left; }
+    html[data-app="app"] .join { margin-top: 10px; flex-direction: row; }
+    html[data-app="app"] .join input { min-height: 30px; font-size: 13px; padding: 6px 10px; }
+    html[data-app="app"] .dropzone {
+      min-height: 46px;
+      margin-top: 10px;
+      padding: 8px;
+      font-size: 12px;
+      border-radius: 14px;
+    }
+    html[data-app="app"] .dropzone strong { font-size: 14px; }
+    html[data-app="app"] textarea { min-height: 64px; font-size: 13px; padding: 9px 11px; border-radius: 12px; }
     html[data-app="app"] button.primary { min-height: 36px; font-size: 14px; margin-top: 8px; }
+    html[data-app="app"] .ghost { min-height: 34px; font-size: 12px; }
+    html[data-app="app"] .item { padding: 8px 10px; font-size: 12px; border-radius: 12px; }
   </style>
 </head>
 <body>
   <header>
     <div class="bar">
       <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span class="kicker">SendToMac</span></a>
-      <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
-        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg>
-        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></g></svg>
-      </button>
-      <a class="legal" href="/privacy">Privacy</a>
+      <div class="bar-actions">
+        <a class="site" href="https://sendtomac.vercel.app/" target="_blank" rel="noopener">Website</a>
+        <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6"/></g></svg>
+        </button>
+        <a class="legal" href="/privacy">Privacy</a>
+      </div>
     </div>
     <h1 id="title">Same Wi-Fi</h1>
     <p id="status">Open this page on the Mac. Scan the code with the phone. Then pick a file.</p>
@@ -133,13 +351,13 @@
   <main id="pair">
     <div class="layout">
       <div>
-        <div id="qr"></div>
+        <div class="qr-wrap"><div id="qr"></div></div>
         <p class="url" id="link"></p>
         <p class="code">Code <strong id="code">····</strong></p>
         <button type="button" id="copy">Copy link</button>
       </div>
       <div>
-        <p>Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.</p>
+        <p class="side-copy">Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.</p>
         <form class="join" id="joinForm">
           <input id="joinCode" type="text" inputmode="text" autocapitalize="none" autocomplete="off" spellcheck="false" maxlength="8" placeholder="Have a code?">
           <button type="submit">Join</button>
