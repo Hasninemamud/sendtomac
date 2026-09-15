@@ -6,7 +6,7 @@
   function paint() {
     var on = night();
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", on ? "#121212" : "#f4f4f2");
+    if (meta) meta.setAttribute("content", on ? "#111111" : "#f5f2eb");
     document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
       btn.setAttribute("aria-label", on ? "Switch to day" : "Night mode");
       btn.setAttribute("aria-pressed", on ? "true" : "false");

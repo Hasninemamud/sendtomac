@@ -10,12 +10,18 @@
     } catch (e) {}
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#121212">
+  <meta name="theme-color" content="#111111">
   <title>SendToMac</title>
   <link rel="icon" href="/logo.png?v=4" type="image/png">
   <link rel="apple-touch-icon" href="/logo.png?v=4">
   <link rel="stylesheet" href="/theme.css">
   <style>
+    @font-face {
+      font-family: "Newsreader";
+      src: url("/fonts/newsreader-500.woff2") format("woff2");
+      font-weight: 500;
+      font-display: swap;
+    }
     @font-face {
       font-family: "Outfit";
       src: url("/fonts/outfit-latin.woff2") format("woff2");
@@ -39,16 +45,32 @@
       margin: 0;
       min-height: 100dvh;
       font-family: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
-      padding: calc(20px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+      padding:
+        calc(18px + env(safe-area-inset-top, 0px))
+        calc(16px + env(safe-area-inset-right, 0px))
+        calc(20px + env(safe-area-inset-bottom, 0px))
+        calc(16px + env(safe-area-inset-left, 0px));
       display: flex;
       flex-direction: column;
+      gap: 14px;
     }
-    header, main, .dropzone { width: 100%; max-width: 560px; margin-left: auto; margin-right: auto; }
+    .shell {
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+    .ico { width: 16px; height: 16px; flex: none; display: block; }
+    .ico-lg { width: 22px; height: 22px; }
+    .ico-xl { width: 36px; height: 36px; }
+
     .bar {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin: 0 0 18px;
     }
     .brand {
       display: flex;
@@ -56,32 +78,62 @@
       gap: 8px;
       text-decoration: none;
       color: inherit;
-      font-weight: 700;
+      font-weight: 600;
       font-size: 15px;
       letter-spacing: -0.02em;
     }
-    .brand .mark { width: 26px; height: 26px; }
+    .brand .mark { width: 28px; height: 28px; border-radius: 8px; }
     .bar-actions {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
-    .site, .legal {
-      font-size: 12px;
+    .site {
+      font-size: 13px;
       color: var(--muted);
       text-decoration: none;
-      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 32px;
     }
-    .site:hover, .legal:hover { color: var(--ink); }
+    .site:hover { color: var(--ink); }
+    .legal { display: none; }
+
     .head {
-      margin: 0 0 14px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
     }
-    h1 {
+    .head-copy { min-width: 0; flex: 1; }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       margin: 0 0 6px;
-      font-size: 28px;
+    }
+    .title-row .wifi,
+    .title-row .dot {
+      flex: none;
+      color: var(--ink);
+    }
+    .title-row .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ok);
+      display: none;
+    }
+    body.is-connected .title-row .dot { display: block; }
+    body.is-connected .title-row .wifi { display: none; }
+    h1 {
+      margin: 0;
+      font-family: "Newsreader", "Iowan Old Style", Georgia, serif;
+      font-size: clamp(24px, 5vw, 30px);
       letter-spacing: -0.03em;
-      font-weight: 700;
+      font-weight: 500;
       line-height: 1.1;
     }
     #status {
@@ -89,105 +141,232 @@
       color: var(--muted);
       line-height: 1.45;
       font-size: 14px;
+      max-width: 34rem;
     }
-    #status.ok { color: var(--muted); }
     #status.bad { color: var(--bad); }
+
+    .device {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 14px;
+      flex: none;
+      min-width: 148px;
+    }
+    body.is-connected .device { display: flex; }
+    .device-ico {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--panel-soft);
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+    }
+    .device strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .device span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .device span::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ok);
+    }
 
     .card {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 22px;
+      border-radius: 20px;
       padding: 16px;
     }
-    .layout {
+
+    .pair-grid {
       display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 16px;
-      align-items: start;
+      grid-template-columns: minmax(160px, 1fr) minmax(0, 1.1fr);
+      gap: 0;
+      align-items: stretch;
+    }
+    .pair-qr {
+      padding-right: 16px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .pair-side {
+      padding-left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      justify-content: center;
     }
     .qr-wrap {
       padding: 10px;
-      border-radius: 18px;
+      border-radius: 16px;
       background: #fff;
       width: fit-content;
     }
     #qr {
-      width: 180px;
-      height: 180px;
+      width: 168px;
+      height: 168px;
       background: #fff;
-      border-radius: 12px;
+      border-radius: 10px;
       overflow: hidden;
     }
-    #qr svg { width: 180px; height: 180px; display: block; }
-    .url { margin: 10px 0 0; font-size: 12px; word-break: break-all; color: var(--muted); }
+    #qr svg { width: 168px; height: 168px; display: block; }
+    .url { display: none; }
     .code {
-      margin: 10px 0 0;
+      margin: 12px 0 0;
       font-size: 13px;
       color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
     .code strong {
-      letter-spacing: 0.14em;
+      letter-spacing: 0.12em;
       color: var(--ink);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
     }
-    .side-copy {
-      margin: 0 0 12px;
+    .side-note {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
       color: var(--muted);
+      font-size: 13px;
       line-height: 1.5;
-      font-size: 14px;
     }
-    button, input, textarea, .ghost { font: inherit; }
+    .side-note .shield {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--panel-soft);
+      display: grid;
+      place-items: center;
+      flex: none;
+      color: var(--ink);
+    }
+    .side-note p { margin: 0; }
+
+    button, input, textarea, .ghost, .tab { font: inherit; }
     button, .ghost {
       border: 0;
       background: var(--btn);
       color: inherit;
-      border-radius: 14px;
-      min-height: 48px;
-      padding: 0 16px;
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 0 14px;
       cursor: pointer;
-      transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
       font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 140ms ease, opacity 140ms ease;
+      -webkit-tap-highlight-color: transparent;
     }
     button:hover, .ghost:hover { transform: translateY(-1px); }
     button.primary {
       background: var(--cta);
       color: var(--on-cta);
       width: 100%;
-      min-height: 52px;
-      font-size: 16px;
+      min-height: 48px;
+      font-size: 15px;
       font-weight: 700;
     }
     button.primary:disabled { opacity: 0.4; transform: none; }
-    textarea, input[type="text"] {
+    .ghost input { display: none; }
+    #copy { margin-top: 12px; width: 100%; font-size: 13px; }
+
+    .join {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .join input {
       width: 100%;
       border: 1px solid var(--line);
       background: var(--field);
-      border-radius: 16px;
-      font-size: 16px;
-      padding: 14px 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      padding: 12px 14px;
       color: inherit;
       outline: none;
+      min-height: 44px;
     }
-    textarea:focus, input[type="text"]:focus {
+    .join input:focus {
       border-color: color-mix(in srgb, var(--ink) 35%, var(--line));
       box-shadow: 0 0 0 3px var(--glow);
     }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .tab {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 12px;
+      min-height: 40px;
+      padding: 8px 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tab[aria-selected="true"] {
+      background: var(--cta);
+      color: var(--on-cta);
+      border-color: transparent;
+    }
+    .tab .ico { width: 14px; height: 14px; }
+
+    .note-wrap { position: relative; }
     textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--field);
+      border-radius: 14px;
+      font-size: 15px;
+      padding: 14px 14px 28px;
+      color: inherit;
+      outline: none;
       min-height: 120px;
       resize: vertical;
       line-height: 1.4;
     }
-    .ghost {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
+    textarea:focus {
+      border-color: color-mix(in srgb, var(--ink) 35%, var(--line));
+      box-shadow: 0 0 0 3px var(--glow);
     }
-    .ghost input { display: none; }
+    .counter {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
     .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .chip {
       background: var(--chip);
@@ -196,125 +375,136 @@
       padding: 6px 10px;
       font-size: 12px;
     }
-    #progress, .item { margin-top: 12px; font-size: 14px; }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      align-items: stretch;
+    }
+    .actions .ghost {
+      flex: 1;
+      min-height: 48px;
+      font-size: 13px;
+    }
+    .actions .primary {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 112px;
+      min-height: 48px;
+    }
+    .cam-row { display: none; margin-top: 10px; }
+    .cam-row .ghost { width: 100%; min-height: 44px; }
+
+    #progress { margin-top: 12px; font-size: 13px; }
     #progress.ok { color: var(--ok); font-weight: 500; }
     #progress.bad { color: var(--bad); }
     .item {
+      margin-top: 10px;
       border: 1px solid var(--line);
       background: var(--panel-soft);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 12px 14px;
-    }
-    .item button {
-      margin-top: 8px;
-      min-height: 36px;
       font-size: 13px;
     }
-    .join { margin-top: 12px; display: flex; gap: 8px; }
-    .join input { flex: 1; border-radius: 14px; min-height: 44px; }
-    .join button { border-radius: 14px; }
+    .item button { margin-top: 8px; min-height: 36px; font-size: 12px; }
 
-    /* Connected compose: note | stacked buttons */
-    .compose {
-      display: grid;
-      grid-template-columns: 1fr 148px;
-      gap: 12px;
-      align-items: stretch;
-    }
-    .compose-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .compose-actions .ghost,
-    .compose-actions .primary {
-      width: 100%;
-      margin: 0;
-      flex: 1;
-      border-radius: 16px;
-      font-size: 14px;
-      line-height: 1.2;
-      padding: 10px 12px;
-    }
-    .compose-actions .primary { min-height: 52px; }
-    .cam-row { display: none; }
-    .share-foot { margin-top: 4px; }
-
-    html[data-app="app"] .cam { display: none; }
-    html[data-app="app"] .brand { pointer-events: none; }
-    html[data-app="app"] .site { pointer-events: auto; font-size: 11px; }
-    html[data-app="app"] .legal { display: none; }
-
-    #share.drop, body.drop #share, .dropzone.over {
-      border-color: var(--ink);
-      background: color-mix(in srgb, var(--ink) 6%, var(--panel));
-    }
     .dropzone {
-      margin-top: 16px;
-      border: 0;
-      border-radius: 0;
-      min-height: 0;
+      border: 1.5px dashed var(--line);
+      border-radius: 18px;
+      min-height: 110px;
       display: grid;
       place-items: center;
       text-align: center;
       color: var(--muted);
-      padding: 8px 4px 0;
+      padding: 18px 14px;
       background: transparent;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+    .dropzone.over {
+      border-color: var(--ink);
+      background: color-mix(in srgb, var(--ink) 5%, transparent);
+    }
+    .dropzone .cloud {
+      margin: 0 auto 8px;
+      color: var(--muted);
     }
     .dropzone strong {
       color: var(--ink);
       display: block;
       margin-bottom: 4px;
-      font-weight: 700;
-      font-size: 15px;
+      font-weight: 600;
+      font-size: 14px;
     }
-    .drop-hint { margin: 0; font-size: 13px; color: var(--muted); }
+    .drop-hint { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
     .drop-phone { display: none; }
     .drop-mac { display: block; }
 
-    @media (max-width: 720px) {
-      body { padding: calc(16px + env(safe-area-inset-top)) 14px calc(22px + env(safe-area-inset-bottom)); }
-      h1 { font-size: 26px; }
-      .layout { grid-template-columns: 1fr; gap: 14px; }
-      .qr-wrap { margin: 0 auto; }
-      #qr, #qr svg { width: min(70vw, 220px); height: min(70vw, 220px); }
-      .code { justify-content: center; }
-      .side-copy { text-align: center; }
-      .join { flex-direction: column; }
-      .join input, .join button { width: 100%; min-height: 48px; }
-      .compose {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-      .compose-actions {
-        flex-direction: column;
-      }
-      .compose-actions .ghost,
-      .compose-actions .primary {
-        min-height: 52px;
-        font-size: 16px;
-      }
-      textarea { min-height: 110px; }
-      .cam-row {
-        display: grid;
-        margin-top: 10px;
-      }
-      .cam-row .ghost { min-height: 48px; }
-      .drop-mac { display: none; }
-      .drop-phone { display: block; }
-      .dropzone strong { font-size: 15px; }
+    .foot {
+      display: none;
+      gap: 6px;
+      align-items: flex-start;
+      margin-top: auto;
+      padding-top: 4px;
+    }
+    body.is-connected .foot { display: flex; }
+    .foot .live {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+      margin-top: 5px;
+      flex: none;
+    }
+    .foot strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .foot p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
     }
 
-    /* Mac popover — match screenshot density */
-    html[data-app="app"] body {
-      padding: 12px 14px 12px;
-      min-height: 0;
+    html[data-app="app"] .brand { pointer-events: none; }
+    html[data-app="app"] .site { pointer-events: auto; }
+    html[data-app="app"] .cam { display: none; }
+
+    @media (max-width: 640px) {
+      .pair-grid { grid-template-columns: 1fr; gap: 16px; }
+      .pair-qr {
+        padding-right: 0;
+        border-right: 0;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .pair-side { padding-left: 0; }
+      #qr, #qr svg { width: min(64vw, 180px); height: min(64vw, 180px); }
+      .device { min-width: 0; }
+      .tabs { grid-template-columns: repeat(2, 1fr); }
+      .actions { flex-direction: column; }
+      .actions .primary { width: 100%; }
+      .cam-row { display: grid; }
+      .drop-mac { display: none; }
+      .drop-phone { display: block; }
+      .head { flex-direction: column; }
+      .device { width: 100%; }
     }
-    html[data-app="app"] header,
-    html[data-app="app"] main,
-    html[data-app="app"] .dropzone { max-width: none; }
-    html[data-app="app"] .bar { margin-bottom: 10px; }
-    html[data-app="app"] .brand { font-size: 14px; }
+
+    @media (max-width: 380px) {
+      .tabs { gap: 4px; }
+      .tab { font-size: 11px; min-height: 38px; }
+      .card { padding: 14px; border-radius: 16px; }
+    }
+
+    html[data-app="app"] body {
+      padding: 12px 12px 10px;
+      min-height: 0;
+      gap: 10px;
+    }
+    html[data-app="app"] .shell { max-width: none; gap: 10px; }
+    html[data-app="app"] .brand { font-size: 13px; }
     html[data-app="app"] .brand .mark { width: 22px; height: 22px; }
     html[data-app="app"] .theme {
       height: 30px;
@@ -322,127 +512,192 @@
       min-width: 58px;
     }
     html[data-app="app"] .theme .icon-sun,
-    html[data-app="app"] .theme .icon-moon {
-      width: 22px;
-      height: 22px;
-    }
+    html[data-app="app"] .theme .icon-moon { width: 22px; height: 22px; }
     html[data-app="app"] .theme svg { width: 12px; height: 12px; }
-    html[data-app="app"] h1 { font-size: 22px; margin: 0 0 4px; }
+    html[data-app="app"] h1 { font-size: 20px; }
     html[data-app="app"] #status { font-size: 12px; }
-    html[data-app="app"] .card { padding: 12px; border-radius: 18px; }
-    html[data-app="app"] .layout { grid-template-columns: 140px 1fr; gap: 12px; }
+    html[data-app="app"] .card { padding: 12px; border-radius: 16px; }
     html[data-app="app"] #qr,
-    html[data-app="app"] #qr svg { width: 120px; height: 120px; }
-    html[data-app="app"] .qr-wrap { padding: 6px; border-radius: 14px; }
-    html[data-app="app"] .url { display: none; }
-    html[data-app="app"] .code { font-size: 11px; margin-top: 8px; }
+    html[data-app="app"] #qr svg { width: 112px; height: 112px; }
+    html[data-app="app"] .qr-wrap { padding: 6px; }
+    html[data-app="app"] .code { font-size: 11px; }
     html[data-app="app"] .code strong { font-size: 12px; }
     html[data-app="app"] #copy,
-    html[data-app="app"] .join button { min-height: 32px; font-size: 12px; border-radius: 12px; }
-    html[data-app="app"] .side-copy { font-size: 12px; text-align: left; }
-    html[data-app="app"] .join { margin-top: 8px; flex-direction: row; }
-    html[data-app="app"] .join input { min-height: 32px; font-size: 13px; padding: 6px 10px; border-radius: 12px; }
-    html[data-app="app"] .compose {
-      grid-template-columns: 1fr 132px;
-      gap: 10px;
-    }
+    html[data-app="app"] .join button { min-height: 34px; font-size: 12px; }
+    html[data-app="app"] .join input { min-height: 34px; font-size: 13px; padding: 8px 10px; }
+    html[data-app="app"] .side-note { font-size: 11px; }
+    html[data-app="app"] .tabs { margin-bottom: 10px; }
+    html[data-app="app"] .tab { min-height: 34px; font-size: 11px; border-radius: 10px; }
     html[data-app="app"] textarea {
-      min-height: 96px;
+      min-height: 88px;
       font-size: 13px;
-      padding: 12px;
-      border-radius: 14px;
+      padding: 12px 12px 26px;
     }
-    html[data-app="app"] .compose-actions .ghost {
-      min-height: 44px;
-      font-size: 12px;
-      border-radius: 14px;
-    }
-    html[data-app="app"] .compose-actions .primary {
-      min-height: 44px;
-      font-size: 14px;
-      border-radius: 14px;
-    }
-    html[data-app="app"] #progress { font-size: 12px; margin-top: 10px; }
-    html[data-app="app"] .item { padding: 8px 10px; font-size: 12px; border-radius: 12px; }
-    html[data-app="app"] .dropzone {
-      margin-top: 12px;
-      padding: 0;
-    }
-    html[data-app="app"] .dropzone strong { font-size: 13px; }
+    html[data-app="app"] .actions .ghost,
+    html[data-app="app"] .actions .primary { min-height: 40px; font-size: 12px; }
+    html[data-app="app"] .dropzone { min-height: 72px; padding: 12px; border-radius: 14px; }
+    html[data-app="app"] .dropzone strong { font-size: 12px; }
     html[data-app="app"] .drop-hint { font-size: 11px; }
     html[data-app="app"] .drop-mac { display: block; }
     html[data-app="app"] .drop-phone { display: none; }
     html[data-app="app"] .cam-row { display: none; }
+    html[data-app="app"] .device { padding: 8px 10px; min-width: 130px; }
+    html[data-app="app"] .device strong { font-size: 12px; }
+    html[data-app="app"] .foot strong { font-size: 12px; }
+    html[data-app="app"] .foot p { font-size: 11px; }
+
+    @media (max-width: 420px) {
+      html[data-app="app"] .pair-grid { grid-template-columns: 1fr; }
+      html[data-app="app"] .pair-qr {
+        padding-right: 0;
+        border-right: 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      html[data-app="app"] .pair-side { padding-left: 0; }
+      html[data-app="app"] .actions { flex-direction: column; }
+      html[data-app="app"] .actions .primary { width: 100%; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="bar">
-      <a class="brand" href="/"><span class="mark" aria-hidden="true"></span>SendToMac</a>
-      <div class="bar-actions">
-        <a class="site" href="https://sendtomac.vercel.app/" target="_blank" rel="noopener">Website</a>
-        <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
-          <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M5.2 18.8l1.6-1.6"/></g></svg></span>
-          <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg></span>
-        </button>
-        <a class="legal" href="/privacy">Privacy</a>
-      </div>
-    </div>
-    <div class="head">
-      <h1 id="title">Same Wi-Fi</h1>
-      <p id="status">Open this page on the Mac. Scan the code with the phone. Then pick a file.</p>
-    </div>
-  </header>
-  <main id="pair">
-    <div class="card">
-      <div class="layout">
-        <div>
-          <div class="qr-wrap"><div id="qr"></div></div>
-          <p class="url" id="link"></p>
-          <p class="code">Code <strong id="code">····</strong></p>
-          <button type="button" id="copy" style="margin-top:10px;width:100%">Copy link</button>
-        </div>
-        <div>
-          <p class="side-copy">Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.</p>
-          <form class="join" id="joinForm">
-            <input id="joinCode" type="text" inputmode="text" autocapitalize="none" autocomplete="off" spellcheck="false" maxlength="8" placeholder="Have a code?">
-            <button type="submit">Join</button>
-          </form>
+  <div class="shell">
+    <header>
+      <div class="bar">
+        <a class="brand" href="/"><span class="mark" aria-hidden="true"></span>SendToMac</a>
+        <div class="bar-actions">
+          <a class="site" href="https://sendtomac.vercel.app/" target="_blank" rel="noopener">
+            Website
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>
+          </a>
+          <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
+            <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M5.2 18.8l1.6-1.6"/></g></svg></span>
+            <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg></span>
+          </button>
+          <a class="legal" href="/privacy">Privacy</a>
         </div>
       </div>
-    </div>
-  </main>
-  <main id="share" hidden>
-    <div class="card">
-      <form id="sendForm">
-        <div class="compose">
+      <div class="head">
+        <div class="head-copy">
+          <div class="title-row">
+            <svg class="wifi ico-lg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm0-4.2a5.7 5.7 0 0 1 4 1.6l-1.4 1.4a3.7 3.7 0 0 0-5.2 0L8 15.9a5.7 5.7 0 0 1 4-1.6zm0-4.3a9.9 9.9 0 0 1 7 2.6l-1.4 1.4a7.9 7.9 0 0 0-11.2 0L5 12.6a9.9 9.9 0 0 1 7-2.6zM12 3a15 15 0 0 1 10.6 4.4L21.2 8.8A13 13 0 0 0 12 5a13 13 0 0 0-9.2 3.8L1.4 7.4A15 15 0 0 1 12 3z"/></svg>
+            <span class="dot" aria-hidden="true"></span>
+            <h1 id="title">Same Wi-Fi</h1>
+          </div>
+          <p id="status">Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.</p>
+        </div>
+        <div class="device" id="device" aria-live="polite">
+          <div class="device-ico" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24"><path fill="currentColor" d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-5v1h2v2H8v-2h2v-1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v8h14V7H5z"/></svg>
+          </div>
           <div>
-            <textarea id="note" placeholder="Or a note, link, or address"></textarea>
-            <div class="chips" id="chips"></div>
-            <div class="cam-row">
-              <label class="ghost cam">Camera<input id="camera" type="file" accept="image/*" capture="environment"></label>
-            </div>
-          </div>
-          <div class="compose-actions">
-            <label class="ghost">Pick photos or files<input id="files" type="file" multiple></label>
-            <button class="primary" id="send" type="submit">Send</button>
+            <strong id="deviceName">Mac</strong>
+            <span>Connected</span>
           </div>
         </div>
-      </form>
-      <p id="progress" class="share-foot"></p>
-      <div id="inbox"></div>
+      </div>
+    </header>
+
+    <main id="pair">
+      <div class="card">
+        <div class="pair-grid">
+          <div class="pair-qr">
+            <div class="qr-wrap"><div id="qr"></div></div>
+            <p class="url" id="link"></p>
+            <p class="code">Code <strong id="code">····</strong></p>
+            <button type="button" id="copy">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h9a2 2 0 0 1 2 2v11h-2V5H9V3zm-4 4h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zm0 2v11h9V9H5z"/></svg>
+              Copy link
+            </button>
+          </div>
+          <div class="pair-side">
+            <div class="side-note">
+              <div class="shield" aria-hidden="true">
+                <svg class="ico" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3zm0 2.2 6 2.2v4.6c0 3.8-2.5 7.3-6 8.8-3.5-1.5-6-5-6-8.8V6.4l6-2.2z"/></svg>
+              </div>
+              <p>Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.</p>
+            </div>
+            <form class="join" id="joinForm">
+              <input id="joinCode" type="text" inputmode="text" autocapitalize="none" autocomplete="off" spellcheck="false" maxlength="8" placeholder="Have a code?">
+              <button class="primary" type="submit">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z"/></svg>
+                Join
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <main id="share" hidden>
+      <div class="card">
+        <div class="tabs" role="tablist" aria-label="Send type">
+          <button class="tab" type="button" role="tab" data-tab="send" aria-selected="true">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11.5 21 3l-5.5 18-3.2-6.3L3 11.5zm9.4 1.3 1.7 3.3 2.9-9.5-9.2 4.3 4.6 1.9z"/></svg>
+            Send
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="files" aria-selected="false">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 2h7l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V8h4.5L13 3.5z"/></svg>
+            Files
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="link" aria-selected="false">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.6 13.4a4 4 0 0 1 0-5.7l2.1-2.1a4 4 0 1 1 5.7 5.7l-1 1-1.4-1.4 1-1a2 2 0 1 0-2.8-2.8l-2.1 2.1a2 2 0 0 0 0 2.8l-1.5 1.4zm2.8-2.8a4 4 0 0 1 0 5.7l-2.1 2.1a4 4 0 1 1-5.7-5.7l1-1 1.4 1.4-1 1a2 2 0 1 0 2.8 2.8l2.1-2.1a2 2 0 0 0 0-2.8l1.5-1.4z"/></svg>
+            Link
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="note" aria-selected="false">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3h11l3 3v15H5V3zm2 2v14h10V7h-3V5H7zm2 4h6v2H9V9zm0 4h6v2H9v-2z"/></svg>
+            Note
+          </button>
+        </div>
+        <form id="sendForm">
+          <div class="note-wrap">
+            <textarea id="note" maxlength="500" placeholder="Or a note, link, or address..."></textarea>
+            <span class="counter" id="counter">0/500</span>
+          </div>
+          <div class="chips" id="chips"></div>
+          <div class="cam-row">
+            <label class="ghost cam">Camera<input id="camera" type="file" accept="image/*" capture="environment"></label>
+          </div>
+          <div class="actions">
+            <label class="ghost">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.5 6.5 9.4 13.6a3 3 0 1 1-4.2-4.2l8.5-8.5a5 5 0 0 1 7.1 7.1l-9.2 9.2a7 7 0 1 1-9.9-9.9l7.8-7.8 1.4 1.4-7.8 7.8a5 5 0 0 0 7.1 7.1l9.2-9.2a3 3 0 0 0-4.2-4.2L7.4 12.1a1 1 0 1 0 1.4 1.4l7.1-7.1 1.4 1.4z"/></svg>
+              Pick photos or files
+              <input id="files" type="file" multiple>
+            </label>
+            <button class="primary" id="send" type="submit">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 11.5 21 3l-5.5 18-3.2-6.3L3 11.5zm9.4 1.3 1.7 3.3 2.9-9.5-9.2 4.3 4.6 1.9z"/></svg>
+              Send
+            </button>
+          </div>
+        </form>
+        <p id="progress"></p>
+        <div id="inbox"></div>
+      </div>
+    </main>
+
+    <div id="dropzone" class="dropzone">
+      <div>
+        <svg class="cloud ico-xl" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 18a5 5 0 0 1-.2-10A7 7 0 0 1 20.5 10 4.5 4.5 0 0 1 19 19H7zm5-2 3-3h-2V9h-2v4H9l3 3z"/></svg>
+        <div class="drop-mac">
+          <strong id="dropTitle">Drop a file anywhere to queue it.</strong>
+          <p class="drop-hint">It sends when the other device is connected.</p>
+        </div>
+        <div class="drop-phone">
+          <strong>Tap Pick photos or files to add.</strong>
+          <p class="drop-hint">It sends when the other device is connected.</p>
+        </div>
+      </div>
     </div>
-  </main>
-  <div id="dropzone" class="dropzone">
-    <div class="drop-mac">
-      <strong>Drop a file anywhere to queue it.</strong>
-      <p class="drop-hint">It sends when the other device is connected.</p>
-    </div>
-    <div class="drop-phone">
-      <strong>Tap Pick photos or files to add.</strong>
-      <p class="drop-hint">It sends when the other device is connected.</p>
+
+    <div class="foot" id="foot">
+      <span class="live" aria-hidden="true"></span>
+      <div>
+        <strong>Mac is connected</strong>
+        <p>Ready to receive files, links, and notes.</p>
+      </div>
     </div>
   </div>
+
   <script src="/vendor/qrcode.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
@@ -451,7 +706,9 @@
     const wanted = (params.get("r") || "").toLowerCase();
     if (inApp) {
       document.documentElement.dataset.app = "app";
-      document.getElementById("status").textContent = "Scan this code with the phone. Or drop a file on this window.";
+      document.getElementById("status").textContent =
+        "Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.";
+      document.getElementById("deviceName").textContent = "MacBook Pro";
     }
     function macHeaders() {
       return localKey ? { "X-SendToMac-Key": localKey } : {};
@@ -460,21 +717,56 @@
     const shareEl = document.getElementById("share");
     const statusEl = document.getElementById("status");
     const progressEl = document.getElementById("progress");
+    const noteEl = document.getElementById("note");
+    const counterEl = document.getElementById("counter");
+    const dropTitle = document.getElementById("dropTitle");
     const picked = [];
     let ws, room = wanted, token = "", mode = "relay", role = "offer", connected = false, socketTries = 0;
     let pc, channel, pendingIce = [], remoteSet = false, sendChain = Promise.resolve();
     let incoming = null;
+
+    const placeholders = {
+      send: "Or a note, link, or address...",
+      files: "Add a short note with your files...",
+      link: "Paste a link or address...",
+      note: "Write a note...",
+    };
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", "false"));
+        tab.setAttribute("aria-selected", "true");
+        const kind = tab.getAttribute("data-tab");
+        noteEl.placeholder = placeholders[kind] || placeholders.send;
+        if (kind === "files") document.getElementById("files").click();
+        else noteEl.focus();
+      });
+    });
+
+    function updateCounter() {
+      counterEl.textContent = noteEl.value.length + "/500";
+    }
+    noteEl.addEventListener("input", updateCounter);
+    updateCounter();
 
     function setStatus(text, kind) {
       statusEl.textContent = text;
       statusEl.className = kind || "";
     }
 
+    function setPairingChrome() {
+      document.body.classList.remove("is-connected");
+      document.getElementById("title").textContent = "Same Wi-Fi";
+      dropTitle.textContent = "Drop a file anywhere to queue it.";
+    }
+
     function showShare() {
       pairEl.hidden = true;
       shareEl.hidden = false;
+      document.body.classList.add("is-connected");
       document.getElementById("title").textContent = "Connected";
-      setStatus("Connected via same Wi-Fi. Ready to share.", "ok");
+      setStatus("You're connected to your Mac. Send files, links or notes instantly.", "ok");
+      dropTitle.textContent = "Drop a file here";
       if (picked.length) sendNow(false);
     }
 
@@ -487,7 +779,10 @@
       document.getElementById("link").textContent = url;
       document.getElementById("copy").onclick = async () => {
         await navigator.clipboard.writeText(url);
-        document.getElementById("copy").textContent = "Copied";
+        const btn = document.getElementById("copy");
+        const prev = btn.innerHTML;
+        btn.textContent = "Copied";
+        setTimeout(() => { btn.innerHTML = prev; }, 1200);
       };
     }
 
@@ -599,6 +894,7 @@
         const msg = JSON.parse(ev.data);
         if (msg.type === "error") {
           pairEl.hidden = false;
+          setPairingChrome();
           setStatus(msg.error, "bad");
           return;
         }
@@ -611,7 +907,7 @@
           if (!wanted && msg.base) drawQr(msg.base + "/share?r=" + room);
           if (!wanted && !msg.base) setStatus("This Mac has no Wi-Fi address yet.", "bad");
           if (wanted) setStatus("Connecting…");
-          else setStatus(inApp ? "Scan this with the phone camera. Press Option + Command to open this again." : "Scan this with the phone camera. Leave this page open.");
+          else setStatus("Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.");
           if (!msg.waiting) onPeer();
           return;
         }
@@ -621,7 +917,7 @@
           setStatus("The other device left. Scan again.", "bad");
           shareEl.hidden = true;
           pairEl.hidden = false;
-          document.getElementById("title").textContent = "Same Wi-Fi";
+          setPairingChrome();
         }
         if (msg.type === "text") showText(msg.text);
         if (msg.type === "file") downloadRelay(msg);
@@ -630,7 +926,7 @@
       ws.onclose = () => {
         if (connected) return;
         if (++socketTries > 2) {
-          setStatus("Open the SendToMac app on the Mac. Leave it open, then scan the code. Same Wi-Fi.", "bad");
+          setStatus("Open SendToMac on the Mac. Leave it open, then scan the code. Same Wi-Fi.", "bad");
           return;
         }
         setTimeout(connectSocket, 1200);
@@ -784,7 +1080,7 @@
     }
 
     function sendNow(includeNote) {
-      const note = includeNote ? document.getElementById("note").value.trim() : "";
+      const note = includeNote ? noteEl.value.trim() : "";
       if (!connected) {
         progressEl.textContent = "Scan the code first. The file sends after that.";
         progressEl.className = "bad";
@@ -801,7 +1097,8 @@
         if (note) {
           if (mode === "webrtc" && channel && channel.readyState === "open") channel.send(JSON.stringify({ t: "text", text: note }));
           else ws.send(JSON.stringify({ type: "text", text: note }));
-          document.getElementById("note").value = "";
+          noteEl.value = "";
+          updateCounter();
         }
         for (const file of files) {
           if (mode === "webrtc") await sendDirect(file);
