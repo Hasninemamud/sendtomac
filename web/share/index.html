@@ -87,19 +87,46 @@
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
-    .site {
-      font-size: 13px;
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      min-height: 34px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--panel-soft);
       color: var(--muted);
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      min-height: 32px;
+      display: inline-grid;
+      place-items: center;
+      flex: none;
     }
-    .site:hover { color: var(--ink); }
-    .legal { display: none; }
+    .icon-btn:hover { color: var(--ink); transform: none; border-color: color-mix(in srgb, var(--ink) 35%, var(--line)); }
+    .icon-btn .ico { width: 16px; height: 16px; }
+    .item-actions {
+      display: contents;
+    }
+    .item-actions .icon-btn {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      min-height: 30px;
+    }
+    .folder-btn {
+      display: none;
+      margin-top: 0;
+      align-self: center;
+    }
+    html[data-app="app"] .folder-btn { display: inline-grid; }
+    html[data-app="app"] .icon-btn {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      min-height: 30px;
+    }
+    html[data-app="app"] .icon-btn .ico { width: 14px; height: 14px; }
 
     .head {
       display: flex;
@@ -404,10 +431,59 @@
       border: 1px solid var(--line);
       background: var(--panel-soft);
       border-radius: 12px;
-      padding: 12px 14px;
+      padding: 10px 12px;
       font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .item button { margin-top: 8px; min-height: 36px; font-size: 12px; }
+    .item-label {
+      flex: 1;
+      min-width: 0;
+      line-height: 1.35;
+    }
+    .item .icon-btn {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      min-height: 30px;
+      margin: 0;
+    }
+    .item button { margin-top: 0; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(120%);
+      z-index: 80;
+      max-width: min(420px, calc(100% - 28px));
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: var(--ink);
+      color: var(--bg);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.35;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 220ms ease, opacity 220ms ease;
+      text-align: center;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast.bad {
+      background: var(--bad);
+      color: #fff;
+    }
+    html[data-app="app"] .toast {
+      bottom: 12px;
+      font-size: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+    }
 
     .dropzone {
       border: 1.5px dashed var(--line);
@@ -467,8 +543,8 @@
       color: var(--muted);
     }
 
+    .legal { display: none; }
     html[data-app="app"] .brand { pointer-events: none; }
-    html[data-app="app"] .site { pointer-events: auto; }
     html[data-app="app"] .cam { display: none; }
 
     @media (max-width: 640px) {
@@ -566,10 +642,9 @@
       <div class="bar">
         <a class="brand" href="/"><span class="mark" aria-hidden="true"></span>SendToMac</a>
         <div class="bar-actions">
-          <a class="site" href="https://sendtomac.vercel.app/" target="_blank" rel="noopener">
-            Website
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>
-          </a>
+          <button class="icon-btn" type="button" id="resetBtn" title="Reset pairing" aria-label="Reset pairing">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 6V3L8 7l4 4V8a4 4 0 1 1-4 4H6a6 6 0 1 0 6-6z"/></svg>
+          </button>
           <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
             <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M5.2 18.8l1.6-1.6"/></g></svg></span>
             <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg></span>
@@ -591,7 +666,7 @@
             <svg class="ico" viewBox="0 0 24 24"><path fill="currentColor" d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-5v1h2v2H8v-2h2v-1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v8h14V7H5z"/></svg>
           </div>
           <div>
-            <strong id="deviceName">Mac</strong>
+            <strong id="deviceName">Device</strong>
             <span>Connected</span>
           </div>
         </div>
@@ -691,12 +766,16 @@
 
     <div class="foot" id="foot">
       <span class="live" aria-hidden="true"></span>
-      <div>
-        <strong>Mac is connected</strong>
+      <div style="flex:1;min-width:0">
+        <strong id="footName">Device is connected</strong>
         <p>Ready to receive files, links, and notes.</p>
       </div>
+      <button class="icon-btn folder-btn" type="button" id="openFolder" title="Open Downloads/SendToMac" aria-label="Open Downloads/SendToMac">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2zm1 5h9v9H4V6h5.2L11 9z"/></svg>
+      </button>
     </div>
   </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/vendor/qrcode.js"></script>
   <script>
@@ -708,15 +787,101 @@
       document.documentElement.dataset.app = "app";
       document.getElementById("status").textContent =
         "Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.";
-      document.getElementById("deviceName").textContent = "MacBook Pro";
     }
-    function macHeaders() {
-      return localKey ? { "X-SendToMac-Key": localKey } : {};
+    function macHeaders(extra) {
+      const headers = localKey ? { "X-SendToMac-Key": localKey } : {};
+      return Object.assign(headers, extra || {});
     }
+
+    function guessLocalName() {
+      const ua = navigator.userAgent || "";
+      if (/iPhone/i.test(ua)) return "iPhone";
+      if (/iPad/i.test(ua)) return "iPad";
+      if (/Android/i.test(ua)) return "Android";
+      if (inApp) return "Mac";
+      return "Phone";
+    }
+
+    let myName = guessLocalName();
+    let peerName = "";
+    const deviceNameEl = document.getElementById("deviceName");
+    const footNameEl = document.getElementById("footName");
+
+    function setPeerName(name) {
+      peerName = (name || "").trim() || "Device";
+      deviceNameEl.textContent = peerName;
+      footNameEl.textContent = peerName + " is connected";
+    }
+
+    const MIME_EXT = {
+      "video/mp4": ".mp4",
+      "video/quicktime": ".mov",
+      "video/webm": ".webm",
+      "video/x-m4v": ".m4v",
+      "video/3gpp": ".3gp",
+      "video/3gpp2": ".3g2",
+      "video/mpeg": ".mpeg",
+      "video/x-matroska": ".mkv",
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/gif": ".gif",
+      "image/webp": ".webp",
+      "image/heic": ".heic",
+      "image/heif": ".heif",
+      "audio/mpeg": ".mp3",
+      "audio/mp4": ".m4a",
+      "audio/aac": ".aac",
+      "audio/wav": ".wav",
+      "audio/x-wav": ".wav",
+      "application/pdf": ".pdf",
+    };
+
+    function ensureFileName(name, mime) {
+      const base = (name || "file").split(/[/\\]/).pop() || "file";
+      if (/\.[A-Za-z0-9]{1,8}$/.test(base)) return base;
+      const ext = MIME_EXT[(mime || "").split(";")[0].trim().toLowerCase()];
+      return ext ? base + ext : base;
+    }
+
+    function namedFile(file) {
+      const name = ensureFileName(file.name, file.type);
+      if (name === file.name) return file;
+      return new File([file], name, { type: file.type || "application/octet-stream" });
+    }
+
+    function resetSession() {
+      const next = new URLSearchParams();
+      if (inApp) next.set("app", "1");
+      if (localKey) next.set("k", localKey);
+      location.search = next.toString() ? "?" + next.toString() : location.pathname;
+    }
+    document.getElementById("resetBtn").addEventListener("click", resetSession);
+
+    document.getElementById("openFolder").addEventListener("click", () => {
+      fetch("/api/open-folder", { method: "POST", headers: macHeaders() })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.ok) throw new Error(data.error || "Could not open folder");
+        })
+        .catch((err) => setStatus(err.message || "Could not open folder", "bad"));
+    });
+
     const pairEl = document.getElementById("pair");
     const shareEl = document.getElementById("share");
     const statusEl = document.getElementById("status");
     const progressEl = document.getElementById("progress");
+    const toastEl = document.getElementById("toast");
+    let toastTimer = 0;
+
+    function showToast(text, kind) {
+      if (!toastEl) return;
+      toastEl.textContent = text;
+      toastEl.className = "toast show" + (kind === "bad" ? " bad" : "");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, 2600);
+    }
     const noteEl = document.getElementById("note");
     const counterEl = document.getElementById("counter");
     const dropTitle = document.getElementById("dropTitle");
@@ -765,7 +930,7 @@
       shareEl.hidden = false;
       document.body.classList.add("is-connected");
       document.getElementById("title").textContent = "Connected";
-      setStatus("You're connected to your Mac. Send files, links or notes instantly.", "ok");
+      setStatus("You're connected to " + (peerName || "the other device") + ". Send files, links or notes instantly.", "ok");
       dropTitle.textContent = "Drop a file here";
       if (picked.length) sendNow(false);
     }
@@ -787,7 +952,7 @@
     }
 
     function addFiles(list) {
-      for (const file of list) picked.push(file);
+      for (const file of list) picked.push(namedFile(file));
       const box = document.getElementById("chips");
       box.replaceChildren();
       for (const file of picked) {
@@ -857,38 +1022,72 @@
     function noteReceived(name, folder) {
       const row = document.createElement("div");
       row.className = "item";
-      row.textContent = folder ? "Saved " + name + " to " + folder : "Received " + name;
+      const label = document.createElement("div");
+      label.className = "item-label";
+      label.textContent = folder ? "Saved " + name + " to " + folder : "Received " + name;
+      row.appendChild(label);
+      if (inApp && folder) {
+        const reveal = document.createElement("button");
+        reveal.type = "button";
+        reveal.className = "icon-btn";
+        reveal.title = "Show in Finder";
+        reveal.setAttribute("aria-label", "Show in Finder");
+        reveal.innerHTML = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm6.3 8.9 4.4 4.4-1.4 1.4-4.4-4.4 1.4-1.4z"/></svg>';
+        reveal.onclick = () => {
+          fetch("/api/reveal", {
+            method: "POST",
+            headers: macHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ name }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (!data.ok) throw new Error(data.error || "Could not open file");
+            })
+            .catch((err) => {
+              setStatus(err.message || "Could not open file", "bad");
+              showToast(err.message || "Could not open file", "bad");
+            });
+        };
+        row.appendChild(reveal);
+      }
       document.getElementById("inbox").prepend(row);
+      showToast("Received " + name);
     }
 
     async function keepOnMac(blob, name) {
+      const fixed = ensureFileName(name, blob.type);
       const body = new FormData();
-      body.append("file", blob, name);
+      body.append("file", blob, fixed);
       const res = await fetch("/api/save", { method: "POST", body, headers: macHeaders() });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Could not save that file");
-      noteReceived(data.name || name, data.folder);
+      noteReceived(data.name || fixed, data.folder);
     }
 
     function saveBlob(blob, name) {
+      const fixed = ensureFileName(name, blob.type);
       if (inApp) {
-        keepOnMac(blob, name).catch((err) => setStatus(err.message || "Could not save that file", "bad"));
+        keepOnMac(blob, fixed).catch((err) => setStatus(err.message || "Could not save that file", "bad"));
         return;
       }
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = name;
+      a.download = fixed;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
-      noteReceived(name);
+      noteReceived(fixed);
     }
 
     function connectSocket() {
       const proto = location.protocol === "https:" ? "wss://" : "ws://";
       ws = new WebSocket(proto + location.host + "/ws");
       ws.onopen = () => {
-        ws.send(JSON.stringify(wanted ? { type: "join", room: wanted } : { type: "create", room: room || "" }));
+        ws.send(JSON.stringify(
+          wanted
+            ? { type: "join", room: wanted, name: myName }
+            : { type: "create", room: room || "", name: myName }
+        ));
       };
       ws.onmessage = (ev) => {
         const msg = JSON.parse(ev.data);
@@ -903,6 +1102,8 @@
           token = msg.token;
           mode = msg.mode;
           role = msg.role;
+          if (msg.name) myName = msg.name;
+          if (msg.peer) setPeerName(msg.peer);
           document.getElementById("code").textContent = room;
           if (!wanted && msg.base) drawQr(msg.base + "/share?r=" + room);
           if (!wanted && !msg.base) setStatus("This Mac has no Wi-Fi address yet.", "bad");
@@ -911,9 +1112,13 @@
           if (!msg.waiting) onPeer();
           return;
         }
-        if (msg.type === "peer") onPeer();
+        if (msg.type === "peer") {
+          if (msg.name) setPeerName(msg.name);
+          onPeer();
+        }
         if (msg.type === "left") {
           connected = false;
+          peerName = "";
           setStatus("The other device left. Scan again.", "bad");
           shareEl.hidden = true;
           pairEl.hidden = false;
@@ -1017,15 +1222,22 @@
     function showText(text) {
       const row = document.createElement("div");
       row.className = "item";
-      const p = document.createElement("p");
-      p.style.margin = "0";
+      const p = document.createElement("div");
+      p.className = "item-label";
       p.textContent = text;
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = "Copy";
-      btn.onclick = () => navigator.clipboard.writeText(text);
+      btn.className = "icon-btn";
+      btn.title = "Copy";
+      btn.setAttribute("aria-label", "Copy");
+      btn.innerHTML = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h9a2 2 0 0 1 2 2v11h-2V5H9V3zm-4 4h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zm0 2v11h9V9H5z"/></svg>';
+      btn.onclick = () => {
+        navigator.clipboard.writeText(text);
+        showToast("Copied");
+      };
       row.append(p, btn);
       document.getElementById("inbox").prepend(row);
+      showToast("Received note");
     }
 
     function enqueue(fn) {
@@ -1034,12 +1246,13 @@
     }
 
     async function sendDirect(file) {
-      channel.send(JSON.stringify({ t: "file", name: file.name, size: file.size, mime: file.type }));
+      const ready = namedFile(file);
+      channel.send(JSON.stringify({ t: "file", name: ready.name, size: ready.size, mime: ready.type }));
       const size = 16 * 1024;
-      for (let offset = 0; offset < file.size; offset += size) {
+      for (let offset = 0; offset < ready.size; offset += size) {
         while (channel.bufferedAmount > 1024 * 1024) await new Promise((r) => setTimeout(r, 20));
-        channel.send(await file.slice(offset, offset + size).arrayBuffer());
-        progressEl.textContent = "Sending " + file.name + " " + Math.min(100, Math.round(((offset + size) / file.size) * 100)) + "%";
+        channel.send(await ready.slice(offset, offset + size).arrayBuffer());
+        progressEl.textContent = "Sending " + ready.name + " " + Math.min(100, Math.round(((offset + size) / ready.size) * 100)) + "%";
         progressEl.className = "";
       }
       channel.send(JSON.stringify({ t: "end" }));
@@ -1047,14 +1260,15 @@
 
     function sendRelay(file) {
       return new Promise((resolve, reject) => {
+        const ready = namedFile(file);
         const body = new FormData();
         body.append("token", token);
-        body.append("file", file, file.name);
+        body.append("file", ready, ready.name);
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/upload");
         xhr.upload.onprogress = (ev) => {
           if (ev.lengthComputable) {
-            progressEl.textContent = "Sending " + file.name + " " + Math.round((ev.loaded / ev.total) * 100) + "%";
+            progressEl.textContent = "Sending " + ready.name + " " + Math.round((ev.loaded / ev.total) * 100) + "%";
             progressEl.className = "";
           }
         };
@@ -1067,16 +1281,23 @@
     function downloadRelay(meta) {
       if (inApp) {
         fetch("/api/file/" + encodeURIComponent(meta.id) + "?token=" + encodeURIComponent(token))
-          .then((res) => res.blob())
-          .then((blob) => keepOnMac(blob, meta.name))
+          .then((res) => {
+            if (!res.ok) throw new Error("Could not save that file");
+            return res.blob().then((blob) => {
+              const typed = blob.type && blob.type !== "application/octet-stream"
+                ? blob
+                : new Blob([blob], { type: meta.mime || blob.type || "application/octet-stream" });
+              return keepOnMac(typed, ensureFileName(meta.name, meta.mime || typed.type));
+            });
+          })
           .catch((err) => setStatus(err.message || "Could not save that file", "bad"));
         return;
       }
       const a = document.createElement("a");
       a.href = "/api/file/" + encodeURIComponent(meta.id) + "?token=" + encodeURIComponent(token);
-      a.download = meta.name;
+      a.download = ensureFileName(meta.name, meta.mime);
       a.click();
-      noteReceived(meta.name);
+      noteReceived(ensureFileName(meta.name, meta.mime));
     }
 
     function sendNow(includeNote) {
@@ -1104,12 +1325,16 @@
           if (mode === "webrtc") await sendDirect(file);
           else await sendRelay(file);
         }
-        progressEl.textContent = labels.length ? ("Sent: " + labels.join(", ")) : "Sent.";
+        const sent = labels.length ? ("Sent: " + labels.join(", ")) : "Sent.";
+        progressEl.textContent = sent;
         progressEl.className = "ok";
+        showToast(sent);
         document.getElementById("send").disabled = false;
       }).catch((err) => {
-        progressEl.textContent = err.message || "Send failed.";
+        const msg = err.message || "Send failed.";
+        progressEl.textContent = msg;
         progressEl.className = "bad";
+        showToast(msg, "bad");
         document.getElementById("send").disabled = false;
       });
     }
@@ -1124,7 +1349,13 @@
       document.getElementById("title").textContent = "Joining";
       setStatus("Connecting to the other device…");
     }
-    connectSocket();
+    fetch("/api/info")
+      .then((res) => res.json())
+      .then((info) => {
+        if (inApp && info.host) myName = info.host;
+      })
+      .catch(() => {})
+      .finally(() => connectSocket());
   </script>
   <script src="/theme.js"></script>
 </body>

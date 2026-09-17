@@ -70,6 +70,30 @@ DANGEROUS_SUFFIX = {
     ".js", ".mjs", ".command", ".app", ".dmg", ".pkg", ".mpkg",
     ".scpt", ".applescript", ".workflow", ".action",
 }
+MIME_EXT = {
+    "video/mp4": ".mp4",
+    "video/quicktime": ".mov",
+    "video/webm": ".webm",
+    "video/x-m4v": ".m4v",
+    "video/3gpp": ".3gp",
+    "video/3gpp2": ".3g2",
+    "video/mpeg": ".mpeg",
+    "video/x-matroska": ".mkv",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+    "image/heic": ".heic",
+    "image/heif": ".heif",
+    "image/tiff": ".tiff",
+    "audio/mpeg": ".mp3",
+    "audio/mp4": ".m4a",
+    "audio/aac": ".aac",
+    "audio/wav": ".wav",
+    "audio/x-wav": ".wav",
+    "audio/webm": ".webm",
+    "application/pdf": ".pdf",
+}
 
 LOCK = threading.Lock()
 ROOMS: dict[str, dict] = {}
@@ -94,6 +118,28 @@ def lan_ip() -> str | None:
     except OSError:
         pass
     return None
+
+
+def host_device_name() -> str:
+    for args in (
+        ["scutil", "--get", "ComputerName"],
+        ["scutil", "--get", "LocalHostName"],
+    ):
+        try:
+            out = subprocess.check_output(args, text=True, timeout=1).strip()
+            if out:
+                return out[:64]
+        except (OSError, subprocess.SubprocessError):
+            pass
+    try:
+        return (socket.gethostname() or "Mac").split(".")[0][:64]
+    except OSError:
+        return "Mac"
+
+
+def clean_device_name(raw) -> str:
+    name = re.sub(r"[^\w .'\-]", "", str(raw or ""), flags=re.UNICODE).strip()
+    return (name or "Device")[:64]
 
 
 def share_base(host_header: str, port: int) -> str | None:
@@ -124,6 +170,18 @@ def safe_name(name: str) -> str:
     for suffix in DANGEROUS_SUFFIX:
         if lower.endswith(suffix):
             return name + ".download"
+    return name
+
+
+def ensure_extension(name: str, mime: str | None = None) -> str:
+    """Phones often send videos without an extension; Mac needs one for Finder/Quick Look."""
+    name = safe_name(name)
+    if Path(name).suffix:
+        return name
+    mime = (mime or "").split(";")[0].strip().lower()
+    ext = MIME_EXT.get(mime)
+    if ext:
+        return name + ext
     return name
 
 
@@ -224,6 +282,7 @@ def new_peer(wfile) -> dict:
     return {
         "id": secrets.token_hex(4),
         "token": secrets.token_urlsafe(18),
+        "name": "Device",
         "wfile": wfile,
         "lock": threading.Lock(),
     }
@@ -279,10 +338,11 @@ def store_upload(token: str, filename: str, mime: str, data: bytes) -> dict:
     file_id = secrets.token_urlsafe(16)
     path = TEMP / file_id
     path.write_bytes(data)
+    clean_mime = mime if mime and not mime.startswith("text/html") else "application/octet-stream"
     meta = {
         "id": file_id,
-        "name": safe_name(filename),
-        "mime": mime if mime and not mime.startswith("text/html") else "application/octet-stream",
+        "name": ensure_extension(filename, clean_mime),
+        "mime": clean_mime,
         "size": len(data),
         "path": str(path),
         "for": others[0]["id"],
@@ -290,7 +350,7 @@ def store_upload(token: str, filename: str, mime: str, data: bytes) -> dict:
     }
     with LOCK:
         FILES[file_id] = meta
-    send_json(others[0], {"type": "file", "id": file_id, "name": meta["name"], "size": meta["size"]})
+    send_json(others[0], {"type": "file", "id": file_id, "name": meta["name"], "size": meta["size"], "mime": meta["mime"]})
     return {"ok": True, "id": file_id, "name": meta["name"]}
 
 
@@ -434,6 +494,7 @@ class Handler(BaseHTTPRequestHandler):
                 "app": "sendtomac",
                 "base": share_base(self.headers.get("Host", ""), self.server.server_address[1]),
                 "mode": transfer_mode(),
+                "host": host_device_name(),
             })
             return
         if parsed.path.startswith("/api/file/"):
@@ -480,6 +541,12 @@ class Handler(BaseHTTPRequestHandler):
         path = urllib.parse.urlparse(self.path).path
         if path == "/api/save":
             self.handle_save()
+            return
+        if path == "/api/reveal":
+            self.handle_reveal()
+            return
+        if path == "/api/open-folder":
+            self.handle_open_folder()
             return
         if path != "/api/upload":
             self.send_obj(404, {"ok": False, "error": "Not found"})
@@ -547,10 +614,32 @@ class Handler(BaseHTTPRequestHandler):
             incoming = files[0]
             if len(incoming["data"]) > MAX_FILE:
                 raise ValueError("File is over 500 MB")
-            name = save_download(incoming["filename"], incoming["data"])
+            name = save_download(incoming["filename"], incoming["data"], incoming.get("mime"))
             self.send_obj(200, {"ok": True, "name": name, "folder": "Downloads/SendToMac"})
         except ValueError as exc:
             self.send_obj(400, {"ok": False, "error": str(exc)})
+
+    def handle_reveal(self) -> None:
+        if not self.local_ok():
+            self.send_obj(403, {"ok": False, "error": "Mac only"})
+            return
+        try:
+            body = json.loads(self.read_body().decode("utf-8", "replace") or "{}")
+            name = ensure_extension(body.get("name") or "", body.get("mime"))
+            path = reveal_download(name)
+            self.send_obj(200, {"ok": True, "path": path})
+        except (ValueError, json.JSONDecodeError) as exc:
+            self.send_obj(400, {"ok": False, "error": str(exc) or "Missing file"})
+
+    def handle_open_folder(self) -> None:
+        if not self.local_ok():
+            self.send_obj(403, {"ok": False, "error": "Mac only"})
+            return
+        try:
+            open_save_folder()
+            self.send_obj(200, {"ok": True, "folder": "Downloads/SendToMac"})
+        except OSError as exc:
+            self.send_obj(500, {"ok": False, "error": str(exc)})
 
     def handle_download(self, parsed) -> None:
         file_id = parsed.path.rsplit("/", 1)[-1]
@@ -647,11 +736,14 @@ class Handler(BaseHTTPRequestHandler):
                 return existing or new_peer(self.wfile), ""
             room = ensure_room(requested if re.fullmatch(r"[a-z0-9]{8}", requested) else None)
         peer = existing or new_peer(self.wfile)
+        peer["name"] = clean_device_name(msg.get("name"))
+        peer["wfile"] = self.wfile
         err = add_peer(room, peer)
         if err == "full":
             write_frame(self.wfile, 1, json.dumps({"type": "error", "error": "That code is already in use."}).encode())
             return peer, ""
         role = "offer" if len(room["peers"]) == 1 else "answer"
+        others = [p for p in room["peers"].values() if p["id"] != peer["id"]]
         send_json(peer, {
             "type": "ready",
             "room": room["id"],
@@ -661,11 +753,18 @@ class Handler(BaseHTTPRequestHandler):
             "role": role,
             "base": share_base(self.headers.get("Host", ""), self.server.server_address[1]),
             "waiting": len(room["peers"]) < 2,
+            "name": peer["name"],
+            "peer": others[0].get("name") if others else "",
+            "host": host_device_name(),
         })
         if len(room["peers"]) == 2:
             for other in list(room["peers"].values()):
+                mates = [p for p in room["peers"].values() if p["id"] != other["id"]]
                 try:
-                    send_json(other, {"type": "peer"})
+                    send_json(other, {
+                        "type": "peer",
+                        "name": mates[0].get("name") if mates else "",
+                    })
                 except OSError:
                     pass
         return peer, room["id"]
@@ -706,10 +805,10 @@ def as_app() -> bool:
     return getattr(sys, "frozen", False) or "--app" in sys.argv
 
 
-def save_download(filename: str, data: bytes) -> str:
+def save_download(filename: str, data: bytes, mime: str | None = None) -> str:
     SAVE_DIR.mkdir(parents=True, exist_ok=True)
     root = SAVE_DIR.resolve()
-    stem = Path(safe_name(filename))
+    stem = Path(ensure_extension(filename, mime))
     dest = (root / stem.name).resolve()
     if dest.parent != root:
         raise ValueError("Bad filename")
@@ -721,6 +820,20 @@ def save_download(filename: str, data: bytes) -> str:
         n += 1
     dest.write_bytes(data)
     return dest.name
+
+
+def reveal_download(filename: str) -> str:
+    root = SAVE_DIR.resolve()
+    path = (root / Path(safe_name(filename)).name).resolve()
+    if path.parent != root or not path.is_file():
+        raise ValueError("File not found")
+    subprocess.run(["open", "-R", str(path)], check=False)
+    return str(path)
+
+
+def open_save_folder() -> None:
+    SAVE_DIR.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["open", str(SAVE_DIR.resolve())], check=False)
 
 
 def open_url(base: str) -> None:
@@ -796,6 +909,8 @@ def run_self_test() -> None:
     assert files[0]["data"] == b"hi"
     assert safe_name("../x") == "x"
     assert safe_name("note.html").endswith(".download")
+    assert ensure_extension("clip", "video/mp4") == "clip.mp4"
+    assert ensure_extension("clip.MOV", "video/quicktime") == "clip.MOV"
     print("self-test ok")
 
 
