@@ -534,6 +534,7 @@
       <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>SendToMac</span></a>
       <div class="nav-links">
         <a href="#how">How it works</a>
+        <a href="#install">Install</a>
         <a href="#privacy">Privacy</a>
         <a href="#faq">FAQ</a>
         <a class="nav-icon" href="https://github.com/Hasninemamud/sendtomac" target="_blank" rel="noopener" aria-label="GitHub">
@@ -558,12 +559,12 @@
           <a class="btn btn-primary" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download for Mac</a>
           <a class="btn btn-ghost" href="#how">See how it works</a>
         </div>
-        <p class="note">Apple silicon and Intel. Drag to Applications, then right-click and choose Open the first time.</p>
+        <p class="note">Apple silicon and Intel. Prefer <strong>Install SendToMac.command</strong> in the disk image, or drag to Applications then right‑click → Open once.</p>
       </div>
       <aside class="hero-card" aria-hidden="true">
         <div>
           <h2>Connected in one scan.</h2>
-          <p>Option + Command opens the window. Drop a file, or pick one, then send.</p>
+          <p>Click the menu-bar icon. Drop a file, or pick one, then send.</p>
         </div>
         <div class="scene">
           <img class="macbook" src="/macbook.png" alt="">
@@ -584,22 +585,45 @@
     <section id="how">
       <p class="section-kicker">How it works</p>
       <h2 class="section-title">Three steps. Same Wi-Fi.</h2>
-      <p class="section-copy">Open the app once. After that, Option + Command brings it back. The phone only needs a camera.</p>
+      <p class="section-copy">Install once. Click the menu-bar icon to open. The phone only needs a camera.</p>
       <div class="steps">
         <article class="step">
           <b>01</b>
-          <h3>Open SendToMac</h3>
-          <p>Press Option + Command, or click the menu-bar icon. The code appears.</p>
+          <h3>Install on the Mac</h3>
+          <p>Open the DMG. Run <strong>Install SendToMac.command</strong>, or drag the app to Applications and right‑click → Open once.</p>
         </article>
         <article class="step">
           <b>02</b>
           <h3>Scan the code</h3>
-          <p>Use the Android camera on the same Wi-Fi. That pairs the two devices.</p>
+          <p>Click the menu-bar icon. Scan with the phone on the same Wi-Fi (not guest Wi-Fi).</p>
         </article>
         <article class="step">
           <b>03</b>
           <h3>Send the file</h3>
           <p>Pick a photo, drop a file, or write a short note. It lands on the other device.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="install">
+      <p class="section-kicker">First open</p>
+      <h2 class="section-title">If macOS blocks the app.</h2>
+      <p class="section-copy">Prefer <strong>Install SendToMac.command</strong> in the disk image — it copies to Applications and clears the download quarantine. If you dragged the app yourself, use one trust step below.</p>
+      <div class="steps">
+        <article class="step">
+          <b>01</b>
+          <h3>Install.command</h3>
+          <p>Open the DMG and run <strong>Install SendToMac.command</strong>. Then click the menu-bar icon. Option⌘ and Open at Login stay optional.</p>
+        </article>
+        <article class="step">
+          <b>02</b>
+          <h3>Right-click → Open</h3>
+          <p>If you dragged the app: in Applications, right-click SendToMac → Open, or System Settings → Privacy &amp; Security → Open Anyway.</p>
+        </article>
+        <article class="step">
+          <b>03</b>
+          <h3>Allow Local Network</h3>
+          <p>If macOS asks, allow Local Network / incoming connections so the phone can reach the Mac.</p>
         </article>
       </div>
     </section>
@@ -613,11 +637,11 @@
           <h3>Local first.</h3>
           <p>On a home network the Mac relays the transfer. On HTTPS hosting, the page only pairs the devices and the file can move directly between them.</p>
           <div class="chips">
-            <span class="chip">Option + Command</span>
+            <span class="chip">Menu-bar icon</span>
             <span class="chip">Drag and drop</span>
             <span class="chip">QR pairing</span>
             <span class="chip">Apple silicon + Intel</span>
-            <span class="chip">Night mode</span>
+            <span class="chip">Optional Option⌘</span>
           </div>
         </div>
         <div class="feature-side">
@@ -655,19 +679,23 @@
       <div class="faq">
         <details>
           <summary>Where do I download it?</summary>
-          <p>Use <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">the latest Mac disk image</a>. Open it, drag SendToMac to Applications, then right-click and choose Open the first time.</p>
+          <p>Use <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">the latest Mac disk image</a>. Open it and run <strong>Install SendToMac.command</strong>, or drag SendToMac to Applications and right‑click → Open the first time.</p>
+        </details>
+        <details>
+          <summary>macOS says the app can’t be opened</summary>
+          <p>Right‑click the app → Open, or use System Settings → Privacy &amp; Security → Open Anyway. This is normal for apps that aren’t notarized yet.</p>
         </details>
         <details>
           <summary>Does the file go to a server?</summary>
           <p>No public upload. On your home Wi-Fi the Mac keeps a temporary copy only until the other device downloads it, or for about 15 minutes.</p>
         </details>
         <details>
-          <summary>Why won’t Option + Command open it?</summary>
-          <p>Open the app once so it is running in the menu bar. After that, hold Option and Command together to show the window.</p>
+          <summary>How do I open the window?</summary>
+          <p>Click the SendToMac icon in the menu bar. Option⌘ is optional — enable it from the icon’s right‑click menu (may ask for Accessibility once).</p>
         </details>
         <details>
           <summary>Why can’t the phone connect?</summary>
-          <p>Both devices need the same Wi-Fi. Guest networks that hide devices from each other will not work. Allow incoming connections the first time macOS asks.</p>
+          <p>Same Wi-Fi (not guest/isolation). Keep the Mac app running. Allow Local Network / incoming connections if macOS asks. Or join the phone hotspot from the Mac and scan again.</p>
         </details>
       </div>
     </section>

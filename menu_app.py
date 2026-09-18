@@ -44,13 +44,16 @@ from AppKit import (
     NSViewWidthSizable,
     NSWorkspace,
 )
-from Foundation import NSBundle, NSDistributedNotificationCenter, NSObject, NSTimer, NSURL, NSURLRequest
+from Foundation import NSBundle, NSDistributedNotificationCenter, NSObject, NSTimer, NSURL, NSURLRequest, NSUserDefaults
 from WebKit import WKWebView, WKWebViewConfiguration
 
 SHOW_NOTE = "app.sendtomac.show"
 POPOVER_SIZE = (560, 400)
 CHORD = NSEventModifierFlagCommand | NSEventModifierFlagOption
 CHORD_HOLD = 0.28
+PREF_LOGIN = "STMOpenAtLogin"
+PREF_SHORTCUT = "STMShortcutEnabled"
+PREF_SEEN_TIP = "STMSeenFirstTip"
 _AX = {}
 _CARBON_HANDLER = None
 _CARBON_REFS = []
@@ -59,6 +62,22 @@ _CG_OPTION = 0x00080000
 _CG_COMMAND = 0x00100000
 _CG_SHIFT = 0x00020000
 _CG_CONTROL = 0x00040000
+
+
+def prefs():
+    return NSUserDefaults.standardUserDefaults()
+
+
+def pref_bool(key, default=False):
+    defaults = prefs()
+    if defaults.objectForKey_(key) is None:
+        return default
+    return bool(defaults.boolForKey_(key))
+
+
+def set_pref_bool(key, value):
+    prefs().setBool_forKey_(bool(value), key)
+    prefs().synchronize()
 
 
 class _EventTypeSpec(Structure):
@@ -346,6 +365,7 @@ class MenuApp(NSObject):
         self.chord_latched = False
         self.shortcut_monitors = []
         self.shortcut_on = False
+        self.login_item = None
         return self
 
     def applicationDidFinishLaunching_(self, _notification):
@@ -363,8 +383,12 @@ class MenuApp(NSObject):
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             self, "appearanceChanged:", "AppleInterfaceThemeChangedNotification", None
         )
-        self.install_shortcut()
-        self.register_login()
+        # Hotkey only if the user opted in and Accessibility is already granted — never prompt on launch.
+        if pref_bool(PREF_SHORTCUT, False) and accessibility_ok(prompt=False):
+            self.start_shortcut()
+        # Login item only if the user opted in.
+        if pref_bool(PREF_LOGIN, False):
+            self.set_login_enabled(True)
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
             0.15, self, "showPopover:", None, False
         )
@@ -416,39 +440,103 @@ class MenuApp(NSObject):
         item = NSStatusBar.systemStatusBar().statusItemWithLength_(NSVariableStatusItemLength)
         button = item.button()
         button.setImage_(image)
-        button.setToolTip_("SendToMac. Right-click to quit.")
+        button.setToolTip_("SendToMac. Click to open. Right-click for options.")
         button.setTarget_(self)
         button.setAction_("toggle:")
         button.sendActionOn_(NSEventMaskLeftMouseUp | NSEventMaskRightMouseUp)
-        menu = NSMenu.alloc().init()
-        open_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Open", "showPopover:", "")
-        open_item.setTarget_(self)
-        quit_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit SendToMac", "quit:", "q")
-        quit_item.setTarget_(self)
-        menu.addItem_(open_item)
-        menu.addItem_(NSMenuItem.separatorItem())
-        menu.addItem_(quit_item)
-        self.menu = menu
+        self.menu = NSMenu.alloc().init()
         self.status = item
+        self.rebuild_menu()
         local = NSEvent.addLocalMonitorForEventsMatchingMask_handler_(
             NSEventMaskRightMouseDown, self.localRightClick_
         )
         if local is not None:
             self.shortcut_monitors.append(local)
 
-    def install_shortcut(self):
+    def rebuild_menu(self):
+        menu = self.menu
+        menu.removeAllItems()
+        open_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Open Window", "showPopover:", "")
+        open_item.setTarget_(self)
+        menu.addItem_(open_item)
+
+        folder_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            "Open Downloads Folder", "openDownloads:", ""
+        )
+        folder_item.setTarget_(self)
+        menu.addItem_(folder_item)
+        menu.addItem_(NSMenuItem.separatorItem())
+
+        shortcut_on = pref_bool(PREF_SHORTCUT, False) and accessibility_ok(prompt=False) and self.shortcut_on
+        shortcut_title = "Disable Option⌘ Shortcut" if shortcut_on else "Enable Option⌘ Shortcut…"
+        shortcut_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            shortcut_title, "toggleShortcut:", ""
+        )
+        shortcut_item.setTarget_(self)
+        menu.addItem_(shortcut_item)
+
+        login_on = pref_bool(PREF_LOGIN, False)
+        login_title = "Stop Opening at Login" if login_on else "Open at Login"
+        login_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            login_title, "toggleLogin:", ""
+        )
+        login_item.setTarget_(self)
+        menu.addItem_(login_item)
+        menu.addItem_(NSMenuItem.separatorItem())
+
+        quit_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit SendToMac", "quit:", "q")
+        quit_item.setTarget_(self)
+        menu.addItem_(quit_item)
+
+    def openDownloads_(self, _sender):
+        folder = Path.home() / "Downloads" / "SendToMac"
+        folder.mkdir(parents=True, exist_ok=True)
+        NSWorkspace.sharedWorkspace().openFile_(str(folder))
+
+    def toggleShortcut_(self, _sender):
+        if self.shortcut_on and pref_bool(PREF_SHORTCUT, False):
+            set_pref_bool(PREF_SHORTCUT, False)
+            self.stop_shortcut()
+            self.rebuild_menu()
+            return
+        # Opt-in: only now may we prompt for Accessibility.
+        if not accessibility_ok(prompt=True):
+            self.rebuild_menu()
+            return
+        set_pref_bool(PREF_SHORTCUT, True)
+        self.start_shortcut()
+        self.rebuild_menu()
+
+    def toggleLogin_(self, _sender):
+        enabled = not pref_bool(PREF_LOGIN, False)
+        set_pref_bool(PREF_LOGIN, enabled)
+        self.set_login_enabled(enabled)
+        self.rebuild_menu()
+
+    def start_shortcut(self):
+        if self.shortcut_on:
+            return
         install_carbon_hotkey(lambda: self.performSelectorOnMainThread_withObject_waitUntilDone_(
             "openFromShortcut:", None, False
         ))
         self.attach_shortcut()
-        self.chord_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-            0.05, self, "pollChord:", None, True
-        )
-        self.register_login()
-        if not accessibility_ok(prompt=False):
-            accessibility_ok(prompt=True)
+        if self.chord_timer is None:
+            self.chord_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                0.05, self, "pollChord:", None, True
+            )
 
-    def register_login(self):
+    def stop_shortcut(self):
+        self.shortcut_on = False
+        if self.chord_timer is not None:
+            self.chord_timer.invalidate()
+            self.chord_timer = None
+        # Global/local monitors stay for right-click; only clear hotkey-related ones carefully.
+        # Keep right-click monitor; drop flag monitors by rebuilding from install_status pattern.
+        # Simplest: invalidate chord timer and leave carbon refs; flags won't open if we gate in handlers.
+        self.chord_latched = False
+        self.chord_used = False
+
+    def set_login_enabled(self, enabled: bool):
         if not getattr(sys, "frozen", False):
             return
         try:
@@ -456,13 +544,27 @@ class MenuApp(NSObject):
             if bundle is None or not bundle.load():
                 return
             service = objc.lookUpClass("SMAppService").mainAppService()
-            if int(service.status()) == 1:
-                return
-            service.registerAndReturnError_(None)
+            if enabled:
+                if int(service.status()) != 1:
+                    service.registerAndReturnError_(None)
+            else:
+                if int(service.status()) == 1:
+                    service.unregisterAndReturnError_(None)
         except Exception:
             return
 
+    def install_shortcut(self):
+        # Kept for compatibility; prefer start_shortcut / toggleShortcut_.
+        self.start_shortcut()
+
+    def register_login(self):
+        # Kept for compatibility; login is opt-in via toggleLogin_.
+        if pref_bool(PREF_LOGIN, False):
+            self.set_login_enabled(True)
+
     def openFromShortcut_(self, _sender):
+        if not pref_bool(PREF_SHORTCUT, False):
+            return
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
             0.05, self, "showPopover:", None, False
         )
@@ -490,6 +592,8 @@ class MenuApp(NSObject):
         return flags == CHORD
 
     def pollChord_(self, _timer):
+        if not pref_bool(PREF_SHORTCUT, False):
+            return
         down = chord_flags_down()
         if down and not self.chord_latched:
             self.chord_latched = True
@@ -498,6 +602,8 @@ class MenuApp(NSObject):
             self.chord_latched = False
 
     def flagsChanged_(self, event):
+        if not pref_bool(PREF_SHORTCUT, False):
+            return
         if self.chord_down(event):
             if self.chord_used:
                 return
@@ -540,6 +646,8 @@ class MenuApp(NSObject):
 
     def hotkeyFired_(self, _timer):
         self.hotkey_timer = None
+        if not pref_bool(PREF_SHORTCUT, False):
+            return
         if self.chord_used or not self.chord_down():
             return
         self.chord_used = True

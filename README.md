@@ -54,19 +54,19 @@ The public site only explains the product. The bytes move on the local network w
 Works on Apple silicon and Intel — one disk image covers both.
 
 1. Open `SendToMac.dmg`.
-2. Drag **SendToMac** into **Applications**.
-3. The first time, **right-click** the app and choose **Open**. It isn't an App Store app, so a normal double-click is blocked until you do this once.
-4. Allow incoming connections if macOS asks — that's the phone reaching the Mac over your Wi-Fi.
-5. If macOS asks for **Accessibility** access, allow it. That permission exists only so **Option + Command** can open the window — the app never records what you type.
+2. Prefer **Install SendToMac.command** (clears quarantine and copies to Applications), **or** drag **SendToMac** into **Applications**.
+3. If you dragged the app (or macOS still blocks it), **right-click** → **Open**, or System Settings → Privacy & Security → **Open Anyway**. It isn’t notarized yet, so a normal double-click can be blocked once.
+4. Allow **Local Network** / incoming connections if macOS asks — that’s the phone reaching the Mac over your Wi-Fi.
+5. **Accessibility** and **Open at Login** are optional. Enable **Option⌘** or login later from the menu-bar icon’s right-click menu — the app never records what you type.
 
-Leave the menu-bar icon running while you send. Received files land in `Downloads/SendToMac`. Right-click the menu-bar icon and choose **Quit SendToMac** when you're done — quitting ends the pairing.
+Leave the menu-bar icon running while you send. Received files land in `Downloads/SendToMac`. Right-click the menu-bar icon and choose **Quit SendToMac** when you’re done — quitting ends the pairing.
 
 ### Open it
 
-- Press **Option + Command**, **or**
-- Click the menu-bar icon.
+- Click the **menu-bar icon**, or
+- If you enabled it: press **Option + Command**.
 
-The app must be running for the shortcut to work. It stays in the menu bar after launch and can offer to start at login so the shortcut keeps working after a restart.
+Open at login is also optional (same right-click menu).
 
 ### Send a file
 

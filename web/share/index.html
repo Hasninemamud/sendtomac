@@ -484,6 +484,36 @@
       padding: 10px 14px;
       border-radius: 12px;
     }
+    .tip {
+      display: none;
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .tip[hidden] { display: none !important; }
+    .tip strong { color: var(--ink); font-weight: 600; }
+    .tip-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .tip-row p { margin: 0; flex: 1; min-width: 0; }
+    .tip button {
+      min-height: 28px;
+      padding: 0 10px;
+      font-size: 12px;
+      border-radius: 999px;
+      background: var(--btn);
+      flex: none;
+    }
+    .tip.show-phone:not([hidden]) { display: block; }
+    html[data-app="app"] .tip.show-app:not([hidden]) { display: block; }
+    html[data-app="app"] .tip.show-phone { display: none !important; }
 
     .dropzone {
       border: 1.5px dashed var(--line);
@@ -673,6 +703,13 @@
       </div>
     </header>
 
+    <div class="tip" id="firstTip" hidden>
+      <div class="tip-row">
+        <p id="tipText"></p>
+        <button type="button" id="tipDismiss">Got it</button>
+      </div>
+    </div>
+
     <main id="pair">
       <div class="card">
         <div class="pair-grid">
@@ -786,8 +823,28 @@
     if (inApp) {
       document.documentElement.dataset.app = "app";
       document.getElementById("status").textContent =
-        "Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.";
+        "Click the menu-bar icon anytime to open this window. Scan with the phone on the same Wi-Fi.";
     }
+
+    (function setupTip() {
+      const tip = document.getElementById("firstTip");
+      const tipText = document.getElementById("tipText");
+      const key = inApp ? "sendtomac-tip-app" : "sendtomac-tip-phone";
+      try {
+        if (localStorage.getItem(key) === "1") return;
+      } catch (e) {}
+      tip.hidden = false;
+      tip.classList.add(inApp ? "show-app" : "show-phone");
+      tipText.innerHTML = inApp
+        ? "<strong>First open.</strong> Click the menu-bar icon to show this window. Option⌘ is optional — enable it from the icon’s right‑click menu. If macOS asks for Local Network, allow it so the phone can connect."
+        : "<strong>Same Wi‑Fi.</strong> Keep the Mac app open. If this page won’t connect, leave guest Wi‑Fi, allow Local Network on the Mac, or join the phone’s hotspot from the Mac and scan again.";
+      document.getElementById("tipDismiss").onclick = () => {
+        tip.hidden = true;
+        tip.classList.remove("show-app", "show-phone");
+        try { localStorage.setItem(key, "1"); } catch (e) {}
+      };
+    })();
+
     function macHeaders(extra) {
       const headers = localKey ? { "X-SendToMac-Key": localKey } : {};
       return Object.assign(headers, extra || {});
@@ -1106,9 +1163,11 @@
           if (msg.peer) setPeerName(msg.peer);
           document.getElementById("code").textContent = room;
           if (!wanted && msg.base) drawQr(msg.base + "/share?r=" + room);
-          if (!wanted && !msg.base) setStatus("This Mac has no Wi-Fi address yet.", "bad");
-          if (wanted) setStatus("Connecting…");
-          else setStatus("Both devices must be on the same Wi-Fi. The scan only pairs them. A file is not uploaded to a public server.");
+          if (!wanted && !msg.base) setStatus("This Mac has no Wi-Fi address yet. Join Wi-Fi (or a phone hotspot), then tap Reset.", "bad");
+          if (wanted) setStatus("Connecting on the same Wi-Fi…");
+          else setStatus(inApp
+            ? "Scan with the phone camera on the same Wi-Fi. Click the menu-bar icon to open this again."
+            : "Scan with the phone camera. Leave this page and the Mac app open.");
           if (!msg.waiting) onPeer();
           return;
         }
@@ -1119,7 +1178,7 @@
         if (msg.type === "left") {
           connected = false;
           peerName = "";
-          setStatus("The other device left. Scan again.", "bad");
+          setStatus("The other device left. Tap Reset for a new code, then scan again.", "bad");
           shareEl.hidden = true;
           pairEl.hidden = false;
           setPairingChrome();
@@ -1131,7 +1190,12 @@
       ws.onclose = () => {
         if (connected) return;
         if (++socketTries > 2) {
-          setStatus("Open SendToMac on the Mac. Leave it open, then scan the code. Same Wi-Fi.", "bad");
+          setStatus(
+            wanted
+              ? "Can’t reach the Mac. Open SendToMac on the Mac, allow Local Network if asked, use the same Wi-Fi (not guest), then scan again."
+              : "Open SendToMac on the Mac and leave it running. Allow Local Network / incoming connections if macOS asks.",
+            "bad"
+          );
           return;
         }
         setTimeout(connectSocket, 1200);
@@ -1157,7 +1221,10 @@
       pc.ondatachannel = (e) => bindChannel(e.channel);
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "failed") {
-          setStatus("Not on the same Wi-Fi, or this network blocks devices from seeing each other. Use a normal Wi-Fi, or join the phone hotspot from the Mac and scan again.", "bad");
+          setStatus(
+            "Not on the same Wi-Fi, or this network blocks devices from seeing each other. Use home Wi-Fi, or join the phone hotspot from the Mac and scan again. Allow Local Network for SendToMac if macOS asked.",
+            "bad"
+          );
         }
       };
       if (role === "offer") {
