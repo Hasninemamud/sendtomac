@@ -56,12 +56,16 @@ PREF_SHORTCUT = "STMShortcutEnabled"
 PREF_SEEN_TIP = "STMSeenFirstTip"
 _AX = {}
 _CARBON_HANDLER = None
+_CARBON_OPEN_HANDLER = None
 _CARBON_REFS = []
 _CG = None
 _CG_OPTION = 0x00080000
 _CG_COMMAND = 0x00100000
 _CG_SHIFT = 0x00020000
 _CG_CONTROL = 0x00040000
+# Carbon virtual key code for "S"; cmdKey modifier bit.
+_VK_S = 0x01
+_CMD_KEY = 256
 
 
 def prefs():
@@ -122,6 +126,45 @@ def install_carbon_hotkey(callback) -> None:
             if carbon.RegisterEventHotKey(key, mods, _EventHotKeyID(0x53544D43, index), target, 0, byref(ref)) == 0:
                 _CARBON_REFS.append(ref)
     except Exception:
+        return
+
+
+def install_cmd_s_hotkey(callback) -> None:
+    """⌘S opens the window. Uses Carbon — no Accessibility prompt."""
+    global _CARBON_OPEN_HANDLER
+    if _CARBON_OPEN_HANDLER is not None:
+        return
+    try:
+        carbon = ctypes.CDLL("/System/Library/Frameworks/Carbon.framework/Carbon")
+        carbon.GetApplicationEventTarget.restype = c_void_p
+        carbon.GetEventDispatcherTarget.restype = c_void_p
+        carbon.InstallEventHandler.argtypes = [
+            c_void_p, c_void_p, c_uint32, POINTER(_EventTypeSpec), c_void_p, POINTER(c_void_p)
+        ]
+        carbon.InstallEventHandler.restype = c_int32
+        carbon.RegisterEventHotKey.argtypes = [
+            c_uint32, c_uint32, _EventHotKeyID, c_void_p, c_uint32, POINTER(c_void_p)
+        ]
+        carbon.RegisterEventHotKey.restype = c_int32
+
+        def handler(_call, _event, _user):
+            callback()
+            return 0
+
+        _CARBON_OPEN_HANDLER = CFUNCTYPE(c_int32, c_void_p, c_void_p, c_void_p)(handler)
+        specs = (_EventTypeSpec * 1)(_EventTypeSpec(0x6B657962, 5))
+        target = carbon.GetEventDispatcherTarget() or carbon.GetApplicationEventTarget()
+        installed = c_void_p()
+        if carbon.InstallEventHandler(target, _CARBON_OPEN_HANDLER, 1, specs, None, byref(installed)) != 0:
+            _CARBON_OPEN_HANDLER = None
+            return
+        ref = c_void_p()
+        if carbon.RegisterEventHotKey(
+            _VK_S, _CMD_KEY, _EventHotKeyID(0x53544D53, 1), target, 0, byref(ref)
+        ) == 0:
+            _CARBON_REFS.append(ref)
+    except Exception:
+        _CARBON_OPEN_HANDLER = None
         return
 
 
@@ -386,12 +429,22 @@ class MenuApp(NSObject):
         # Hotkey only if the user opted in and Accessibility is already granted — never prompt on launch.
         if pref_bool(PREF_SHORTCUT, False) and accessibility_ok(prompt=False):
             self.start_shortcut()
+        # ⌘S always opens the share window (Carbon; no Accessibility).
+        install_cmd_s_hotkey(lambda: self.performSelectorOnMainThread_withObject_waitUntilDone_(
+            "showPopover:", None, False
+        ))
         # Login item only if the user opted in.
         if pref_bool(PREF_LOGIN, False):
             self.set_login_enabled(True)
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
             0.15, self, "showPopover:", None, False
         )
+
+    def applicationShouldHandleReopen_hasVisibleWindows_(self, _app, has_visible):
+        # Dock icon click while already running.
+        if not has_visible:
+            self.showPopover_(None)
+        return True
 
     def applicationWillTerminate_(self, _notification):
         if self.httpd is not None:
@@ -456,7 +509,7 @@ class MenuApp(NSObject):
     def rebuild_menu(self):
         menu = self.menu
         menu.removeAllItems()
-        open_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Open Window", "showPopover:", "")
+        open_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Open Window", "showPopover:", "s")
         open_item.setTarget_(self)
         menu.addItem_(open_item)
 
@@ -485,6 +538,7 @@ class MenuApp(NSObject):
         menu.addItem_(NSMenuItem.separatorItem())
 
         quit_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit SendToMac", "quit:", "q")
+        quit_item.setKeyEquivalentModifierMask_(NSEventModifierFlagCommand)
         quit_item.setTarget_(self)
         menu.addItem_(quit_item)
 
