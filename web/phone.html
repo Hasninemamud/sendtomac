@@ -87,14 +87,13 @@
   <h1 id="macName">Mac</h1>
   <form id="form">
     <button type="button" class="secondary" id="pasteSend">Send what’s copied</button>
-    <textarea id="text" placeholder="Or paste a link, note, address, or code"></textarea>
-    <div class="row">
-      <label class="ghost">Photos or files<input id="files" type="file" multiple></label>
-      <label class="ghost">Camera<input id="camera" type="file" accept="image/*" capture="environment"></label>
-    </div>
+    <textarea id="text" placeholder="Note, link, or address…"></textarea>
     <div class="chips" id="chips"></div>
+    <div class="row">
+      <label class="ghost">Add files<input id="files" type="file" multiple></label>
+    </div>
     <div class="dock">
-      <button type="submit" id="send">Send to Mac</button>
+      <button type="submit" id="send">Send</button>
     </div>
   </form>
   <p id="status"></p>
@@ -132,10 +131,6 @@
     }
 
     document.getElementById("files").addEventListener("change", (e) => {
-      addFiles(e.target.files);
-      e.target.value = "";
-    });
-    document.getElementById("camera").addEventListener("change", (e) => {
       addFiles(e.target.files);
       e.target.value = "";
     });
