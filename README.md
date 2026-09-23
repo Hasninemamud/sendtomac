@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/logo.png" alt="SendToMac" width="128">
+  <img src="web/logo-color.png" alt="SendToMac" width="128">
 </p>
 
 <h1 align="center">SendToMac</h1>

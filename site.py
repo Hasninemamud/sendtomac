@@ -51,6 +51,7 @@ ICONS = {
     "/logo.png": (ROOT / "web" / "logo.png", "image/png"),
     "/logo-day.png": (ROOT / "web" / "logo-day.png", "image/png"),
     "/logo-night.png": (ROOT / "web" / "logo-night.png", "image/png"),
+    "/logo-color.png": (ROOT / "web" / "logo-color.png", "image/png"),
     "/menu-icon.png": (ROOT / "web" / "menu-icon.png", "image/png"),
     "/menu-icon-light.png": (ROOT / "web" / "menu-icon-light.png", "image/png"),
     "/menu-ink.png": (ROOT / "web" / "menu-ink.png", "image/png"),
