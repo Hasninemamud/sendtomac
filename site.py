@@ -524,6 +524,21 @@ class Handler(BaseHTTPRequestHandler):
             if path.is_file():
                 self.send_bytes(200, path.read_bytes(), content_type)
                 return
+        # Allow top-level web assets (png/svg/ico) without listing every file.
+        if parsed.path.startswith("/") and ".." not in parsed.path and parsed.path.count("/") == 1:
+            asset = ROOT / "web" / parsed.path.lstrip("/")
+            types = {
+                ".png": "image/png",
+                ".svg": "image/svg+xml",
+                ".ico": "image/x-icon",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".webp": "image/webp",
+            }
+            ctype = types.get(asset.suffix.lower())
+            if ctype and asset.is_file():
+                self.send_bytes(200, asset.read_bytes(), ctype, cache=True)
+                return
         query = urllib.parse.parse_qs(parsed.query)
         if parsed.path in {"/privacy", "/privacy/", "/privacy.html"}:
             self.send_bytes(200, PRIVACY.read_bytes(), "text/html; charset=utf-8")

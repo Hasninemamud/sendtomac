@@ -91,7 +91,8 @@ html[data-theme="night"] .theme .icon-moon {
   flex: none;
   display: block;
   object-fit: contain;
-  border-radius: 8px;
+  background: transparent;
+  border-radius: 0;
 }
 .brand .mark-night { display: none; }
 html[data-theme="night"] .brand .mark-day { display: none; }
