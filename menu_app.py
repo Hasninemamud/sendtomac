@@ -472,6 +472,8 @@ class MenuApp(NSObject):
         roots = []
         if getattr(sys, "frozen", False):
             roots.append(Path(sys.executable).resolve().parent.parent / "Resources" / "web")
+            # Dual-arch launcher: nested app Resources
+            roots.append(Path(sys.executable).resolve().parent.parent / "Resources" / "AppleSilicon" / "SendToMac.app" / "Contents" / "Resources" / "web")
         roots.append(Path(__file__).resolve().parent / "web")
         name = "menu-icon.png"
         for root in roots:
@@ -479,13 +481,22 @@ class MenuApp(NSObject):
             if path.is_file():
                 image = NSImage.alloc().initWithContentsOfFile_(str(path))
                 if image is not None:
+                    # Template = auto light/dark. 22pt matches typical menu-bar icon size.
                     image.setTemplate_(True)
-                    image.setSize_((18, 18))
+                    image.setSize_((22, 22))
+                    try:
+                        image.setIsTemplate_(True)
+                    except Exception:
+                        pass
                     return image
         image = NSImage.imageWithSystemSymbolName_accessibilityDescription_("laptopcomputer", "SendToMac")
         if image is None:
             image = NSImage.alloc().init()
         image.setTemplate_(True)
+        try:
+            image.setSize_((22, 22))
+        except Exception:
+            pass
         return image
 
     def install_status(self):

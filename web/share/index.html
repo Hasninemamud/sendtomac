@@ -12,8 +12,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
   <title>SendToMac</title>
-  <link rel="icon" href="/logo.png?v=5" type="image/png">
-  <link rel="apple-touch-icon" href="/logo.png?v=5">
+  <link rel="icon" href="/logo.png?v=6" type="image/png">
+  <link rel="apple-touch-icon" href="/logo.png?v=6">
   <link rel="stylesheet" href="/theme.css">
   <style>
     @font-face {
@@ -243,16 +243,16 @@
       justify-content: center;
     }
     .qr-wrap {
-      padding: 10px;
-      border-radius: 16px;
-      background: #fff;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
       width: fit-content;
     }
     #qr {
       width: 168px;
       height: 168px;
       background: #fff;
-      border-radius: 10px;
+      border-radius: 0;
       overflow: hidden;
     }
     #qr svg { width: 168px; height: 168px; display: block; }
@@ -580,7 +580,7 @@
     }
     html[data-app="app"] .shell { max-width: none; gap: 10px; }
     html[data-app="app"] .brand { font-size: 13px; }
-    html[data-app="app"] .brand .mark { width: 22px; height: 22px; }
+    html[data-app="app"] .brand .mark { width: 28px; height: 28px; border-radius: 8px; }
     html[data-app="app"] .theme {
       height: 30px;
       min-height: 30px;
@@ -594,7 +594,7 @@
     html[data-app="app"] .card { padding: 12px; border-radius: 16px; }
     html[data-app="app"] #qr,
     html[data-app="app"] #qr svg { width: 112px; height: 112px; }
-    html[data-app="app"] .qr-wrap { padding: 6px; }
+    html[data-app="app"] .qr-wrap { padding: 0; background: transparent; }
     html[data-app="app"] .code { font-size: 11px; }
     html[data-app="app"] .code strong { font-size: 12px; }
     html[data-app="app"] #copy,
@@ -928,7 +928,7 @@
       const qr = qrcode(0, "M");
       qr.addData(url);
       qr.make();
-      el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 10, scalable: true });
+      el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 1, scalable: true });
       document.getElementById("link").textContent = url;
       document.getElementById("copy").onclick = async () => {
         await navigator.clipboard.writeText(url);
