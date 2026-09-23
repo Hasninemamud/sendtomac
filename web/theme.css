@@ -90,9 +90,8 @@ html[data-theme="night"] .theme .icon-moon {
   height: 32px;
   flex: none;
   display: block;
-  background: url("/logo.png?v=6") center / contain no-repeat;
+  object-fit: contain;
   border-radius: 8px;
-  position: relative;
 }
 .brand .mark::after {
   display: none;
