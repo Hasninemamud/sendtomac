@@ -48,7 +48,7 @@ from Foundation import NSBundle, NSDistributedNotificationCenter, NSObject, NSTi
 from WebKit import WKWebView, WKWebViewConfiguration
 
 SHOW_NOTE = "app.sendtomac.show"
-POPOVER_SIZE = (560, 400)
+POPOVER_SIZE = (400, 250)
 CHORD = NSEventModifierFlagCommand | NSEventModifierFlagOption
 CHORD_HOLD = 0.28
 PREF_LOGIN = "STMOpenAtLogin"
