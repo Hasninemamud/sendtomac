@@ -49,6 +49,8 @@ ICONS = {
     "/apple-touch-icon.png": (ROOT / "web" / "apple-touch-icon.png", "image/png"),
     "/favicon.ico": (ROOT / "web" / "favicon.ico", "image/x-icon"),
     "/logo.png": (ROOT / "web" / "logo.png", "image/png"),
+    "/logo-day.png": (ROOT / "web" / "logo-day.png", "image/png"),
+    "/logo-night.png": (ROOT / "web" / "logo-night.png", "image/png"),
     "/menu-icon.png": (ROOT / "web" / "menu-icon.png", "image/png"),
     "/menu-icon-light.png": (ROOT / "web" / "menu-icon-light.png", "image/png"),
     "/menu-ink.png": (ROOT / "web" / "menu-ink.png", "image/png"),
