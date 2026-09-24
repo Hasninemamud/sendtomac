@@ -443,10 +443,19 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "public, max-age=86400" if cache else "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
+        if getattr(self, "_head_only", False):
+            return
         self.wfile.write(body)
 
     def send_obj(self, code: int, payload) -> None:
         self.send_bytes(code, json.dumps(payload).encode(), "application/json; charset=utf-8")
+
+    def do_HEAD(self) -> None:  # noqa: N802
+        self._head_only = True
+        try:
+            self.do_GET()
+        finally:
+            self._head_only = False
 
     def request_key(self) -> str:
         key = self.headers.get("X-SendToMac-Key") or ""
@@ -490,6 +499,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/ws":
+            if getattr(self, "_head_only", False):
+                self.send_bytes(405, b"Method Not Allowed", "text/plain; charset=utf-8")
+                return
             self.handle_ws()
             return
         if parsed.path == "/api/info":
