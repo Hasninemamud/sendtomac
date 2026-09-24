@@ -1,50 +1,50 @@
 :root {
   color-scheme: light;
-  --bg: #e9e8e4;
-  --bg-2: #dddbd6;
-  --ink: #12141a;
-  --muted: #5c606a;
-  --soft: #2c3038;
-  --line: rgba(18, 20, 26, 0.12);
-  --rule: rgba(18, 20, 26, 0.1);
-  --field: #f4f3f0;
-  --chip: #dddbd6;
-  --cta: #12141a;
-  --on-cta: #e9e8e4;
-  --ok: #2a6b4f;
-  --bad: #8f2d2d;
-  --accent: #12141a;
-  --glow: rgba(18, 20, 26, 0.08);
-  --panel: #f4f3f0;
-  --panel-soft: #dddbd6;
-  --btn: #dddbd6;
-  --shadow: 0 12px 32px rgba(18, 20, 26, 0.08);
-  --radius: 20px;
-  --radius-sm: 14px;
+  --bg: #f4f3ee;
+  --bg-2: #eeede6;
+  --ink: #191817;
+  --muted: #5a554e;
+  --soft: #3d3a35;
+  --line: rgba(25, 24, 23, 0.12);
+  --rule: rgba(25, 24, 23, 0.1);
+  --field: #faf9f5;
+  --chip: #eeede6;
+  --cta: #c96442;
+  --on-cta: #faf9f5;
+  --ok: #6b7a3d;
+  --bad: #a53e2a;
+  --accent: #c96442;
+  --glow: rgba(201, 100, 66, 0.16);
+  --panel: #faf9f5;
+  --panel-soft: #eeede6;
+  --btn: #eeede6;
+  --shadow: none;
+  --radius: 10px;
+  --radius-sm: 8px;
   --page: var(--bg);
   --panel-strong: var(--field);
 }
 html[data-theme="night"] {
   color-scheme: dark;
-  --bg: #0e0f12;
-  --bg-2: #17191e;
-  --ink: #ebe8e2;
-  --muted: #9a9ea8;
-  --soft: #d2cfc8;
-  --line: rgba(235, 232, 226, 0.12);
-  --rule: rgba(235, 232, 226, 0.1);
-  --field: #15171c;
-  --chip: #1e2128;
-  --cta: #ebe8e2;
-  --on-cta: #0e0f12;
-  --ok: #6fbf8a;
+  --bg: #141413;
+  --bg-2: #1c1b19;
+  --ink: #f0eee6;
+  --muted: #87867f;
+  --soft: #c8c5bc;
+  --line: rgba(240, 238, 230, 0.12);
+  --rule: rgba(240, 238, 230, 0.1);
+  --field: #1c1b19;
+  --chip: #252421;
+  --cta: #f0eee6;
+  --on-cta: #141413;
+  --ok: #9bb56a;
   --bad: #e7a0a0;
-  --accent: #ebe8e2;
-  --glow: rgba(235, 232, 226, 0.08);
-  --panel: #15171c;
-  --panel-soft: #1e2128;
-  --btn: #1e2128;
-  --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --accent: #d97757;
+  --glow: rgba(217, 119, 87, 0.18);
+  --panel: #1c1b19;
+  --panel-soft: #252421;
+  --btn: #252421;
+  --shadow: none;
   --page: var(--bg);
   --panel-strong: var(--field);
 }
@@ -62,13 +62,13 @@ body {
   padding: 3px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--panel-soft);
+  background: transparent;
   color: var(--muted);
   cursor: pointer;
   flex: none;
   transition: border-color 160ms ease, background 160ms ease;
 }
-.theme:hover { border-color: color-mix(in srgb, var(--ink) 40%, var(--line)); }
+.theme:hover { border-color: color-mix(in srgb, var(--ink) 35%, var(--line)); }
 .theme .icon-sun,
 .theme .icon-moon {
   width: 26px;
@@ -82,16 +82,14 @@ body {
 html:not([data-theme="night"]) .theme .icon-sun {
   background: var(--panel);
   color: var(--ink);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 html[data-theme="night"] .theme .icon-moon {
-  background: #262a32;
+  background: #2a2926;
   color: var(--ink);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .brand .mark {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   flex: none;
   display: block;
   object-fit: contain;

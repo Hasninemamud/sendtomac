@@ -10,13 +10,13 @@
     } catch (e) {}
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#e9e8e4">
+  <meta name="theme-color" content="#f4f3ee">
   <title>Privacy — SendToMac</title>
-  <link rel="icon" href="../logo-day.png?v=13" type="image/png" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="../logo-night.png?v=13" type="image/png" media="(prefers-color-scheme: dark)">
-  <link rel="icon" href="../logo.png?v=13" type="image/png">
-  <link rel="apple-touch-icon" href="../logo.png?v=13">
-  <link rel="stylesheet" href="../theme.css?v=13">
+  <link rel="icon" href="../logo-day.png?v=14" type="image/png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="../logo-night.png?v=14" type="image/png" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="../logo.png?v=14" type="image/png">
+  <link rel="apple-touch-icon" href="../logo.png?v=14">
+  <link rel="stylesheet" href="../theme.css?v=14">
   <style>
     @font-face {
       font-family: "Newsreader";
@@ -39,51 +39,79 @@
         radial-gradient(90% 50% at 0% 0%, color-mix(in srgb, var(--ink) 5%, transparent), transparent 50%),
         var(--bg);
       color: var(--ink);
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
     }
     a { color: inherit; }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 28px 24px 72px; }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding:
+        calc(24px + env(safe-area-inset-top, 0px))
+        20px
+        calc(56px + env(safe-area-inset-bottom, 0px));
+    }
     nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       padding-bottom: 18px;
       border-bottom: 1px solid var(--line);
     }
-    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .brand span { font-size: 15px; font-weight: 650; letter-spacing: -0.03em; }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      min-width: 0;
+    }
+    .brand span {
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .brand .mark-night { display: none; }
     html[data-theme="night"] .brand .mark-day { display: none; }
     html[data-theme="night"] .brand .mark-night { display: block; }
-    .nav-links { display: flex; align-items: center; gap: 16px; }
+    .nav-links { display: flex; align-items: center; gap: 12px; flex: none; }
     nav .back { font-size: 14px; color: var(--muted); text-decoration: none; }
     nav .back:hover { color: var(--ink); }
     h1 {
-      margin: 40px 0 8px;
+      margin: 36px 0 8px;
       font-family: "Newsreader", Georgia, serif;
-      font-size: clamp(36px, 6vw, 48px);
+      font-size: clamp(32px, 9vw, 48px);
       letter-spacing: -0.035em;
       font-weight: 500;
       line-height: 1.05;
     }
     .updated { margin: 0 0 28px; color: var(--muted); font-size: 14px; }
     h2 {
-      margin: 32px 0 8px;
+      margin: 28px 0 8px;
       padding-top: 8px;
       border-top: 1px solid var(--line);
       font-family: "Newsreader", Georgia, serif;
-      font-size: 22px;
+      font-size: clamp(20px, 5vw, 22px);
       letter-spacing: -0.02em;
       font-weight: 500;
     }
     h2:first-of-type { border-top: 0; padding-top: 0; }
     p { margin: 0 0 12px; line-height: 1.55; color: var(--muted); }
-    p a { color: var(--soft); text-decoration: underline; text-underline-offset: 2px; }
+    p a { color: var(--soft); text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+
+    @media (max-width: 420px) {
+      .wrap { padding-left: 16px; padding-right: 16px; }
+      .brand span { font-size: 14px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <nav>
-      <a class="brand" href="../"><img class="mark mark-day" src="../logo-day.png?v=13" width="28" height="28" alt=""><img class="mark mark-night" src="../logo-night.png?v=13" width="28" height="28" alt=""><span>SendToMac</span></a>
+      <a class="brand" href="../"><img class="mark mark-day" src="../logo-day.png?v=14" width="28" height="28" alt=""><img class="mark mark-night" src="../logo-night.png?v=14" width="28" height="28" alt=""><span>SendToMac</span></a>
       <div class="nav-links">
         <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
           <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M5.2 18.8l1.6-1.6"/></g></svg></span>
@@ -117,6 +145,6 @@
     <h2>Contact</h2>
     <p>Questions about this policy: <a href="https://github.com/Hasninemamud/sendtomac">github.com/Hasninemamud/sendtomac</a>.</p>
   </div>
-  <script src="../theme.js?v=13"></script>
+  <script src="../theme.js?v=14"></script>
 </body>
 </html>

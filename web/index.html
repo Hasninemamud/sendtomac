@@ -11,94 +11,66 @@
     } catch (e) {}
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#e9e8e4">
+  <meta name="theme-color" content="#f4f3ee">
   <meta name="description" content="Send a file from Android to a Mac on the same Wi-Fi. Scan a code. No account. No public upload.">
   <title>SendToMac. From the phone. Onto the Mac.</title>
-  <link rel="icon" href="logo-day.png?v=13" type="image/png" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="logo-night.png?v=13" type="image/png" media="(prefers-color-scheme: dark)">
-  <link rel="icon" href="logo.png?v=13" type="image/png">
-  <link rel="apple-touch-icon" href="logo.png?v=13">
-  <link rel="stylesheet" href="theme.css?v=13">
+  <link rel="icon" href="logo-day.png?v=14" type="image/png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="logo-night.png?v=14" type="image/png" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="logo.png?v=14" type="image/png">
+  <link rel="apple-touch-icon" href="logo.png?v=14">
+  <link rel="stylesheet" href="theme.css?v=14">
   <style>
-    /* Fallback tokens if theme.css fails to load (wrong preview root / file://). */
     :root {
       color-scheme: light;
-      --bg: #e9e8e4; --ink: #12141a; --muted: #5c606a; --soft: #2c3038;
-      --line: rgba(18, 20, 26, 0.12); --cta: #12141a; --on-cta: #e9e8e4;
-      --panel: #f4f3f0; --panel-soft: #dddbd6; --page: var(--bg);
+      --bg: #f4f3ee; --ink: #191817; --muted: #5a554e; --soft: #3d3a35;
+      --line: rgba(25, 24, 23, 0.12); --cta: #c96442; --on-cta: #faf9f5;
+      --panel: #faf9f5; --panel-soft: #eeede6; --accent: #c96442; --page: var(--bg);
     }
     html[data-theme="night"] {
       color-scheme: dark;
-      --bg: #0e0f12; --ink: #ebe8e2; --muted: #9a9ea8; --soft: #d2cfc8;
-      --line: rgba(235, 232, 226, 0.12); --cta: #ebe8e2; --on-cta: #0e0f12;
-      --panel: #15171c; --panel-soft: #1e2128; --page: var(--bg);
+      --bg: #141413; --ink: #f0eee6; --muted: #87867f; --soft: #c8c5bc;
+      --line: rgba(240, 238, 230, 0.12); --cta: #f0eee6; --on-cta: #141413;
+      --panel: #1c1b19; --panel-soft: #252421; --accent: #d97757; --page: var(--bg);
     }
     .brand .mark-night { display: none; }
     html[data-theme="night"] .brand .mark-day { display: none; }
     html[data-theme="night"] .brand .mark-night { display: block; }
     html[data-theme="night"] .macbook { filter: invert(1); }
-    .theme {
-      display: inline-flex; align-items: center; gap: 2px;
-      height: 34px; min-height: 34px; min-width: 64px; padding: 3px;
-      border: 1px solid var(--line); border-radius: 999px;
-      background: var(--panel-soft); color: var(--muted); cursor: pointer; flex: none;
-    }
-    .theme .icon-sun, .theme .icon-moon {
-      width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%;
-    }
-    .theme svg { width: 14px; height: 14px; display: block; }
-    html:not([data-theme="night"]) .theme .icon-sun {
-      background: var(--panel); color: var(--ink);
-    }
-    html[data-theme="night"] .theme .icon-moon {
-      background: #262a32; color: var(--ink);
-    }
 
     @font-face {
       font-family: "Newsreader";
       src: url("fonts/newsreader-400.woff2") format("woff2");
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
+      font-weight: 400; font-style: normal; font-display: swap;
     }
     @font-face {
       font-family: "Newsreader";
       src: url("fonts/newsreader-italic.woff2") format("woff2");
-      font-weight: 400;
-      font-style: italic;
-      font-display: swap;
+      font-weight: 400; font-style: italic; font-display: swap;
     }
     @font-face {
       font-family: "Newsreader";
       src: url("fonts/newsreader-500.woff2") format("woff2");
-      font-weight: 500;
-      font-style: normal;
-      font-display: swap;
+      font-weight: 500; font-style: normal; font-display: swap;
     }
     @font-face {
       font-family: "Newsreader";
       src: url("fonts/newsreader-600.woff2") format("woff2");
-      font-weight: 600;
-      font-style: normal;
-      font-display: swap;
+      font-weight: 600; font-style: normal; font-display: swap;
     }
     @font-face {
       font-family: "Outfit";
       src: url("fonts/outfit-latin.woff2") format("woff2");
-      font-weight: 400 500;
-      font-display: swap;
+      font-weight: 400 500; font-display: swap;
     }
     @font-face {
       font-family: "Outfit";
       src: url("fonts/outfit-600.woff2") format("woff2");
-      font-weight: 600;
-      font-display: swap;
+      font-weight: 600; font-display: swap;
     }
     @font-face {
       font-family: "Outfit";
       src: url("fonts/outfit-700.woff2") format("woff2");
-      font-weight: 700;
-      font-display: swap;
+      font-weight: 700; font-display: swap;
     }
 
     * { box-sizing: border-box; }
@@ -110,41 +82,44 @@
       color: var(--ink);
       background: var(--bg);
       overflow-x: hidden;
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
     }
     a { color: inherit; }
-    .shell { width: min(1080px, calc(100% - 40px)); margin: 0 auto; }
+    .shell { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
 
     .top {
       position: sticky;
       top: 0;
       z-index: 40;
-      backdrop-filter: blur(16px);
-      background: color-mix(in srgb, var(--bg) 78%, transparent);
+      backdrop-filter: blur(18px);
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
       border-bottom: 1px solid var(--line);
     }
     .nav {
-      width: min(1080px, calc(100% - 40px));
+      width: min(1120px, calc(100% - 48px));
       margin: 0 auto;
-      min-height: 60px;
+      min-height: 64px;
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 20px;
     }
     .brand {
       display: flex;
       align-items: center;
       gap: 10px;
       text-decoration: none;
-      font-size: 15px;
-      font-weight: 650;
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 22px;
+      font-weight: 500;
       letter-spacing: -0.03em;
     }
-    .brand .mark { width: 28px; height: 28px; }
+    .brand .mark { width: 26px; height: 26px; }
     .nav-links {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
@@ -153,393 +128,462 @@
       color: var(--muted);
       font-size: 14px;
       padding: 8px 10px;
-      border-radius: 999px;
+      border-radius: 8px;
     }
     .nav-links a:hover { color: var(--ink); }
     .nav-icon {
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-      padding: 0;
-      display: inline-grid;
-      place-items: center;
-      border-radius: 50%;
-      color: var(--muted);
+      width: 36px; height: 36px; min-width: 36px; padding: 0;
+      display: inline-grid; place-items: center;
+      border-radius: 50%; color: var(--muted);
     }
     .nav-icon:hover { color: var(--ink); }
     .nav-icon svg { width: 18px; height: 18px; display: block; }
+    .nav-ghost {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 36px; padding: 0 14px;
+      border: 1px solid var(--line); border-radius: 999px;
+      text-decoration: none; font-size: 14px; color: var(--ink);
+    }
     .nav-cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 36px;
-      padding: 0 14px;
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 36px; padding: 0 14px;
       border-radius: 999px;
-      background: var(--cta);
-      color: var(--on-cta);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
+      background: var(--cta); color: var(--on-cta);
+      text-decoration: none; font-size: 14px; font-weight: 600;
     }
 
     .hero-bleed {
       position: relative;
       isolation: isolate;
       overflow: hidden;
-      border-bottom: 1px solid var(--line);
+      min-height: calc(100dvh - 64px);
+      display: flex;
+      align-items: center;
       background:
-        radial-gradient(90% 70% at 80% 10%, color-mix(in srgb, var(--ink) 8%, transparent), transparent 55%),
-        radial-gradient(70% 50% at 10% 90%, color-mix(in srgb, var(--ink) 5%, transparent), transparent 50%),
-        linear-gradient(180deg, color-mix(in srgb, var(--panel) 55%, var(--bg)), var(--bg));
+        radial-gradient(70% 55% at 85% 15%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%),
+        radial-gradient(55% 45% at 8% 90%, color-mix(in srgb, var(--ink) 5%, transparent), transparent 55%),
+        var(--bg);
     }
     .hero {
-      width: min(1080px, calc(100% - 40px));
+      width: min(1120px, calc(100% - 48px));
       margin: 0 auto;
-      padding: 56px 0 64px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      padding: 72px 0 80px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 40px 48px;
       align-items: center;
-      gap: 40px 56px;
-      min-height: calc(100dvh - 60px);
+      text-align: left;
     }
     .hero-copy {
-      flex: 0 1 34rem;
-      max-width: 36rem;
+      display: grid;
+      gap: 18px;
+      justify-items: start;
+      min-width: 0;
     }
     .hero-brand {
       margin: 0;
-      font-family: "Newsreader", "Iowan Old Style", Georgia, serif;
-      font-size: clamp(52px, 8vw, 84px);
-      line-height: 0.95;
+      font-family: "Newsreader", Georgia, serif;
+      font-size: clamp(48px, 7vw, 84px);
+      line-height: 0.92;
       letter-spacing: -0.045em;
       font-weight: 500;
-      animation: rise 0.7s ease both;
+      animation: rise 0.8s ease both;
     }
-    .hero h2 {
-      margin: 14px 0 0;
+    .hero h1 {
+      margin: 0;
+      max-width: 16ch;
       font-family: "Newsreader", Georgia, serif;
-      font-size: clamp(22px, 3vw, 30px);
+      font-size: clamp(26px, 3.6vw, 40px);
       font-weight: 400;
       font-style: italic;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.025em;
       color: var(--soft);
-      max-width: 18ch;
-      animation: rise 0.75s 0.05s ease both;
+      line-height: 1.15;
+      animation: rise 0.85s 0.06s ease both;
     }
     .lede {
-      margin: 16px 0 0;
-      max-width: 30rem;
+      margin: 0;
+      max-width: 32rem;
       font-size: 17px;
       line-height: 1.55;
       color: var(--muted);
-      animation: rise 0.75s 0.1s ease both;
+      animation: rise 0.85s 0.12s ease both;
     }
     .actions {
-      margin-top: 26px;
+      margin-top: 6px;
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
-      animation: rise 0.75s 0.16s ease both;
+      justify-content: flex-start;
+      animation: rise 0.85s 0.18s ease both;
     }
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 48px;
-      padding: 0 18px;
-      border-radius: 999px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 15px;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; min-height: 48px; padding: 0 20px;
+      border-radius: 999px; text-decoration: none;
+      font-weight: 600; font-size: 15px;
       border: 1px solid transparent;
-      transition: transform 160ms ease;
+      transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
     }
-    .btn:hover { transform: translateY(-1px); }
     .btn-primary { background: var(--cta); color: var(--on-cta); }
+    .btn-primary:hover { filter: brightness(0.96); }
     .btn-ghost {
       background: transparent;
       border-color: var(--line);
       color: var(--ink);
     }
+    .btn-ghost:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
 
     .hero-visual {
-      position: relative;
-      flex: 0 0 auto;
-      min-height: 240px;
+      margin: 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-      animation: rise 0.85s 0.12s ease both;
+      justify-content: flex-end;
+      min-width: 0;
+      animation: rise 0.95s 0.2s ease both;
     }
     .scene {
+      --fly-start: 50px;
+      --fly-mid: 280px;
+      --fly-end: 296px;
       position: relative;
       display: flex;
       align-items: center;
       gap: 18px;
-      height: 200px;
+      height: 180px;
     }
-    .macbook { width: 200px; height: 200px; object-fit: contain; }
+    .macbook { width: 180px; height: 180px; object-fit: contain; }
     .scene .arrows {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      color: var(--ink);
-      opacity: 0.55;
+      display: flex; flex-direction: column; gap: 12px;
+      color: var(--ink); opacity: 0.45;
     }
-    .scene .arrow { width: 64px; height: 18px; display: block; }
+    .scene .arrow { width: 56px; height: 16px; display: block; }
     .scene .arrow-out { animation: pulse-out 2.8s ease-in-out infinite; }
     .scene .arrow-in { animation: pulse-in 2.8s ease-in-out infinite; }
-    .scene .phone { width: 78px; height: 158px; color: var(--ink); }
+    .scene .phone { width: 70px; height: 142px; color: var(--ink); }
     .file {
-      position: absolute;
-      left: 14px;
-      background: var(--ink);
-      color: var(--bg);
-      font-size: 12px;
-      border-radius: 999px;
-      padding: 6px 10px;
-      white-space: nowrap;
-      pointer-events: none;
+      position: absolute; left: 12px;
+      background: var(--ink); color: var(--bg);
+      font-size: 12px; border-radius: 999px; padding: 6px 10px;
+      white-space: nowrap; pointer-events: none;
     }
-    .file-out {
-      top: 48px;
-      animation: fly-out 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
-    .file-in {
-      top: 108px;
-      animation: fly-in 2.8s 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
+    .file-out { top: 42px; animation: fly-out 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+    .file-in { top: 98px; animation: fly-in 2.8s 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
 
-    section { padding: 88px 0 0; }
+    section { padding: 96px 0 0; }
     .section-kicker {
       margin: 0;
-      color: var(--muted);
+      color: var(--accent);
       font-size: 12px;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       font-weight: 650;
     }
     .section-title {
-      margin: 12px 0 0;
+      margin: 14px 0 0;
       font-family: "Newsreader", Georgia, serif;
-      font-size: clamp(32px, 4.8vw, 52px);
+      font-size: clamp(34px, 5vw, 56px);
       letter-spacing: -0.035em;
       line-height: 1.05;
       font-weight: 500;
       max-width: 14ch;
     }
     .section-copy {
-      margin: 14px 0 0;
+      margin: 16px 0 0;
       max-width: 36rem;
       color: var(--muted);
-      font-size: 16px;
-      line-height: 1.55;
+      font-size: 17px;
+      line-height: 1.6;
     }
 
     .steps {
-      margin-top: 36px;
+      margin-top: 48px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .step {
-      border-top: 1px solid var(--line);
-      padding: 22px 4px 8px;
-      min-height: 170px;
-    }
-    .step b {
-      display: inline-block;
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      font-weight: 650;
-    }
-    .step h3 {
-      margin: 14px 0 8px;
-      font-family: "Newsreader", Georgia, serif;
-      font-size: 26px;
-      font-weight: 500;
-      letter-spacing: -0.03em;
-    }
-    .step p { margin: 0; color: var(--muted); line-height: 1.5; font-size: 15px; }
-
-    .feature-main {
-      margin-top: 36px;
-      border-top: 1px solid var(--line);
-      padding-top: 28px;
-    }
-    .feature-main h3 {
-      margin: 0;
-      font-family: "Newsreader", Georgia, serif;
-      font-size: clamp(28px, 3.5vw, 40px);
-      font-weight: 500;
-      letter-spacing: -0.03em;
-    }
-    .feature-main p {
-      margin: 12px 0 0;
-      color: var(--muted);
-      line-height: 1.55;
-      max-width: 40rem;
-    }
-    .chips {
-      margin-top: 22px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .chip {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 13px;
-      color: var(--soft);
-      background: color-mix(in srgb, var(--panel) 70%, transparent);
-    }
-
-    .omit {
-      margin-top: 32px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 28px;
-      border-top: 1px solid var(--line);
-      padding-top: 22px;
-    }
-    .omit-list {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      gap: 10px;
-    }
-    .omit-list li {
-      color: var(--soft);
-      font-size: 15px;
-      padding: 2px 0;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 10px;
-    }
-
-    .faq {
-      margin-top: 28px;
-      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0;
       border-top: 1px solid var(--line);
     }
-    details {
-      border-bottom: 1px solid var(--line);
-      padding: 0;
-      background: transparent;
+    .step {
+      padding: 28px 24px 8px 0;
+      border-right: 1px solid var(--line);
     }
+    .step:last-child { border-right: 0; padding-right: 0; }
+    .step b {
+      display: block;
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      font-weight: 650;
+    }
+    .step h3 {
+      margin: 16px 0 10px;
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 28px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+    }
+    .step p { margin: 0; color: var(--muted); line-height: 1.55; font-size: 15px; max-width: 28ch; }
+
+    .band {
+      margin-top: 96px;
+      padding: 72px 0;
+      background: var(--bg-2, color-mix(in srgb, var(--ink) 4%, var(--bg)));
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .band .shell { display: grid; gap: 18px; max-width: 720px; }
+    .band h2 {
+      margin: 0;
+      font-family: "Newsreader", Georgia, serif;
+      font-size: clamp(32px, 4.5vw, 48px);
+      font-weight: 500;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+    }
+    .band p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    .omit {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 40px;
+      border-top: 1px solid var(--line);
+      max-width: 640px;
+    }
+    .omit-list {
+      margin: 0; padding: 0; list-style: none;
+    }
+    .omit-list li {
+      color: var(--soft);
+      font-size: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .faq {
+      margin-top: 40px;
+      max-width: 720px;
+      border-top: 1px solid var(--line);
+    }
+    details { border-bottom: 1px solid var(--line); }
     summary {
       cursor: pointer;
       list-style: none;
-      padding: 18px 0;
+      padding: 22px 0;
       font-family: "Newsreader", Georgia, serif;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 500;
       letter-spacing: -0.02em;
     }
     summary::-webkit-details-marker { display: none; }
     details p {
-      margin: 0 0 18px;
+      margin: 0 0 22px;
       color: var(--muted);
-      line-height: 1.55;
+      line-height: 1.6;
       max-width: 46rem;
     }
+    details a { color: var(--accent); }
 
     .finale {
-      margin: 88px 0 40px;
-      padding: 48px 0;
-      text-align: left;
+      margin: 96px 0 0;
+      padding: 80px 0;
+      text-align: center;
       border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
     }
     .finale h2 {
-      margin: 0;
-      max-width: 14ch;
+      margin: 0 auto;
+      max-width: 16ch;
       font-family: "Newsreader", Georgia, serif;
-      font-size: clamp(32px, 4.8vw, 48px);
+      font-size: clamp(34px, 5vw, 52px);
       letter-spacing: -0.035em;
-      line-height: 1.08;
+      line-height: 1.06;
       font-weight: 500;
     }
     .finale p {
-      margin: 14px 0 0;
+      margin: 16px auto 0;
       max-width: 32rem;
       color: var(--muted);
-      line-height: 1.55;
+      line-height: 1.6;
+      font-size: 17px;
     }
+    .finale .actions { margin-top: 28px; }
 
     footer {
-      padding: 24px 0 56px;
+      padding: 28px 0 56px;
       color: var(--muted);
       font-size: 13px;
       display: flex;
       justify-content: space-between;
       gap: 16px;
       flex-wrap: wrap;
+      border-top: 1px solid var(--line);
     }
     footer a { color: var(--soft); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    footer a:hover { color: var(--ink); }
 
     @keyframes rise {
-      from { opacity: 0; transform: translateY(14px); }
+      from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: none; }
     }
     @keyframes fly-out {
-      0% { transform: translate(56px, 0); opacity: 0; }
+      0% { transform: translate(var(--fly-start), 0); opacity: 0; }
       12% { opacity: 1; }
-      58% { transform: translate(300px, 6px); opacity: 1; }
-      78% { transform: translate(316px, 10px) scale(0.86); opacity: 0; }
+      58% { transform: translate(var(--fly-mid), 6px); opacity: 1; }
+      78% { transform: translate(var(--fly-end), 10px) scale(0.86); opacity: 0; }
       100% { opacity: 0; }
     }
     @keyframes fly-in {
-      0% { transform: translate(300px, 0); opacity: 0; }
+      0% { transform: translate(var(--fly-mid), 0); opacity: 0; }
       12% { opacity: 1; }
-      58% { transform: translate(56px, -4px); opacity: 1; }
-      78% { transform: translate(40px, 2px) scale(0.86); opacity: 0; }
+      58% { transform: translate(var(--fly-start), -4px); opacity: 1; }
+      78% { transform: translate(calc(var(--fly-start) - 14px), 2px) scale(0.86); opacity: 0; }
       100% { opacity: 0; }
     }
     @keyframes pulse-out {
-      0%, 100% { opacity: 0.25; }
-      25% { opacity: 0.85; }
-      50%, 75% { opacity: 0.25; }
+      0%, 100% { opacity: 0.2; }
+      25% { opacity: 0.8; }
+      50%, 75% { opacity: 0.2; }
     }
     @keyframes pulse-in {
-      0%, 25% { opacity: 0.25; }
-      75% { opacity: 0.85; }
-      50%, 100% { opacity: 0.25; }
+      0%, 25% { opacity: 0.2; }
+      75% { opacity: 0.8; }
+      50%, 100% { opacity: 0.2; }
     }
-    @media (max-width: 860px) {
-      .nav-links a:not(.nav-cta):not(.nav-icon) { display: none; }
-      .hero {
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-start;
-        min-height: 0;
-        padding: 40px 0 44px;
-        gap: 36px;
+
+    @media (max-width: 960px) {
+      .shell,
+      .nav { width: min(1120px, calc(100% - 32px)); }
+      .steps { grid-template-columns: 1fr; }
+      .step {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        padding: 24px 0;
       }
-      .steps, .omit { grid-template-columns: 1fr; }
-      .hero-visual { min-height: 0; justify-content: flex-start; }
-      .scene { height: 160px; }
-      .macbook { width: 156px; height: 156px; }
-      .scene .phone { width: 64px; height: 130px; }
+      .step:last-child { border-bottom: 0; }
+      .step p { max-width: none; }
     }
+
+    @media (max-width: 860px) {
+      .nav {
+        min-height: 56px;
+        gap: 10px;
+      }
+      .brand { font-size: 18px; gap: 8px; }
+      .brand .mark { width: 22px; height: 22px; }
+      .nav-links { gap: 4px; }
+      .nav-links a:not(.nav-cta):not(.nav-icon):not(.nav-ghost) { display: none; }
+      .nav-ghost { display: none; }
+      .nav-cta { min-height: 34px; padding: 0 12px; font-size: 13px; }
+
+      .hero-bleed { min-height: auto; }
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 40px 0 48px;
+        gap: 28px;
+        text-align: left;
+      }
+      .hero-copy { gap: 16px; }
+      .hero-brand { font-size: clamp(44px, 14vw, 64px); }
+      .hero h1 {
+        font-size: clamp(24px, 7vw, 32px);
+        max-width: none;
+      }
+      .lede { font-size: 16px; max-width: none; }
+      .actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 10px;
+      }
+      .btn { width: 100%; min-height: 48px; }
+
+      .hero-visual {
+        width: 100%;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .scene {
+        --fly-start: 36px;
+        --fly-mid: 168px;
+        --fly-end: 182px;
+        width: min(100%, 300px);
+        height: 140px;
+        gap: 12px;
+        margin: 0 auto;
+      }
+      .macbook { width: 112px; height: 112px; flex: none; }
+      .scene .phone { width: 50px; height: 102px; flex: none; }
+      .scene .arrows { gap: 8px; flex: none; }
+      .scene .arrow { width: 40px; height: 14px; }
+      .file { font-size: 11px; padding: 5px 8px; left: 6px; }
+      .file-out { top: 28px; }
+      .file-in { top: 70px; }
+
+      section { padding: 64px 0 0; }
+      .section-title { max-width: none; font-size: clamp(30px, 9vw, 40px); }
+      .section-copy { font-size: 16px; max-width: none; }
+      .omit { grid-template-columns: 1fr; gap: 0; }
+      .band { margin-top: 64px; padding: 48px 0; }
+      .band .shell { max-width: none; }
+      .faq { max-width: none; }
+      summary { font-size: 20px; padding: 18px 0; }
+
+      .finale {
+        margin-top: 64px;
+        padding: 56px 0 40px;
+        text-align: left;
+      }
+      .finale h2 { margin: 0; max-width: none; font-size: clamp(30px, 9vw, 40px); }
+      .finale p { margin: 14px 0 0; }
+      .finale .actions { margin-top: 22px; }
+
+      footer {
+        padding: 20px 0 calc(28px + env(safe-area-inset-bottom, 0px));
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .shell,
+      .nav { width: min(1120px, calc(100% - 24px)); }
+      .nav-icon { width: 32px; height: 32px; min-width: 32px; }
+      .theme { min-width: 56px; height: 32px; }
+      .hero { padding: 32px 0 40px; }
+      .scene {
+        --fly-start: 28px;
+        --fly-mid: 140px;
+        --fly-end: 152px;
+        width: min(100%, 260px);
+        height: 120px;
+        gap: 8px;
+      }
+      .macbook { width: 96px; height: 96px; }
+      .scene .phone { width: 44px; height: 90px; }
+      .scene .arrow { width: 32px; height: 12px; }
+      .file { font-size: 10px; padding: 4px 7px; }
+      .file-out { top: 22px; }
+      .file-in { top: 58px; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      .hero-brand, .hero h2, .lede, .actions, .hero-visual, .file, .arrow-out, .arrow-in { animation: none; }
-      .file-out { transform: translate(140px, 0); opacity: 1; }
-      .file-in { transform: translate(100px, 0); opacity: 1; }
-      .scene .arrow-out, .scene .arrow-in { opacity: 0.55; }
+      .hero-brand, .hero h1, .lede, .actions, .hero-visual, .file, .arrow-out, .arrow-in { animation: none; }
+      .file-out { transform: translate(var(--fly-mid), 0); opacity: 1; }
+      .file-in { transform: translate(calc(var(--fly-mid) * 0.55), 0); opacity: 1; }
+      .scene .arrow-out, .scene .arrow-in { opacity: 0.45; }
     }
   </style>
 </head>
 <body>
   <div class="top">
     <nav class="nav" aria-label="Primary">
-      <a class="brand" href="./"><img class="mark mark-day" src="logo-day.png?v=13" width="28" height="28" alt=""><img class="mark mark-night" src="logo-night.png?v=13" width="28" height="28" alt=""><span>SendToMac</span></a>
+      <a class="brand" href="./"><img class="mark mark-day" src="logo-day.png?v=14" width="26" height="26" alt=""><img class="mark mark-night" src="logo-night.png?v=14" width="26" height="26" alt=""><span>SendToMac</span></a>
       <div class="nav-links">
         <a href="#how">How it works</a>
         <a href="#install">Install</a>
@@ -552,6 +596,7 @@
           <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M5.2 18.8l1.6-1.6"/></g></svg></span>
           <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg></span>
         </button>
+        <a class="nav-ghost" href="#how">Explore</a>
         <a class="nav-cta" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download</a>
       </div>
     </nav>
@@ -561,8 +606,8 @@
     <div class="hero">
       <div class="hero-copy">
         <p class="hero-brand">SendToMac</p>
-        <h2>From the phone. Onto the Mac.</h2>
-        <p class="lede">Download the Mac app, scan the code, send the file. No account. The file stays on your Wi-Fi.</p>
+        <h1>Hand the Mac a file, not a cloud upload.</h1>
+        <p class="lede">Download the app, scan once, send across the room. Same Wi‑Fi. No account.</p>
         <div class="actions">
           <a class="btn btn-primary" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download for Mac</a>
           <a class="btn btn-ghost" href="#how">See how it works</a>
@@ -593,133 +638,111 @@
     </div>
   </header>
 
-  <main class="shell">
-    <section id="how">
-      <p class="section-kicker">How it works</p>
-      <h2 class="section-title">Three steps. Same Wi-Fi.</h2>
-      <p class="section-copy">Install once. Click the menu-bar icon to open. The phone only needs a camera.</p>
-      <div class="steps">
-        <article class="step">
-          <b>01</b>
-          <h3>Install on the Mac</h3>
-          <p>Open the DMG. Run <strong>Install SendToMac.command</strong>, or drag the app to Applications and right‑click → Open once.</p>
-        </article>
-        <article class="step">
-          <b>02</b>
-          <h3>Scan the code</h3>
-          <p>Click the menu-bar icon. Scan with the phone on the same Wi-Fi (not guest Wi-Fi).</p>
-        </article>
-        <article class="step">
-          <b>03</b>
-          <h3>Send the file</h3>
-          <p>Pick a photo, drop a file, or write a short note. It lands on the other device.</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="install">
-      <p class="section-kicker">First open</p>
-      <h2 class="section-title">If macOS blocks the app.</h2>
-      <p class="section-copy">Prefer <strong>Install SendToMac.command</strong> in the disk image — it copies to Applications and clears the download quarantine.</p>
-      <div class="steps">
-        <article class="step">
-          <b>01</b>
-          <h3>Install.command</h3>
-          <p>Open the DMG and run <strong>Install SendToMac.command</strong>. Then click the menu-bar icon.</p>
-        </article>
-        <article class="step">
-          <b>02</b>
-          <h3>Right-click → Open</h3>
-          <p>If you dragged the app: right-click SendToMac → Open, or System Settings → Privacy &amp; Security → Open Anyway.</p>
-        </article>
-        <article class="step">
-          <b>03</b>
-          <h3>Allow Local Network</h3>
-          <p>If macOS asks, allow Local Network / incoming connections so the phone can reach the Mac.</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="features">
-      <p class="section-kicker">Built for the desk</p>
-      <h2 class="section-title">A Mac app that stays out of the way.</h2>
-      <p class="section-copy">It lives in the menu bar. The window is small. The file never needs a public upload.</p>
-      <div class="feature-main">
-        <h3>Local first.</h3>
-        <p>On a home network the Mac relays the transfer. On HTTPS hosting, the page only pairs the devices and the file can move directly between them.</p>
-        <div class="chips">
-          <span class="chip">Menu-bar icon</span>
-          <span class="chip">Drag and drop</span>
-          <span class="chip">QR pairing</span>
-          <span class="chip">Apple silicon + Intel</span>
-          <span class="chip">Optional Option⌘</span>
+  <main>
+    <div class="shell">
+      <section id="how">
+        <p class="section-kicker">How it works</p>
+        <h2 class="section-title">Three steps. Same Wi‑Fi.</h2>
+        <p class="section-copy">Install once. Click the menu-bar icon to open. The phone only needs a camera.</p>
+        <div class="steps">
+          <article class="step">
+            <b>01</b>
+            <h3>Install on the Mac</h3>
+            <p>Open the DMG. Run <strong>Install SendToMac.command</strong>, or drag the app to Applications and right‑click → Open once.</p>
+          </article>
+          <article class="step">
+            <b>02</b>
+            <h3>Scan the code</h3>
+            <p>Click the menu-bar icon. Scan with the phone on the same Wi‑Fi (not guest Wi‑Fi).</p>
+          </article>
+          <article class="step">
+            <b>03</b>
+            <h3>Send the file</h3>
+            <p>Pick a photo, drop a file, or write a short note. It lands on the other device.</p>
+          </article>
         </div>
+      </section>
+    </div>
+
+    <section class="band" id="install">
+      <div class="shell">
+        <p class="section-kicker">First open</p>
+        <h2>If macOS blocks the app.</h2>
+        <p>Prefer <strong>Install SendToMac.command</strong> in the disk image — it copies to Applications and clears the download quarantine. Or right‑click → Open, then allow Local Network when asked.</p>
       </div>
     </section>
 
-    <section id="privacy">
-      <p class="section-kicker">Privacy</p>
-      <h2 class="section-title">Left out on purpose.</h2>
-      <p class="section-copy">SendToMac is for a phone and a Mac on the same Wi-Fi. Anything that turns it into an account product stays out.</p>
-      <div class="omit">
-        <ul class="omit-list">
-          <li>No account</li>
-          <li>No analytics</li>
-          <li>No tracking cookies</li>
-        </ul>
-        <ul class="omit-list">
-          <li>No public file host</li>
-          <li>No sale of data</li>
-          <li>No name or email asked</li>
-        </ul>
-      </div>
-    </section>
+    <div class="shell">
+      <section id="features">
+        <p class="section-kicker">Built for the desk</p>
+        <h2 class="section-title">A Mac app that stays out of the way.</h2>
+        <p class="section-copy">It lives in the menu bar. The window is small. On your home network the Mac relays the transfer. The file never needs a public upload.</p>
+      </section>
 
-    <section id="faq">
-      <p class="section-kicker">FAQ</p>
-      <h2 class="section-title">Common questions.</h2>
-      <div class="faq">
-        <details>
-          <summary>Where do I download it?</summary>
-          <p>Use <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">the latest Mac disk image</a>. Open it and run <strong>Install SendToMac.command</strong>, or drag SendToMac to Applications and right‑click → Open the first time.</p>
-        </details>
-        <details>
-          <summary>macOS says the app can’t be opened</summary>
-          <p>Right‑click the app → Open, or use System Settings → Privacy &amp; Security → Open Anyway. This is normal for apps that aren’t notarized yet.</p>
-        </details>
-        <details>
-          <summary>Does the file go to a server?</summary>
-          <p>No public upload. On your home Wi-Fi the Mac keeps a temporary copy only until the other device downloads it, or for about 15 minutes.</p>
-        </details>
-        <details>
-          <summary>How do I open the window?</summary>
-          <p>Click the SendToMac icon in the menu bar. Option⌘ is optional — enable it from the icon’s right‑click menu (may ask for Accessibility once).</p>
-        </details>
-        <details>
-          <summary>Why can’t the phone connect?</summary>
-          <p>Same Wi-Fi (not guest/isolation). Keep the Mac app running. Allow Local Network / incoming connections if macOS asks. Or join the phone hotspot from the Mac and scan again.</p>
-        </details>
-      </div>
-    </section>
+      <section id="privacy">
+        <p class="section-kicker">Privacy</p>
+        <h2 class="section-title">Left out on purpose.</h2>
+        <p class="section-copy">SendToMac is for a phone and a Mac on the same Wi‑Fi. Anything that turns it into an account product stays out.</p>
+        <div class="omit">
+          <ul class="omit-list">
+            <li>No account</li>
+            <li>No analytics</li>
+            <li>No tracking cookies</li>
+          </ul>
+          <ul class="omit-list">
+            <li>No public file host</li>
+            <li>No sale of data</li>
+            <li>No name or email asked</li>
+          </ul>
+        </div>
+      </section>
 
-    <section class="finale">
-      <h2>Ready to send from the phone?</h2>
-      <p>Install the Mac app, scan once, and move the file across the room.</p>
-      <div class="actions">
-        <a class="btn btn-primary" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download for Mac</a>
-        <a class="btn btn-ghost" href="privacy/">Privacy policy</a>
-      </div>
-    </section>
+      <section id="faq">
+        <p class="section-kicker">FAQ</p>
+        <h2 class="section-title">Common questions.</h2>
+        <div class="faq">
+          <details>
+            <summary>Where do I download it?</summary>
+            <p>Use <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">the latest Mac disk image</a>. Open it and run <strong>Install SendToMac.command</strong>, or drag SendToMac to Applications and right‑click → Open the first time.</p>
+          </details>
+          <details>
+            <summary>macOS says the app can’t be opened</summary>
+            <p>Right‑click the app → Open, or use System Settings → Privacy &amp; Security → Open Anyway. This is normal for apps that aren’t notarized yet.</p>
+          </details>
+          <details>
+            <summary>Does the file go to a server?</summary>
+            <p>No public upload. On your home Wi‑Fi the Mac keeps a temporary copy only until the other device downloads it, or for about 15 minutes.</p>
+          </details>
+          <details>
+            <summary>How do I open the window?</summary>
+            <p>Click the SendToMac icon in the menu bar. Option⌘ is optional — enable it from the icon’s right‑click menu (may ask for Accessibility once).</p>
+          </details>
+          <details>
+            <summary>Why can’t the phone connect?</summary>
+            <p>Same Wi‑Fi (not guest/isolation). Keep the Mac app running. Allow Local Network / incoming connections if macOS asks. Or join the phone hotspot from the Mac and scan again.</p>
+          </details>
+        </div>
+      </section>
 
-    <footer>
-      <span>SendToMac. Same Wi-Fi. No account.</span>
-      <span>
-        <a href="https://github.com/Hasninemamud/sendtomac">GitHub</a>
-        ·
-        <a href="privacy/">Privacy</a>
-      </span>
-    </footer>
+      <section class="finale">
+        <h2>Ready to send from the phone?</h2>
+        <p>Install the Mac app, scan once, and move the file across the room.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download for Mac</a>
+          <a class="btn btn-ghost" href="privacy/">Privacy policy</a>
+        </div>
+      </section>
+
+      <footer>
+        <span>SendToMac. Same Wi‑Fi. No account.</span>
+        <span>
+          <a href="https://github.com/Hasninemamud/sendtomac">GitHub</a>
+          ·
+          <a href="privacy/">Privacy</a>
+        </span>
+      </footer>
+    </div>
   </main>
-  <script src="theme.js?v=13"></script>
+  <script src="theme.js?v=14"></script>
 </body>
 </html>
