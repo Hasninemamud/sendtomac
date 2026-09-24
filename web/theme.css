@@ -1,48 +1,52 @@
 :root {
   color-scheme: light;
-  --bg: #f5f2eb;
-  --bg-2: #ebe6dc;
-  --ink: #141414;
-  --muted: #6b6760;
-  --soft: #3a3732;
-  --line: rgba(20, 20, 20, 0.12);
-  --rule: rgba(20, 20, 20, 0.1);
-  --field: #faf8f4;
-  --chip: #ebe6dc;
-  --cta: #141414;
-  --on-cta: #f5f2eb;
-  --ok: #2f6b48;
+  --bg: #e9e8e4;
+  --bg-2: #dddbd6;
+  --ink: #12141a;
+  --muted: #5c606a;
+  --soft: #2c3038;
+  --line: rgba(18, 20, 26, 0.12);
+  --rule: rgba(18, 20, 26, 0.1);
+  --field: #f4f3f0;
+  --chip: #dddbd6;
+  --cta: #12141a;
+  --on-cta: #e9e8e4;
+  --ok: #2a6b4f;
   --bad: #8f2d2d;
-  --accent: #141414;
-  --glow: rgba(20, 20, 20, 0.08);
-  --panel: #faf8f4;
-  --panel-soft: #ebe6dc;
-  --btn: #ebe6dc;
-  --shadow: none;
-  --radius: 18px;
+  --accent: #12141a;
+  --glow: rgba(18, 20, 26, 0.08);
+  --panel: #f4f3f0;
+  --panel-soft: #dddbd6;
+  --btn: #dddbd6;
+  --shadow: 0 12px 32px rgba(18, 20, 26, 0.08);
+  --radius: 20px;
   --radius-sm: 14px;
+  --page: var(--bg);
+  --panel-strong: var(--field);
 }
 html[data-theme="night"] {
   color-scheme: dark;
-  --bg: #111111;
-  --bg-2: #1a1a1a;
-  --ink: #f3eee6;
-  --muted: #9c968c;
-  --soft: #d5cfc4;
-  --line: rgba(243, 238, 230, 0.14);
-  --rule: rgba(243, 238, 230, 0.1);
-  --field: #161616;
-  --chip: #222222;
-  --cta: #f3eee6;
-  --on-cta: #111111;
+  --bg: #0e0f12;
+  --bg-2: #17191e;
+  --ink: #ebe8e2;
+  --muted: #9a9ea8;
+  --soft: #d2cfc8;
+  --line: rgba(235, 232, 226, 0.12);
+  --rule: rgba(235, 232, 226, 0.1);
+  --field: #15171c;
+  --chip: #1e2128;
+  --cta: #ebe8e2;
+  --on-cta: #0e0f12;
   --ok: #6fbf8a;
   --bad: #e7a0a0;
-  --accent: #f3eee6;
-  --glow: rgba(243, 238, 230, 0.08);
-  --panel: #1a1a1a;
-  --panel-soft: #222222;
-  --btn: #222222;
-  --shadow: none;
+  --accent: #ebe8e2;
+  --glow: rgba(235, 232, 226, 0.08);
+  --panel: #15171c;
+  --panel-soft: #1e2128;
+  --btn: #1e2128;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --page: var(--bg);
+  --panel-strong: var(--field);
 }
 body {
   background: var(--bg);
@@ -81,7 +85,7 @@ html:not([data-theme="night"]) .theme .icon-sun {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 html[data-theme="night"] .theme .icon-moon {
-  background: #2f2f2f;
+  background: #262a32;
   color: var(--ink);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
@@ -97,7 +101,5 @@ html[data-theme="night"] .theme .icon-moon {
 .brand .mark-night { display: none; }
 html[data-theme="night"] .brand .mark-day { display: none; }
 html[data-theme="night"] .brand .mark-night { display: block; }
-.brand .mark::after {
-  display: none;
-}
+.brand .mark::after { display: none; }
 html[data-theme="night"] .macbook { filter: invert(1); }
