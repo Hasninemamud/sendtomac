@@ -529,7 +529,7 @@ class MenuApp(NSObject):
         if local_down is not None:
             self.shortcut_monitors.append(local_down)
 
-    def click_in_screen_rect_(self, point, view):
+    def point_in_view(self, point, view):
         if view is None:
             return False
         window = view.window()
@@ -538,7 +538,7 @@ class MenuApp(NSObject):
         rect = view.convertRect_toView_(view.bounds(), None)
         return NSPointInRect(point, window.convertRectToScreen_(rect))
 
-    def should_dismiss_for_click_(self):
+    def should_dismiss_for_click(self):
         if self.popover is None or not self.popover.isShown() or self.status is None:
             return False
         # Leave open while a sheet/panel (file picker) is up.
@@ -546,20 +546,20 @@ class MenuApp(NSObject):
         if app.modalWindow() is not None:
             return False
         point = NSEvent.mouseLocation()
-        if self.click_in_screen_rect_(point, self.status.button()):
+        if self.point_in_view(point, self.status.button()):
             return False
         page = self.popover.contentViewController()
         view = page.view() if page is not None else None
-        if self.click_in_screen_rect_(point, view):
+        if self.point_in_view(point, view):
             return False
         return True
 
     def outsideMouseDown_(self, _event):
-        if self.should_dismiss_for_click_():
+        if self.should_dismiss_for_click():
             self.popover.performClose_(None)
 
     def localOutsideMouseDown_(self, event):
-        if self.should_dismiss_for_click_():
+        if self.should_dismiss_for_click():
             self.popover.performClose_(None)
         return event
 
