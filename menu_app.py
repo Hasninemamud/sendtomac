@@ -16,6 +16,7 @@ from AppKit import (
     NSEvent,
     NSEventMaskFlagsChanged,
     NSEventMaskKeyDown,
+    NSEventMaskLeftMouseDown,
     NSEventMaskLeftMouseUp,
     NSEventMaskRightMouseDown,
     NSEventMaskRightMouseUp,
@@ -516,6 +517,51 @@ class MenuApp(NSObject):
         )
         if local is not None:
             self.shortcut_monitors.append(local)
+        # Semitransient keeps WKWebView usable; dismiss on outside click ourselves.
+        watched = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(
+            NSEventMaskLeftMouseDown, self.outsideMouseDown_
+        )
+        local_down = NSEvent.addLocalMonitorForEventsMatchingMask_handler_(
+            NSEventMaskLeftMouseDown, self.localOutsideMouseDown_
+        )
+        if watched is not None:
+            self.shortcut_monitors.append(watched)
+        if local_down is not None:
+            self.shortcut_monitors.append(local_down)
+
+    def click_in_screen_rect_(self, point, view):
+        if view is None:
+            return False
+        window = view.window()
+        if window is None:
+            return False
+        rect = view.convertRect_toView_(view.bounds(), None)
+        return NSPointInRect(point, window.convertRectToScreen_(rect))
+
+    def should_dismiss_for_click_(self):
+        if self.popover is None or not self.popover.isShown() or self.status is None:
+            return False
+        # Leave open while a sheet/panel (file picker) is up.
+        app = NSApplication.sharedApplication()
+        if app.modalWindow() is not None:
+            return False
+        point = NSEvent.mouseLocation()
+        if self.click_in_screen_rect_(point, self.status.button()):
+            return False
+        page = self.popover.contentViewController()
+        view = page.view() if page is not None else None
+        if self.click_in_screen_rect_(point, view):
+            return False
+        return True
+
+    def outsideMouseDown_(self, _event):
+        if self.should_dismiss_for_click_():
+            self.popover.performClose_(None)
+
+    def localOutsideMouseDown_(self, event):
+        if self.should_dismiss_for_click_():
+            self.popover.performClose_(None)
+        return event
 
     def rebuild_menu(self):
         menu = self.menu
