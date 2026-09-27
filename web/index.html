@@ -11,31 +11,32 @@
     } catch (e) {}
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4f3ee">
+  <meta name="theme-color" content="#fcfaf7">
   <meta name="description" content="Send a file from Android to a Mac on the same Wi-Fi. Scan a code. No account. No public upload.">
   <title>SendToMac. From the phone. Onto the Mac.</title>
-  <link rel="icon" href="logo-day.png?v=14" type="image/png" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="logo-night.png?v=14" type="image/png" media="(prefers-color-scheme: dark)">
-  <link rel="icon" href="logo.png?v=14" type="image/png">
-  <link rel="apple-touch-icon" href="logo.png?v=14">
-  <link rel="stylesheet" href="theme.css?v=14">
+  <link rel="icon" href="logo-day.png?v=15" type="image/png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="logo-night.png?v=15" type="image/png" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="logo.png?v=15" type="image/png">
+  <link rel="apple-touch-icon" href="logo.png?v=15">
+  <link rel="stylesheet" href="theme.css?v=15">
   <style>
     :root {
       color-scheme: light;
-      --bg: #f4f3ee; --ink: #191817; --muted: #5a554e; --soft: #3d3a35;
-      --line: rgba(25, 24, 23, 0.12); --cta: #c96442; --on-cta: #faf9f5;
-      --panel: #faf9f5; --panel-soft: #eeede6; --accent: #c96442; --page: var(--bg);
+      --bg: #fcfaf7; --ink: #111111; --muted: #6b6560; --soft: #3a3734;
+      --line: rgba(17, 17, 17, 0.12); --cta: #111111; --on-cta: #fcfaf7;
+      --panel: #f3efe8; --panel-soft: #ebe6de; --accent: #111111; --page: var(--bg);
+      --bg-2: #f3efe8;
     }
     html[data-theme="night"] {
       color-scheme: dark;
       --bg: #141413; --ink: #f0eee6; --muted: #87867f; --soft: #c8c5bc;
       --line: rgba(240, 238, 230, 0.12); --cta: #f0eee6; --on-cta: #141413;
-      --panel: #1c1b19; --panel-soft: #252421; --accent: #d97757; --page: var(--bg);
+      --panel: #1c1b19; --panel-soft: #252421; --accent: #f0eee6; --page: var(--bg);
+      --bg-2: #1c1b19;
     }
     .brand .mark-night { display: none; }
     html[data-theme="night"] .brand .mark-day { display: none; }
     html[data-theme="night"] .brand .mark-night { display: block; }
-    html[data-theme="night"] .macbook { filter: invert(1); }
 
     @font-face {
       font-family: "Newsreader";
@@ -93,13 +94,12 @@
       top: 0;
       z-index: 40;
       backdrop-filter: blur(18px);
-      background: color-mix(in srgb, var(--bg) 82%, transparent);
-      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
     }
     .nav {
       width: min(1120px, calc(100% - 48px));
       margin: 0 auto;
-      min-height: 64px;
+      min-height: 72px;
       display: flex;
       align-items: center;
       gap: 20px;
@@ -109,17 +109,17 @@
       align-items: center;
       gap: 10px;
       text-decoration: none;
-      font-family: "Newsreader", Georgia, serif;
-      font-size: 22px;
-      font-weight: 500;
-      letter-spacing: -0.03em;
+      font-family: "Outfit", sans-serif;
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
     }
     .brand .mark { width: 26px; height: 26px; }
     .nav-links {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
@@ -127,153 +127,252 @@
       text-decoration: none;
       color: var(--muted);
       font-size: 14px;
-      padding: 8px 10px;
+      padding: 8px 12px;
       border-radius: 8px;
     }
     .nav-links a:hover { color: var(--ink); }
-    .nav-icon {
-      width: 36px; height: 36px; min-width: 36px; padding: 0;
-      display: inline-grid; place-items: center;
-      border-radius: 50%; color: var(--muted);
-    }
-    .nav-icon:hover { color: var(--ink); }
-    .nav-icon svg { width: 18px; height: 18px; display: block; }
-    .nav-ghost {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-height: 36px; padding: 0 14px;
-      border: 1px solid var(--line); border-radius: 999px;
-      text-decoration: none; font-size: 14px; color: var(--ink);
-    }
     .nav-cta {
       display: inline-flex; align-items: center; justify-content: center;
-      min-height: 36px; padding: 0 14px;
+      min-height: 38px; padding: 0 18px;
       border-radius: 999px;
       background: var(--cta); color: var(--on-cta);
       text-decoration: none; font-size: 14px; font-weight: 600;
+      margin-left: 6px;
     }
+    .nav-cta:hover { filter: brightness(1.08); }
 
     .hero-bleed {
       position: relative;
       isolation: isolate;
-      overflow: hidden;
-      min-height: calc(100dvh - 64px);
+      min-height: calc(100dvh - 72px);
       display: flex;
       align-items: center;
-      background:
-        radial-gradient(70% 55% at 85% 15%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%),
-        radial-gradient(55% 45% at 8% 90%, color-mix(in srgb, var(--ink) 5%, transparent), transparent 55%),
-        var(--bg);
+      background: var(--bg);
     }
     .hero {
       width: min(1120px, calc(100% - 48px));
       margin: 0 auto;
-      padding: 72px 0 80px;
+      padding: 48px 0 80px;
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-      gap: 40px 48px;
+      grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+      gap: 48px 56px;
       align-items: center;
-      text-align: left;
     }
     .hero-copy {
       display: grid;
-      gap: 18px;
+      gap: 22px;
       justify-items: start;
       min-width: 0;
     }
-    .hero-brand {
+    .hero-kicker {
       margin: 0;
-      font-family: "Newsreader", Georgia, serif;
-      font-size: clamp(48px, 7vw, 84px);
-      line-height: 0.92;
-      letter-spacing: -0.045em;
-      font-weight: 500;
-      animation: rise 0.8s ease both;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      animation: rise 0.7s ease both;
     }
     .hero h1 {
       margin: 0;
-      max-width: 16ch;
+      max-width: 11ch;
       font-family: "Newsreader", Georgia, serif;
-      font-size: clamp(26px, 3.6vw, 40px);
-      font-weight: 400;
+      font-size: clamp(48px, 7vw, 78px);
+      font-weight: 500;
+      font-style: normal;
+      letter-spacing: -0.04em;
+      line-height: 0.98;
+      color: var(--ink);
+      animation: rise 0.8s 0.05s ease both;
+    }
+    .hero h1 em {
       font-style: italic;
-      letter-spacing: -0.025em;
-      color: var(--soft);
-      line-height: 1.15;
-      animation: rise 0.85s 0.06s ease both;
+      font-weight: 400;
     }
     .lede {
       margin: 0;
-      max-width: 32rem;
+      max-width: 34rem;
       font-size: 17px;
       line-height: 1.55;
       color: var(--muted);
-      animation: rise 0.85s 0.12s ease both;
+      animation: rise 0.85s 0.1s ease both;
     }
     .actions {
-      margin-top: 6px;
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
-      justify-content: flex-start;
-      animation: rise 0.85s 0.18s ease both;
+      animation: rise 0.85s 0.16s ease both;
     }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      gap: 8px; min-height: 48px; padding: 0 20px;
+      gap: 8px; min-height: 48px; padding: 0 22px;
       border-radius: 999px; text-decoration: none;
       font-weight: 600; font-size: 15px;
       border: 1px solid transparent;
       transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
     }
     .btn-primary { background: var(--cta); color: var(--on-cta); }
-    .btn-primary:hover { filter: brightness(0.96); }
+    .btn-primary:hover { filter: brightness(1.1); }
     .btn-ghost {
       background: transparent;
-      border-color: var(--line);
+      border-color: color-mix(in srgb, var(--ink) 28%, transparent);
       color: var(--ink);
     }
     .btn-ghost:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+    .hero-note {
+      margin: 0;
+      max-width: 36rem;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--muted);
+      animation: rise 0.85s 0.22s ease both;
+    }
 
     .hero-visual {
       margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
       min-width: 0;
-      animation: rise 0.95s 0.2s ease both;
+      animation: rise 0.95s 0.18s ease both;
     }
-    .scene {
-      --fly-start: 50px;
-      --fly-mid: 280px;
-      --fly-end: 296px;
+    .hero-card {
+      background: var(--panel);
+      border-radius: 28px;
+      padding: 36px 36px 28px;
+      min-height: 420px;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 12px;
+    }
+    .hero-card h2 {
+      margin: 0;
+      font-family: "Newsreader", Georgia, serif;
+      font-size: clamp(28px, 3.2vw, 36px);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+    .hero-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+      max-width: 28ch;
+    }
+    .hero-art {
+      align-self: end;
+      justify-self: stretch;
+      display: flex;
+      justify-content: center;
+      padding-top: 28px;
+      color: var(--ink);
+    }
+    .hero-transfer {
+      --travel: 225px;
       position: relative;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       gap: 18px;
-      height: 180px;
+      width: max-content;
     }
-    .macbook { width: 180px; height: 180px; object-fit: contain; }
-    .scene .arrows {
-      display: flex; flex-direction: column; gap: 12px;
-      color: var(--ink); opacity: 0.45;
+    .hero-art .phone {
+      position: relative;
+      width: 72px;
+      height: 148px;
+      flex: none;
+      transform-origin: center bottom;
+      animation: art-in 0.85s 0.32s ease both, phone-breathe 5.2s 1.2s ease-in-out infinite;
     }
-    .scene .arrow { width: 56px; height: 16px; display: block; }
-    .scene .arrow-out { animation: pulse-out 2.8s ease-in-out infinite; }
-    .scene .arrow-in { animation: pulse-in 2.8s ease-in-out infinite; }
-    .scene .phone { width: 70px; height: 142px; color: var(--ink); }
-    .file {
-      position: absolute; left: 12px;
-      background: var(--ink); color: var(--bg);
-      font-size: 12px; border-radius: 999px; padding: 6px 10px;
-      white-space: nowrap; pointer-events: none;
+    .hero-art .phone-glow {
+      position: absolute;
+      left: 12%;
+      top: 14%;
+      width: 76%;
+      height: 68%;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--ink) 8%, transparent);
+      opacity: 0;
+      pointer-events: none;
+      animation: phone-receive 6.4s 0.2s ease-in-out infinite;
     }
-    .file-out { top: 42px; animation: fly-out 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-    .file-in { top: 98px; animation: fly-in 2.8s 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+    .hero-art .arrows {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: none;
+      margin-bottom: 48px;
+      color: var(--ink);
+      animation: art-in 0.85s 0.42s ease both;
+    }
+    .hero-art .arrow {
+      width: 48px;
+      height: 16px;
+      display: block;
+      opacity: 0.3;
+    }
+    .hero-art .arrow-to-mac {
+      animation: arrow-active-fwd 6.4s 0.2s ease-in-out infinite;
+    }
+    .hero-art .arrow-to-phone {
+      animation: arrow-active-back 6.4s 0.2s ease-in-out infinite;
+    }
+    .hero-art .arrow path:first-child {
+      stroke-dasharray: 34;
+      stroke-dashoffset: 14;
+    }
+    .hero-art .arrow-to-mac path:first-child {
+      animation: arrow-flow-fwd 6.4s 0.2s ease-in-out infinite;
+    }
+    .hero-art .arrow-to-phone path:first-child {
+      animation: arrow-flow-back 6.4s 0.2s ease-in-out infinite;
+    }
+    .hero-art .mac {
+      position: relative;
+      width: 210px;
+      height: 140px;
+      flex: none;
+      animation: art-in 0.9s 0.5s ease both;
+    }
+    .hero-art .mac svg { width: 100%; height: 100%; display: block; }
+    .hero-art .mac .screen-glow {
+      position: absolute;
+      left: 13.5%;
+      top: 16%;
+      width: 73%;
+      height: 63%;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--ink) 8%, transparent);
+      opacity: 0;
+      pointer-events: none;
+      animation: screen-receive 6.4s 0.2s ease-in-out infinite;
+    }
+    .hero-art .file-chip {
+      position: absolute;
+      left: 36px;
+      z-index: 2;
+      background: var(--ink);
+      color: var(--bg);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      border-radius: 999px;
+      padding: 7px 12px;
+      white-space: nowrap;
+      box-shadow: 0 6px 18px color-mix(in srgb, var(--ink) 14%, transparent);
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    .hero-art .chip-to-mac {
+      bottom: 78px;
+      animation: send-to-mac 6.4s 0.2s cubic-bezier(0.4, 0.05, 0.2, 1) infinite;
+    }
+    .hero-art .chip-to-phone {
+      bottom: 48px;
+      animation: send-to-phone 6.4s 0.2s cubic-bezier(0.4, 0.05, 0.2, 1) infinite;
+    }
 
     section { padding: 96px 0 0; }
     .section-kicker {
       margin: 0;
-      color: var(--accent);
+      color: var(--muted);
       font-size: 12px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -310,7 +409,7 @@
     .step:last-child { border-right: 0; padding-right: 0; }
     .step b {
       display: block;
-      color: var(--accent);
+      color: var(--muted);
       font-size: 12px;
       letter-spacing: 0.14em;
       font-weight: 650;
@@ -387,7 +486,7 @@
       line-height: 1.6;
       max-width: 46rem;
     }
-    details a { color: var(--accent); }
+    details a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
     .finale {
       margin: 96px 0 0;
@@ -430,29 +529,96 @@
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: none; }
     }
-    @keyframes fly-out {
-      0% { transform: translate(var(--fly-start), 0); opacity: 0; }
-      12% { opacity: 1; }
-      58% { transform: translate(var(--fly-mid), 6px); opacity: 1; }
-      78% { transform: translate(var(--fly-end), 10px) scale(0.86); opacity: 0; }
-      100% { opacity: 0; }
+    @keyframes art-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    @keyframes fly-in {
-      0% { transform: translate(var(--fly-mid), 0); opacity: 0; }
-      12% { opacity: 1; }
-      58% { transform: translate(var(--fly-start), -4px); opacity: 1; }
-      78% { transform: translate(calc(var(--fly-start) - 14px), 2px) scale(0.86); opacity: 0; }
-      100% { opacity: 0; }
+    @keyframes phone-breathe {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
     }
-    @keyframes pulse-out {
-      0%, 100% { opacity: 0.2; }
-      25% { opacity: 0.8; }
-      50%, 75% { opacity: 0.2; }
+    /* First half of cycle: highlight Android → Mac */
+    @keyframes arrow-active-fwd {
+      0%, 48% { opacity: 0.85; transform: translateX(0); }
+      8%, 40% { opacity: 1; transform: translateX(3px); }
+      52%, 100% { opacity: 0.22; transform: translateX(0); }
     }
-    @keyframes pulse-in {
-      0%, 25% { opacity: 0.2; }
-      75% { opacity: 0.8; }
-      50%, 100% { opacity: 0.2; }
+    @keyframes arrow-active-back {
+      0%, 48% { opacity: 0.22; transform: translateX(0); }
+      52%, 100% { opacity: 0.85; transform: translateX(0); }
+      60%, 92% { opacity: 1; transform: translateX(-3px); }
+    }
+    @keyframes arrow-flow-fwd {
+      0%, 48%, 100% { stroke-dashoffset: 16; opacity: 0.35; }
+      12%, 36% { stroke-dashoffset: 0; opacity: 1; }
+      52%, 100% { stroke-dashoffset: 16; opacity: 0.2; }
+    }
+    @keyframes arrow-flow-back {
+      0%, 48% { stroke-dashoffset: 16; opacity: 0.2; }
+      56%, 88% { stroke-dashoffset: 0; opacity: 1; }
+      100% { stroke-dashoffset: 16; opacity: 0.2; }
+    }
+    @keyframes screen-receive {
+      0%, 28%, 52%, 100% { opacity: 0; }
+      34%, 46% { opacity: 1; }
+    }
+    @keyframes phone-receive {
+      0%, 72%, 100% { opacity: 0; }
+      78%, 90% { opacity: 1; }
+    }
+    /* Android → Mac */
+    @keyframes send-to-mac {
+      0% {
+        opacity: 0;
+        transform: translateX(0) translateY(8px) scale(0.82);
+      }
+      6% {
+        opacity: 1;
+        transform: translateX(0) translateY(0) scale(0.92);
+      }
+      28% {
+        opacity: 1;
+        transform: translateX(var(--travel)) translateY(-8px) scale(1);
+      }
+      36% {
+        opacity: 1;
+        transform: translateX(var(--travel)) translateY(-6px) scale(1.03);
+      }
+      44% {
+        opacity: 1;
+        transform: translateX(var(--travel)) translateY(-6px) scale(1);
+      }
+      50%, 100% {
+        opacity: 0;
+        transform: translateX(var(--travel)) translateY(-12px) scale(0.92);
+      }
+    }
+    /* Mac → Android */
+    @keyframes send-to-phone {
+      0%, 48% {
+        opacity: 0;
+        transform: translateX(var(--travel)) translateY(10px) scale(0.82);
+      }
+      54% {
+        opacity: 1;
+        transform: translateX(var(--travel)) translateY(4px) scale(0.92);
+      }
+      76% {
+        opacity: 1;
+        transform: translateX(0) translateY(4px) scale(1);
+      }
+      84% {
+        opacity: 1;
+        transform: translateX(0) translateY(2px) scale(1.03);
+      }
+      92% {
+        opacity: 1;
+        transform: translateX(0) translateY(2px) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(0) translateY(8px) scale(0.92);
+      }
     }
 
     @media (max-width: 960px) {
@@ -469,61 +635,53 @@
     }
 
     @media (max-width: 860px) {
-      .nav {
-        min-height: 56px;
-        gap: 10px;
-      }
-      .brand { font-size: 18px; gap: 8px; }
+      .nav { min-height: 60px; gap: 10px; }
+      .brand { font-size: 16px; gap: 8px; }
       .brand .mark { width: 22px; height: 22px; }
-      .nav-links { gap: 4px; }
-      .nav-links a:not(.nav-cta):not(.nav-icon):not(.nav-ghost) { display: none; }
-      .nav-ghost { display: none; }
-      .nav-cta { min-height: 34px; padding: 0 12px; font-size: 13px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .nav-cta { min-height: 34px; padding: 0 14px; font-size: 13px; margin-left: 0; }
 
       .hero-bleed { min-height: auto; }
       .hero {
         grid-template-columns: 1fr;
-        padding: 40px 0 48px;
+        padding: 28px 0 48px;
         gap: 28px;
-        text-align: left;
       }
-      .hero-copy { gap: 16px; }
-      .hero-brand { font-size: clamp(44px, 14vw, 64px); }
       .hero h1 {
-        font-size: clamp(24px, 7vw, 32px);
-        max-width: none;
+        font-size: clamp(40px, 12vw, 56px);
+        max-width: 12ch;
       }
       .lede { font-size: 16px; max-width: none; }
       .actions {
         width: 100%;
         flex-direction: column;
         align-items: stretch;
-        justify-content: flex-start;
         gap: 10px;
       }
-      .btn { width: 100%; min-height: 48px; }
-
-      .hero-visual {
-        width: 100%;
-        justify-content: center;
-        overflow: hidden;
+      .btn { width: 100%; }
+      .hero-card {
+        min-height: 0;
+        padding: 28px 24px 22px;
+        border-radius: 22px;
       }
-      .scene {
-        --fly-start: 36px;
-        --fly-mid: 168px;
-        --fly-end: 182px;
-        width: min(100%, 300px);
-        height: 140px;
+      .hero-art {
+        padding-top: 20px;
+      }
+      .hero-transfer {
+        --travel: 168px;
         gap: 12px;
-        margin: 0 auto;
       }
-      .macbook { width: 112px; height: 112px; flex: none; }
-      .scene .phone { width: 50px; height: 102px; flex: none; }
-      .scene .arrows { gap: 8px; flex: none; }
-      .scene .arrow { width: 40px; height: 14px; }
-      .file { font-size: 11px; padding: 5px 8px; left: 6px; }
-      .file-out { top: 28px; }
-      .file-in { top: 70px; }
+      .hero-art .phone { width: 56px; height: 116px; }
+      .hero-art .mac { width: 168px; height: 112px; }
+      .hero-art .arrows { gap: 10px; margin-bottom: 36px; }
+      .hero-art .arrow { width: 36px; height: 14px; }
+      .hero-art .file-chip {
+        left: 28px;
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+      .hero-art .chip-to-mac { bottom: 62px; }
+      .hero-art .chip-to-phone { bottom: 38px; }
 
       section { padding: 64px 0 0; }
       .section-title { max-width: none; font-size: clamp(30px, 9vw, 40px); }
@@ -553,50 +711,44 @@
     @media (max-width: 420px) {
       .shell,
       .nav { width: min(1120px, calc(100% - 24px)); }
-      .nav-icon { width: 32px; height: 32px; min-width: 32px; }
       .theme { min-width: 56px; height: 32px; }
-      .hero { padding: 32px 0 40px; }
-      .scene {
-        --fly-start: 28px;
-        --fly-mid: 140px;
-        --fly-end: 152px;
-        width: min(100%, 260px);
-        height: 120px;
-        gap: 8px;
-      }
-      .macbook { width: 96px; height: 96px; }
-      .scene .phone { width: 44px; height: 90px; }
-      .scene .arrow { width: 32px; height: 12px; }
-      .file { font-size: 10px; padding: 4px 7px; }
-      .file-out { top: 22px; }
-      .file-in { top: 58px; }
+      .hero { padding: 24px 0 36px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .hero-brand, .hero h1, .lede, .actions, .hero-visual, .file, .arrow-out, .arrow-in { animation: none; }
-      .file-out { transform: translate(var(--fly-mid), 0); opacity: 1; }
-      .file-in { transform: translate(calc(var(--fly-mid) * 0.55), 0); opacity: 1; }
-      .scene .arrow-out, .scene .arrow-in { opacity: 0.45; }
+      .hero-kicker, .hero h1, .lede, .actions, .hero-note, .hero-visual,
+      .hero-art .phone, .hero-art .arrows, .hero-art .arrow, .hero-art .mac,
+      .hero-art .arrow path, .hero-art .mac .screen-glow, .hero-art .phone-glow,
+      .hero-art .file-chip { animation: none !important; }
+      .hero-art .arrow { opacity: 0.55; }
+      .hero-art .arrow path:first-child { stroke-dashoffset: 0; opacity: 1; }
+      .hero-art .mac .screen-glow,
+      .hero-art .phone-glow { opacity: 0; }
+      .hero-art .chip-to-mac {
+        opacity: 1;
+        transform: translateX(var(--travel));
+        box-shadow: none;
+      }
+      .hero-art .chip-to-phone {
+        opacity: 1;
+        transform: translateX(0);
+        box-shadow: none;
+      }
     }
   </style>
 </head>
 <body>
   <div class="top">
     <nav class="nav" aria-label="Primary">
-      <a class="brand" href="./"><img class="mark mark-day" src="logo-day.png?v=14" width="26" height="26" alt=""><img class="mark mark-night" src="logo-night.png?v=14" width="26" height="26" alt=""><span>SendToMac</span></a>
+      <a class="brand" href="./"><img class="mark mark-day" src="logo-day.png?v=15" width="26" height="26" alt=""><img class="mark mark-night" src="logo-night.png?v=15" width="26" height="26" alt=""><span>SendToMac</span></a>
       <div class="nav-links">
         <a href="#how">How it works</a>
-        <a href="#install">Install</a>
         <a href="#privacy">Privacy</a>
         <a href="#faq">FAQ</a>
-        <a class="nav-icon" href="https://github.com/Hasninemamud/sendtomac" target="_blank" rel="noopener" aria-label="GitHub">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.2-3.4-1.2-.4-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.7.4-1.1.7-1.3-2.2-.2-4.6-1.1-4.6-5a3.9 3.9 0 0 1 1-2.7c-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c2-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 0 1 1 2.7c0 3.9-2.3 4.8-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg>
-        </a>
         <button class="theme" type="button" data-theme-toggle aria-label="Night mode" aria-pressed="false">
           <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M5.2 18.8l1.6-1.6"/></g></svg></span>
           <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg></span>
         </button>
-        <a class="nav-ghost" href="#how">Explore</a>
         <a class="nav-cta" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download</a>
       </div>
     </nav>
@@ -605,35 +757,53 @@
   <header class="hero-bleed">
     <div class="hero">
       <div class="hero-copy">
-        <p class="hero-brand">SendToMac</p>
-        <h1>Hand the Mac a file, not a cloud upload.</h1>
-        <p class="lede">Download the app, scan once, send across the room. Same Wi‑Fi. No account.</p>
+        <p class="hero-kicker">Menu-bar Mac app · Same Wi-Fi</p>
+        <h1>From the <em>phone.</em> Onto the Mac.</h1>
+        <p class="lede">Download the Mac app, scan the code, send the file. No account. The file stays on your Wi‑Fi, not on a public server.</p>
         <div class="actions">
           <a class="btn btn-primary" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download for Mac</a>
           <a class="btn btn-ghost" href="#how">See how it works</a>
         </div>
+        <p class="hero-note">Apple silicon and Intel. Drag to Applications, then right-click and choose Open the first time.</p>
       </div>
-      <div class="hero-visual" aria-hidden="true">
-        <div class="scene">
-          <img class="macbook" src="macbook.png" alt="">
-          <div class="arrows">
-            <svg class="arrow arrow-out" viewBox="0 0 44 14" fill="none">
-              <path d="M6 7H34" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-              <path d="M28 2 L38 7 L28 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <svg class="arrow arrow-in" viewBox="0 0 44 14" fill="none">
-              <path d="M38 7H10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-              <path d="M16 2 L6 7 L16 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+      <div class="hero-visual">
+        <aside class="hero-card" aria-label="Product preview">
+          <h2>Connected in one scan.</h2>
+          <p>Send either way on the same Wi‑Fi. Drop a file on the Mac, or pick one on the phone.</p>
+          <div class="hero-art" aria-hidden="true">
+            <div class="hero-transfer">
+              <div class="phone">
+                <span class="phone-glow"></span>
+                <svg viewBox="0 0 68 138" fill="none">
+                  <rect x="3" y="3" width="62" height="132" rx="14" stroke="currentColor" stroke-width="2.4"/>
+                  <rect x="24" y="14" width="20" height="4" rx="2" fill="currentColor"/>
+                  <rect x="18" y="118" width="32" height="4" rx="2" fill="currentColor"/>
+                </svg>
+              </div>
+              <div class="arrows">
+                <svg class="arrow arrow-to-mac" viewBox="0 0 48 16" fill="none">
+                  <path d="M4 8H36" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  <path d="M30 3 L40 8 L30 13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg class="arrow arrow-to-phone" viewBox="0 0 48 16" fill="none">
+                  <path d="M44 8H12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  <path d="M18 3 L8 8 L18 13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="mac">
+                <span class="screen-glow"></span>
+                <svg viewBox="0 0 210 140" fill="none">
+                  <rect x="18" y="12" width="174" height="108" rx="10" stroke="currentColor" stroke-width="2.4"/>
+                  <rect x="28" y="22" width="154" height="88" rx="4" stroke="currentColor" stroke-width="1.6" opacity="0.35"/>
+                  <path d="M8 128 H202" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                  <path d="M70 128 H140" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity="0.25"/>
+                </svg>
+              </div>
+              <span class="file-chip chip-to-mac">photo.jpg</span>
+              <span class="file-chip chip-to-phone">note.txt</span>
+            </div>
           </div>
-          <svg class="phone" viewBox="0 0 68 138" fill="none">
-            <rect x="3" y="3" width="62" height="132" rx="14" stroke="currentColor" stroke-width="2.5"/>
-            <circle cx="34" cy="16" r="3" fill="currentColor"/>
-            <rect x="18" y="118" width="32" height="4" rx="2" fill="currentColor"/>
-          </svg>
-          <span class="file file-out">photo.jpg</span>
-          <span class="file file-in">note.txt</span>
-        </div>
+        </aside>
       </div>
     </div>
   </header>
@@ -648,7 +818,7 @@
           <article class="step">
             <b>01</b>
             <h3>Install on the Mac</h3>
-            <p>Open the DMG. Run <strong>Install SendToMac.command</strong>, or drag the app to Applications and right‑click → Open once.</p>
+            <p>Open the DMG. Drag SendToMac to Applications, then right‑click → Open once.</p>
           </article>
           <article class="step">
             <b>02</b>
@@ -668,7 +838,7 @@
       <div class="shell">
         <p class="section-kicker">First open</p>
         <h2>If macOS blocks the app.</h2>
-        <p>Prefer <strong>Install SendToMac.command</strong> in the disk image — it copies to Applications and clears the download quarantine. Or right‑click → Open, then allow Local Network when asked.</p>
+        <p>Drag SendToMac to Applications, then <strong>right‑click → Open</strong> the first time. Allow Local Network when macOS asks.</p>
       </div>
     </section>
 
@@ -703,7 +873,7 @@
         <div class="faq">
           <details>
             <summary>Where do I download it?</summary>
-            <p>Use <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">the latest Mac disk image</a>. Open it and run <strong>Install SendToMac.command</strong>, or drag SendToMac to Applications and right‑click → Open the first time.</p>
+            <p>Use <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">the latest Mac disk image</a>. Drag SendToMac to Applications and right‑click → Open the first time.</p>
           </details>
           <details>
             <summary>macOS says the app can’t be opened</summary>
@@ -743,6 +913,6 @@
       </footer>
     </div>
   </main>
-  <script src="theme.js?v=14"></script>
+  <script src="theme.js?v=15"></script>
 </body>
 </html>
