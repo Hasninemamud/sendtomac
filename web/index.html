@@ -267,111 +267,118 @@
       justify-self: stretch;
       display: flex;
       justify-content: center;
-      padding-top: 28px;
+      padding-top: 20px;
       color: var(--ink);
     }
     .hero-transfer {
-      --travel: 225px;
+      --phone-x: 14%;
+      --mac-x: 72%;
+      --phone-y: 44%;
+      --mac-y: 38%;
+      --mid-y: 26%;
       position: relative;
-      display: flex;
-      align-items: flex-end;
-      gap: 18px;
-      width: max-content;
+      width: min(100%, 380px);
+      height: 158px;
+      animation: art-in 0.9s 0.35s ease both;
     }
     .hero-art .phone {
-      position: relative;
-      width: 72px;
-      height: 148px;
-      flex: none;
-      transform-origin: center bottom;
-      animation: art-in 0.85s 0.32s ease both, phone-breathe 5.2s 1.2s ease-in-out infinite;
-    }
-    .hero-art .phone-glow {
       position: absolute;
-      left: 12%;
-      top: 14%;
-      width: 76%;
-      height: 68%;
-      border-radius: 10px;
-      background: color-mix(in srgb, var(--ink) 8%, transparent);
-      opacity: 0;
+      left: 0;
+      bottom: 0;
+      width: 102px;
+      height: 150px;
+      z-index: 1;
+    }
+    .hero-art .phone img,
+    .hero-art .mac img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      object-position: bottom center;
+      user-select: none;
       pointer-events: none;
-      animation: phone-receive 6.4s 0.2s ease-in-out infinite;
     }
     .hero-art .arrows {
+      position: absolute;
+      left: 43%;
+      top: 40%;
+      transform: translate(-50%, -50%);
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      flex: none;
-      margin-bottom: 48px;
-      color: var(--ink);
-      animation: art-in 0.85s 0.42s ease both;
+      gap: 16px;
+      z-index: 0;
+      width: 72px;
     }
     .hero-art .arrow {
-      width: 48px;
-      height: 16px;
-      display: block;
-      opacity: 0.3;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 18px;
+      opacity: 0.2;
+      color: var(--ink);
     }
+    .hero-art .arrow .chev {
+      width: 10px;
+      height: 10px;
+      border-right: 2.2px solid currentColor;
+      border-top: 2.2px solid currentColor;
+      opacity: 0.25;
+      flex-shrink: 0;
+    }
+    .hero-art .arrow-to-mac .chev { transform: rotate(45deg); }
+    .hero-art .arrow-to-phone .chev { transform: rotate(-135deg); }
     .hero-art .arrow-to-mac {
-      animation: arrow-active-fwd 6.4s 0.2s ease-in-out infinite;
+      animation: arrow-lane-fwd 6.5s ease-in-out infinite;
     }
     .hero-art .arrow-to-phone {
-      animation: arrow-active-back 6.4s 0.2s ease-in-out infinite;
+      animation: arrow-lane-back 6.5s ease-in-out infinite;
     }
-    .hero-art .arrow path:first-child {
-      stroke-dasharray: 34;
-      stroke-dashoffset: 14;
-    }
-    .hero-art .arrow-to-mac path:first-child {
-      animation: arrow-flow-fwd 6.4s 0.2s ease-in-out infinite;
-    }
-    .hero-art .arrow-to-phone path:first-child {
-      animation: arrow-flow-back 6.4s 0.2s ease-in-out infinite;
-    }
+    .hero-art .arrow-to-mac .chev:nth-child(1) { animation: chev-fwd 6.5s ease-in-out infinite; animation-delay: 0s; }
+    .hero-art .arrow-to-mac .chev:nth-child(2) { animation: chev-fwd 6.5s ease-in-out infinite; animation-delay: 0.12s; }
+    .hero-art .arrow-to-mac .chev:nth-child(3) { animation: chev-fwd 6.5s ease-in-out infinite; animation-delay: 0.24s; }
+    .hero-art .arrow-to-phone .chev:nth-child(1) { animation: chev-back 6.5s ease-in-out infinite; animation-delay: 0.24s; }
+    .hero-art .arrow-to-phone .chev:nth-child(2) { animation: chev-back 6.5s ease-in-out infinite; animation-delay: 0.12s; }
+    .hero-art .arrow-to-phone .chev:nth-child(3) { animation: chev-back 6.5s ease-in-out infinite; animation-delay: 0s; }
     .hero-art .mac {
-      position: relative;
-      width: 210px;
-      height: 140px;
-      flex: none;
-      animation: art-in 0.9s 0.5s ease both;
-    }
-    .hero-art .mac svg { width: 100%; height: 100%; display: block; }
-    .hero-art .mac .screen-glow {
       position: absolute;
-      left: 13.5%;
-      top: 16%;
-      width: 73%;
-      height: 63%;
-      border-radius: 4px;
-      background: color-mix(in srgb, var(--ink) 8%, transparent);
-      opacity: 0;
-      pointer-events: none;
-      animation: screen-receive 6.4s 0.2s ease-in-out infinite;
+      right: 0;
+      bottom: 12px;
+      width: 188px;
+      height: 114px;
+      z-index: 1;
+    }
+    html.night .hero-art .phone img {
+      filter: brightness(1.08) contrast(0.95);
+      opacity: 0.95;
     }
     .hero-art .file-chip {
       position: absolute;
-      left: 36px;
-      z-index: 2;
+      top: var(--phone-y);
+      left: var(--phone-x);
+      z-index: 3;
       background: var(--ink);
       color: var(--bg);
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 650;
       letter-spacing: -0.01em;
       border-radius: 999px;
-      padding: 7px 12px;
+      padding: 6px 11px;
       white-space: nowrap;
-      box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent);
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 16%, transparent);
       pointer-events: none;
-      will-change: transform, opacity;
+      opacity: 0;
+      will-change: left, top, transform, opacity;
+      transform: translate(-50%, -50%);
+      transform-origin: center center;
     }
     .hero-art .chip-to-mac {
-      bottom: 78px;
-      animation: send-to-mac 6.4s 0.2s cubic-bezier(0.4, 0.05, 0.2, 1) infinite;
+      animation: fly-to-mac 6.5s cubic-bezier(0.45, 0.02, 0.2, 1) infinite;
     }
     .hero-art .chip-to-phone {
-      bottom: 48px;
-      animation: send-to-phone 6.4s 0.2s cubic-bezier(0.4, 0.05, 0.2, 1) infinite;
+      animation: fly-to-phone 6.5s cubic-bezier(0.45, 0.02, 0.2, 1) infinite;
     }
 
     section { padding: 104px 0 0; }
@@ -535,95 +542,109 @@
       to { opacity: 1; transform: none; }
     }
     @keyframes art-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
     }
-    @keyframes phone-breathe {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
-    }
-    /* First half of cycle: highlight Android → Mac */
-    @keyframes arrow-active-fwd {
-      0%, 48% { opacity: 0.85; transform: translateX(0); }
-      8%, 40% { opacity: 1; transform: translateX(3px); }
-      52%, 100% { opacity: 0.22; transform: translateX(0); }
-    }
-    @keyframes arrow-active-back {
-      0%, 48% { opacity: 0.22; transform: translateX(0); }
-      52%, 100% { opacity: 0.85; transform: translateX(0); }
-      60%, 92% { opacity: 1; transform: translateX(-3px); }
-    }
-    @keyframes arrow-flow-fwd {
-      0%, 48%, 100% { stroke-dashoffset: 16; opacity: 0.35; }
-      12%, 36% { stroke-dashoffset: 0; opacity: 1; }
-      52%, 100% { stroke-dashoffset: 16; opacity: 0.2; }
-    }
-    @keyframes arrow-flow-back {
-      0%, 48% { stroke-dashoffset: 16; opacity: 0.2; }
-      56%, 88% { stroke-dashoffset: 0; opacity: 1; }
-      100% { stroke-dashoffset: 16; opacity: 0.2; }
-    }
-    @keyframes screen-receive {
-      0%, 28%, 52%, 100% { opacity: 0; }
-      34%, 46% { opacity: 1; }
-    }
-    @keyframes phone-receive {
-      0%, 72%, 100% { opacity: 0; }
-      78%, 90% { opacity: 1; }
-    }
-    /* Android → Mac */
-    @keyframes send-to-mac {
+    /* Phone → Mac (0–46%), pause, Mac → Phone (54–100%) */
+    @keyframes fly-to-mac {
       0% {
+        left: var(--phone-x);
+        top: var(--phone-y);
         opacity: 0;
-        transform: translateX(0) translateY(8px) scale(0.82);
+        transform: translate(-50%, -50%) scale(0.88);
       }
       6% {
+        left: var(--phone-x);
+        top: var(--phone-y);
         opacity: 1;
-        transform: translateX(0) translateY(0) scale(0.92);
+        transform: translate(-50%, -50%) scale(1);
       }
-      28% {
+      14% {
+        left: var(--phone-x);
+        top: var(--phone-y);
         opacity: 1;
-        transform: translateX(var(--travel)) translateY(-8px) scale(1);
+        transform: translate(-50%, -50%) scale(1);
       }
       36% {
+        left: var(--mac-x);
+        top: var(--mid-y);
         opacity: 1;
-        transform: translateX(var(--travel)) translateY(-6px) scale(1.03);
+        transform: translate(-50%, -50%) scale(1.04);
       }
       44% {
+        left: var(--mac-x);
+        top: var(--mac-y);
         opacity: 1;
-        transform: translateX(var(--travel)) translateY(-6px) scale(1);
+        transform: translate(-50%, -50%) scale(1);
       }
-      50%, 100% {
+      50% {
+        left: var(--mac-x);
+        top: var(--mac-y);
         opacity: 0;
-        transform: translateX(var(--travel)) translateY(-12px) scale(0.92);
+        transform: translate(-50%, -50%) scale(0.92);
+      }
+      50.01%, 100% {
+        left: var(--mac-x);
+        top: var(--mac-y);
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
       }
     }
-    /* Mac → Android */
-    @keyframes send-to-phone {
-      0%, 48% {
+    @keyframes fly-to-phone {
+      0%, 50% {
+        left: var(--mac-x);
+        top: var(--mac-y);
         opacity: 0;
-        transform: translateX(var(--travel)) translateY(10px) scale(0.82);
+        transform: translate(-50%, -50%) scale(0.88);
       }
-      54% {
+      56% {
+        left: var(--mac-x);
+        top: var(--mac-y);
         opacity: 1;
-        transform: translateX(var(--travel)) translateY(4px) scale(0.92);
+        transform: translate(-50%, -50%) scale(1);
       }
-      76% {
+      64% {
+        left: var(--mac-x);
+        top: var(--mac-y);
         opacity: 1;
-        transform: translateX(0) translateY(4px) scale(1);
+        transform: translate(-50%, -50%) scale(1);
       }
-      84% {
+      86% {
+        left: var(--phone-x);
+        top: var(--mid-y);
         opacity: 1;
-        transform: translateX(0) translateY(2px) scale(1.03);
+        transform: translate(-50%, -50%) scale(1.04);
       }
-      92% {
+      94% {
+        left: var(--phone-x);
+        top: var(--phone-y);
         opacity: 1;
-        transform: translateX(0) translateY(2px) scale(1);
+        transform: translate(-50%, -50%) scale(1);
       }
       100% {
+        left: var(--phone-x);
+        top: var(--phone-y);
         opacity: 0;
-        transform: translateX(0) translateY(8px) scale(0.92);
+        transform: translate(-50%, -50%) scale(0.92);
       }
+    }
+    @keyframes arrow-lane-fwd {
+      0%, 12% { opacity: 0.18; color: var(--ink); }
+      16%, 42% { opacity: 1; color: var(--accent); }
+      50%, 100% { opacity: 0.16; color: var(--ink); }
+    }
+    @keyframes arrow-lane-back {
+      0%, 50% { opacity: 0.16; color: var(--ink); }
+      56%, 92% { opacity: 1; color: var(--accent); }
+      100% { opacity: 0.16; color: var(--ink); }
+    }
+    @keyframes chev-fwd {
+      0%, 12%, 48%, 100% { opacity: 0.2; transform: rotate(45deg) translate(-2px, 2px); }
+      18%, 38% { opacity: 1; transform: rotate(45deg) translate(0, 0); }
+    }
+    @keyframes chev-back {
+      0%, 52%, 96%, 100% { opacity: 0.2; transform: rotate(-135deg) translate(-2px, 2px); }
+      60%, 88% { opacity: 1; transform: rotate(-135deg) translate(0, 0); }
     }
 
     @media (max-width: 960px) {
@@ -670,23 +691,25 @@
         border-radius: 22px;
       }
       .hero-art {
-        padding-top: 20px;
+        padding-top: 12px;
       }
       .hero-transfer {
-        --travel: 168px;
-        gap: 12px;
+        width: min(100%, 300px);
+        height: 144px;
+        --phone-x: 15%;
+        --mac-x: 73%;
+        --phone-y: 46%;
+        --mac-y: 36%;
+        --mid-y: 24%;
       }
-      .hero-art .phone { width: 56px; height: 116px; }
-      .hero-art .mac { width: 168px; height: 112px; }
-      .hero-art .arrows { gap: 10px; margin-bottom: 36px; }
-      .hero-art .arrow { width: 36px; height: 14px; }
+      .hero-art .phone { width: 84px; height: 124px; }
+      .hero-art .mac { width: 152px; height: 92px; bottom: 10px; }
+      .hero-art .arrows { width: 56px; gap: 12px; }
+      .hero-art .arrow .chev { width: 8px; height: 8px; }
       .hero-art .file-chip {
-        left: 28px;
         font-size: 11px;
         padding: 6px 10px;
       }
-      .hero-art .chip-to-mac { bottom: 62px; }
-      .hero-art .chip-to-phone { bottom: 38px; }
 
       section { padding: 64px 0 0; }
       .section-title { max-width: none; font-size: clamp(30px, 9vw, 40px); }
@@ -722,21 +745,21 @@
 
     @media (prefers-reduced-motion: reduce) {
       .hero-kicker, .hero h1, .lede, .actions, .hero-note, .hero-visual,
-      .hero-art .phone, .hero-art .arrows, .hero-art .arrow, .hero-art .mac,
-      .hero-art .arrow path, .hero-art .mac .screen-glow, .hero-art .phone-glow,
+      .hero-transfer, .hero-art .arrow, .hero-art .arrow .chev,
       .hero-art .file-chip { animation: none !important; }
-      .hero-art .arrow { opacity: 0.55; }
-      .hero-art .arrow path:first-child { stroke-dashoffset: 0; opacity: 1; }
-      .hero-art .mac .screen-glow,
-      .hero-art .phone-glow { opacity: 0; }
+      .hero-art .arrow-to-mac { opacity: 0.85; color: var(--accent); }
+      .hero-art .arrow-to-phone { opacity: 0.35; }
+      .hero-art .arrow .chev { opacity: 0.85; }
       .hero-art .chip-to-mac {
+        left: var(--mac-x);
+        top: var(--mac-y);
         opacity: 1;
-        transform: translateX(var(--travel));
         box-shadow: none;
       }
       .hero-art .chip-to-phone {
-        opacity: 1;
-        transform: translateX(0);
+        left: var(--phone-x);
+        top: var(--phone-y);
+        opacity: 0.55;
         box-shadow: none;
       }
     }
@@ -778,31 +801,18 @@
           <div class="hero-art" aria-hidden="true">
             <div class="hero-transfer">
               <div class="phone">
-                <span class="phone-glow"></span>
-                <svg viewBox="0 0 68 138" fill="none">
-                  <rect x="3" y="3" width="62" height="132" rx="14" stroke="currentColor" stroke-width="2.4"/>
-                  <rect x="24" y="14" width="20" height="4" rx="2" fill="currentColor"/>
-                  <rect x="18" y="118" width="32" height="4" rx="2" fill="currentColor"/>
-                </svg>
+                <img src="phone-hero.png" alt="" width="415" height="809" decoding="async"/>
               </div>
               <div class="arrows">
-                <svg class="arrow arrow-to-mac" viewBox="0 0 48 16" fill="none">
-                  <path d="M4 8H36" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                  <path d="M30 3 L40 8 L30 13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <svg class="arrow arrow-to-phone" viewBox="0 0 48 16" fill="none">
-                  <path d="M44 8H12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                  <path d="M18 3 L8 8 L18 13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <div class="arrow arrow-to-mac" aria-hidden="true">
+                  <span class="chev"></span><span class="chev"></span><span class="chev"></span>
+                </div>
+                <div class="arrow arrow-to-phone" aria-hidden="true">
+                  <span class="chev"></span><span class="chev"></span><span class="chev"></span>
+                </div>
               </div>
               <div class="mac">
-                <span class="screen-glow"></span>
-                <svg viewBox="0 0 210 140" fill="none">
-                  <rect x="18" y="12" width="174" height="108" rx="10" stroke="currentColor" stroke-width="2.4"/>
-                  <rect x="28" y="22" width="154" height="88" rx="4" stroke="currentColor" stroke-width="1.6" opacity="0.35"/>
-                  <path d="M8 128 H202" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-                  <path d="M70 128 H140" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity="0.25"/>
-                </svg>
+                <img src="mac-hero.png" alt="" width="349" height="211" decoding="async"/>
               </div>
               <span class="file-chip chip-to-mac">photo.jpg</span>
               <span class="file-chip chip-to-phone">note.txt</span>
