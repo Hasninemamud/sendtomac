@@ -1,0 +1,11 @@
+{
+  "name": "sendtomac-loadtest",
+  "private": true,
+  "scripts": {
+    "test:browsers": "playwright test",
+    "test:k6": "k6 run k6-sendtomac.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

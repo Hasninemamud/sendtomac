@@ -9,3 +9,7 @@ dist-intel/
 .venv-intel/
 *.icns
 icon.iconset/
+loadtest/node_modules/
+loadtest/test-results/
+loadtest/playwright-report/
+loadtest/package-lock.json
