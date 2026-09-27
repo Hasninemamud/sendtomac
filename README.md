@@ -1,16 +1,16 @@
 <p align="center">
-  <img src="assets/logo-source.png" alt="SendToMac" width="128">
+  <img src="assets/logo-source.png" alt="SendToMac logo" width="128">
 </p>
 
 <h1 align="center">SendToMac</h1>
 
 <p align="center">
-  <b>The easiest way to scan and transfer a file from a phone to a Mac on the same Wi-Fi.</b>
+  <b>The easiest way to scan and transfer a file from your phone to your Mac — over the same Wi-Fi.</b>
 </p>
 
 <p align="center">
   <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">
-    <img alt="Download for Mac" src="https://img.shields.io/badge/Download-macOS-black?style=for-the-badge&logo=apple">
+    <img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-black?style=for-the-badge&logo=apple">
   </a>
   <a href="LICENSE">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge">
@@ -19,270 +19,184 @@
 </p>
 
 <p align="center">
-  No account. No public file host. The phone scans a code, then the file stays on that network.
+  No account. No public file host. Your phone scans a code, and the file never leaves your network.
 </p>
 
-Description
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#how-it-works">How it works</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#privacy">Privacy</a> •
+  <a href="#contributing">Contributing</a>
+</p>
 
-SendToMac is a local file-transfer application that lets you send files, photos, and short notes between a phone and a Mac while both devices are connected to the same Wi-Fi network.
+---
 
-The Mac application runs from the menu bar and displays a QR code and an 8-character pairing code. The phone scans the QR code using its camera and opens the transfer page in a browser. No phone application needs to be installed.
+## Overview
 
-Files are transferred over the local network while the Mac application is running. Received files are saved to:
+SendToMac is a local file-transfer app that lets you send files, photos, and short notes between a phone and a Mac while both devices sit on the same Wi-Fi network.
 
+The Mac app lives in the menu bar and shows a QR code plus an 8-character pairing code. Your phone scans the code and opens a transfer page in its browser — no app install required. Everything moves over your local network, and received files land in:
+
+```
 ~/Downloads/SendToMac
+```
 
-The public website is only used to introduce and distribute the product. Files are not uploaded to GitHub, Vercel, or another public file host.
+The public website exists only to introduce and distribute the product. Files are never uploaded to GitHub, Vercel, or any public file host.
 
-Features
+## Features
 
-📱 Transfer files between a phone and Mac over the same Wi-Fi
+| | |
+|---|---|
+| 📱 | Transfer files between phone and Mac over the same Wi-Fi |
+| 📷 | QR-code based pairing |
+| 🔢 | Random 8-character pairing code |
+| 🖥️ | macOS menu-bar app |
+| 🌐 | No phone app required |
+| 📁 | Saves received files to `Downloads/SendToMac` |
+| 📝 | Send short notes, links, and addresses |
+| 🔒 | No account required |
+| 🚫 | No analytics or tracking cookies |
+| 💾 | Pairing codes kept in memory only |
+| 🍎 | Supports Apple Silicon and Intel Macs |
+| ⚡ | Local network transfer |
+| 🔄 | One pairing at a time |
 
-📷 QR-code based pairing
+## How it works
 
-🔢 Random 8-character pairing code
+```
+ Phone                                Mac
+   │                                   │
+   │  1. Open SendToMac's menu-bar     │
+   │     window — see the QR code      │
+   │                                   │
+   │  2. Scan the QR code              │
+   │     (same Wi-Fi network)          │
+   │ ────────────────────────────────▶ │
+   │                                   │
+   │  3. Select or drop a file         │
+   │ ────────────────────────────────▶ │
+   │                                   │
+   │                       ~/Downloads/SendToMac
+```
 
-🖥️ macOS menu-bar application
+### Pairing
 
-🌐 No phone application required
+1. Open **SendToMac** on the Mac.
+2. It displays a QR code and an 8-character pairing code.
+3. Scan the QR code with your phone's camera.
+4. Both devices must be on the same Wi-Fi network — the scan pairs them.
+5. Either side can now send a file, photo, or short note.
 
-📁 Saves received files to Downloads/SendToMac
+The pairing code is generated randomly and kept only in memory — never written to disk.
 
-📝 Send short notes, links, and addresses
-
-🔒 No account required
-
-🚫 No analytics or tracking cookies
-
-💾 Pairing codes are kept only in memory
-
-🍎 Supports Apple Silicon and Intel Macs
-
-⚡ Local network transfer
-
-🔄 One pair at a time
-
-How it works
-
-Phone                              Mac
-  |                                  |
-  |  1. Open SendToMac               |
-  |     menu-bar window              |
-  |     shows a QR code              |
-  |                                  |
-  |  2. Scan the QR code             |
-  |     on the same Wi-Fi            |
-  |--------------------------------->|
-  |                                  |
-  |  3. Select or drop a file        |
-  |--------------------------------->|
-  |                                  |
-  |                         Downloads/SendToMac
-
-Pairing
-
-Open SendToMac on the Mac.
-
-The application displays a QR code and an 8-character pairing code.
-
-Scan the QR code using the phone camera.
-
-Both devices must be connected to the same Wi-Fi network.
-
-The scan pairs the phone with the Mac.
-
-Either side can then send a file, photo, or short note.
-
-The pairing code is generated randomly and kept only in memory.
-
-Installation
+## Installation
 
 SendToMac supports both Apple Silicon and Intel Macs.
 
-Download
-
-Download the latest macOS disk image:
+### Download
 
 <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">
-  <img alt="Download SendToMac" src="https://img.shields.io/badge/Download-SendToMac-black?style=for-the-badge&logo=apple">
+  <img alt="Download SendToMac" src="https://img.shields.io/badge/Download-SendToMac.dmg-black?style=for-the-badge&logo=apple">
 </a>
 
-Install
+### Install
 
-Open SendToMac.dmg.
+1. Open `SendToMac.dmg`.
+2. Run **Install SendToMac.command** (preferred) — it clears quarantine and copies the app to Applications.
+   - Alternatively, drag **SendToMac** into the Applications folder.
+3. If macOS blocks the app: right-click it → **Open**, or go to **System Settings → Privacy & Security → Open Anyway**.
+4. Allow **Local Network** or incoming-connection permissions if macOS prompts for them.
 
-Prefer Install SendToMac.command. It clears quarantine and copies the application to Applications.
+> **Note:** SendToMac is not yet notarized, so macOS may block it on first launch — this is expected.
 
-Alternatively, drag SendToMac into the Applications folder.
+### Opening the app
 
-If macOS blocks the application, right-click it and select Open, or go to:
-System Settings → Privacy & Security → Open Anyway.
+- Click the menu-bar icon, or
+- Use the shortcut **⌥ Option + ⌘ Command** (if enabled)
+- Enable **Open at Login** from the menu-bar icon's right-click menu (optional)
 
-Allow Local Network or incoming connections if macOS asks for permission.
+## Usage
 
-SendToMac is not notarized yet, so macOS may block the application during the first launch.
+### Send a file from your Mac
 
-Open SendToMac
+Once your phone has scanned the QR code:
 
-You can open the application from the menu-bar icon.
+- Drop a file onto the SendToMac window and press **Send**, or
+- Choose **Photos or files**
+- You can also type a note, link, or address and send it
 
-If enabled, you can also use:
+### Send a file from your phone
 
-Option + Command
+1. Scan the QR code shown by SendToMac.
+2. Select a file or photo on your phone.
+3. It transfers to the Mac and lands in `~/Downloads/SendToMac`.
 
-Open at Login is optional and can be enabled from the menu-bar icon's right-click menu.
+### Network requirements
 
-Usage
+- Both devices must be able to reach each other on the local network.
+- Guest / public Wi-Fi networks with client isolation may not work.
+- If needed, connect the Mac to your phone's hotspot and scan again.
 
-Send a file from Mac
+## Architecture
 
-After the phone has scanned the QR code:
+| Component | Role |
+|---|---|
+| **Mac app** | Menu-bar window, QR code, local transfer, file saving |
+| **Phone browser** | Opens the scanned transfer page — no install needed |
+| **Pairing code** | Connects the two devices |
+| **Local server** | Runs on the Mac, port `8790` |
+| **Website** | Product/download page and privacy info |
 
-Drop a file onto the SendToMac window and press Send.
+The local server runs on the Mac and is reachable from any device on the same Wi-Fi network. Since a plain local page can't open a direct browser-to-browser channel, the Mac relays files between the connected devices. Temporary files are deleted once the receiving device downloads them, or after roughly 15 minutes if unclaimed.
 
-Or choose Photos or files.
+## Privacy
 
-You can also type a note, link, or address and send it.
+- No account required
+- No analytics, no tracking cookies
+- Pairing codes are never written to disk
+- Files stay on the local network
+- Received files are stored locally in `Downloads/SendToMac`
+- The `⌥ + ⌘` shortcut only checks those two keys — it doesn't record or store other keystrokes
 
-Send a file from phone
+Full privacy policy: [`web/privacy/index.html`](web/privacy/index.html) · Also published at `/privacy`
 
-Scan the QR code displayed by SendToMac.
+## Limits
 
-Select a file or photo from the phone.
+- One pairing at a time — a third device can't join an active session
+- Maximum file size: **500 MB**
+- Maximum note size: **20,000 characters**
+- Android share-sheet integration isn't available yet
+- First launch may require right-click → Open (app isn't notarized)
 
-The selected item is transferred to the Mac.
+## Development
 
-Received files are stored in:
+**Requirements**
 
-~/Downloads/SendToMac
+- Python 3
+- `pyobjc`
+- `pywebview`
 
-Network requirements
+**Run the transfer page from source**
 
-Both devices must be able to communicate with each other over the local network.
-
-Guest or public Wi-Fi networks that isolate connected devices may not work.
-
-If necessary, connect the Mac to the phone's hotspot and scan the QR code again.
-
-Architecture
-
-SendToMac consists of several parts:
-
-Component
-
-Role
-
-Mac app
-
-Menu-bar window, QR code, local transfer, and file saving
-
-Phone browser
-
-Opens the scanned transfer page; no app installation required
-
-Pairing code
-
-Connects the two devices
-
-Local server
-
-Runs on the Mac at port 8790
-
-Website
-
-Product/download page and privacy information
-
-The local server runs on the Mac and is reachable from devices on the same Wi-Fi network.
-
-Because a plain local page cannot open a direct browser-to-browser transfer channel, the Mac relays the file between the connected devices.
-
-Temporary files are removed after the receiving device downloads them, or after approximately 15 minutes if they remain unclaimed.
-
-Privacy
-
-SendToMac is designed for local transfers.
-
-No account is required.
-
-No analytics are included.
-
-No tracking cookies are used.
-
-Pairing codes are not written to disk.
-
-Files are intended to remain on the local network.
-
-Received files are stored locally in Downloads/SendToMac.
-
-The Option + Command shortcut checks only those two keys and does not record or store other keystrokes.
-
-For the full privacy policy, see:
-
-web/privacy/index.html
-
-The privacy page is also published at:
-
-/privacy
-
-Limits
-
-One pair at a time.
-
-A third device cannot join the same pairing session.
-
-Maximum file size: 500 MB.
-
-Maximum note size: 20,000 characters.
-
-Android share-sheet integration is not currently available.
-
-The first macOS launch may require right-click → Open because the application is not notarized.
-
-Requirements
-
-For users
-
-macOS
-
-Apple Silicon or Intel Mac
-
-Phone with a camera and modern web browser
-
-Both devices connected to the same Wi-Fi network
-
-For development
-
-The project requires:
-
-Python 3
-
-pyobjc
-
-pywebview
-
-Run from source
-
-To run the web transfer page from source:
-
+```bash
 python3 site.py
+```
 
-This opens the transfer site in a browser.
+This opens the transfer site in a browser. It does *not* launch the menu-bar app itself — the downloadable app is a windowed build of the local server combined with a menu-bar shell.
 
-Running site.py opens the transfer page; it does not launch the menu-bar application itself.
+**Build-related files**
 
-The downloadable application is a windowed build of the local server combined with a menu-bar shell.
+- `SendToMac.spec`
+- `launcher.c`
 
-Build-related files include:
+The distributed disk image bundles both Apple Silicon and Intel builds; the launcher starts whichever matches the Mac.
 
-SendToMac.spec
-launcher.c
+### Project structure
 
-The distributed disk image contains both Apple Silicon and Intel builds. The launcher starts the build appropriate for the Mac.
-
-Project Structure
-
-A simplified project structure is:
-
+```
 SendToMac/
 ├── assets/
 │   └── logo-source.png
@@ -294,66 +208,43 @@ SendToMac/
 ├── launcher.c
 ├── LICENSE
 └── README.md
+```
 
-Roadmap
+## Roadmap
 
-Potential future improvements can be tracked through the project's issue tracker.
+Tracked via the [issue tracker](https://github.com/Hasninemamud/sendtomac/issues). Currently documented limitations:
 
-Current documented limitations include:
+- [ ] macOS notarization
+- [ ] Android share-sheet integration
+- [ ] Multi-device / simultaneous pairing
 
-macOS notarization
+## Support
 
-Android share-sheet integration
+Found a bug or have a feature request? [Open an issue](https://github.com/Hasninemamud/sendtomac/issues) and include:
 
-Single-pair transfer limitation
+- macOS version
+- Mac model (Apple Silicon or Intel)
+- Phone model and browser
+- Network setup
+- Steps to reproduce
+- Relevant error message or screenshot
 
-Support
+## Contributing
 
-If you encounter a problem or have a feature request, open an issue in the GitHub repository:
+Contributions are welcome!
 
-https://github.com/Hasninemamud/sendtomac
+1. Open an issue first to discuss any major change.
+2. Fork the repository.
+3. Create a feature branch.
+4. Make your changes and test locally.
+5. Update documentation when necessary.
+6. Open a pull request with a clear description.
 
-When reporting an issue, include:
+## Author
 
-macOS version
+**Hasnine Mamud**
+GitHub: [@Hasninemamud](https://github.com/Hasninemamud)
 
-Mac model / Apple Silicon or Intel
+## License
 
-Phone model and browser
-
-Network setup
-
-Steps to reproduce the problem
-
-Relevant error message or screenshot
-
-Contributing
-
-Contributions are welcome.
-
-Before making a major change, open an issue to discuss the proposed change.
-
-For pull requests:
-
-Fork the repository.
-
-Create a feature branch.
-
-Make your changes.
-
-Test the changes locally.
-
-Update documentation when necessary.
-
-Open a pull request with a clear description of the change.
-
-Author
-
-Hasnine Mamud
-
-GitHub:
-https://github.com/Hasninemamud
-
-License
-
-Released under the MIT License.
+Released under the [MIT License](LICENSE).
