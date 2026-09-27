@@ -64,25 +64,22 @@ echo "==> Stage DMG contents"
 rm -rf "$STAGE"
 mkdir -p "$STAGE"
 cp -R "$PKG" "$STAGE/SendToMac.app"
-cp "$ROOT/Install SendToMac.command" "$STAGE/"
-chmod +x "$STAGE/Install SendToMac.command"
-# Clear quarantine on staged bits so local opens aren't poisoned
+# Classic drag-to-Applications layout (no shell installer in the window).
 xattr -cr "$STAGE" 2>/dev/null || true
 
 echo "==> Build styled DMG"
 rm -f "$OUT"
-# Window 660×420; icons sit on the designed background band.
+# Window 660×420; app left, Applications right.
 create-dmg \
   --volname "SendToMac" \
   --volicon "$ROOT/icon.icns" \
   --background "$BG" \
   --window-pos 200 120 \
   --window-size 660 420 \
-  --icon-size 96 \
-  --icon "SendToMac.app" 128 170 \
+  --icon-size 112 \
+  --icon "SendToMac.app" 150 170 \
   --hide-extension "SendToMac.app" \
-  --icon "Install SendToMac.command" 330 170 \
-  --app-drop-link 520 170 \
+  --app-drop-link 510 170 \
   --no-internet-enable \
   "$OUT" \
   "$STAGE"
