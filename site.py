@@ -61,6 +61,11 @@ ICONS = {
 VENDOR = ROOT / "web" / "vendor" / "qrcode.js"
 PORT = 8790
 PUBLIC = os.environ.get("SENDTOMAC_PUBLIC") == "1"
+GITHUB_RELEASE_API = "https://api.github.com/repos/Hasninemamud/sendtomac/releases/latest"
+DMG_DOWNLOAD_URL = (
+    "https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg"
+)
+DMG_ASSET_NAME = "SendToMac.dmg"
 MAX_FILE = 500 * 1024 * 1024
 MAX_TEXT = 20_000
 MAX_ROOMS = 64
@@ -429,6 +434,26 @@ def parse_multipart(content_type: str, body: bytes) -> tuple[dict, list]:
     return fields, files
 
 
+def github_dmg_download_count() -> int | None:
+    try:
+        req = urllib.request.Request(
+            GITHUB_RELEASE_API,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "SendToMac",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            data = json.loads(resp.read().decode())
+        for asset in data.get("assets") or []:
+            if asset.get("name") == DMG_ASSET_NAME:
+                return int(asset.get("download_count") or 0)
+        return 0
+    except Exception:
+        return None
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "SendToMacSite/1.0"
     protocol_version = "HTTP/1.1"
@@ -449,6 +474,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def send_obj(self, code: int, payload) -> None:
         self.send_bytes(code, json.dumps(payload).encode(), "application/json; charset=utf-8")
+
+    def send_redirect(self, url: str) -> None:
+        self.send_response(302)
+        self.send_header("Location", url)
+        self.end_headers()
 
     def do_HEAD(self) -> None:  # noqa: N802
         self._head_only = True
@@ -511,6 +541,13 @@ class Handler(BaseHTTPRequestHandler):
                 "mode": transfer_mode(),
                 "host": host_device_name(),
             })
+            return
+        if parsed.path == "/api/download":
+            self.send_redirect(DMG_DOWNLOAD_URL)
+            return
+        if parsed.path == "/api/downloads":
+            count = github_dmg_download_count()
+            self.send_obj(200, {"count": count})
             return
         if parsed.path.startswith("/api/file/"):
             self.handle_download(parsed)

@@ -223,6 +223,14 @@
       color: var(--ink);
     }
     .btn-ghost:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+    .download-stat {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--accent);
+      animation: rise 0.85s 0.19s ease both;
+    }
     .hero-note {
       margin: 0;
       max-width: 36rem;
@@ -777,7 +785,7 @@
           <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M5.2 18.8l1.6-1.6"/></g></svg></span>
           <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg></span>
         </button>
-        <a class="nav-cta" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download</a>
+        <a class="nav-cta" href="/api/download">Download</a>
       </div>
     </nav>
   </div>
@@ -789,9 +797,10 @@
         <h1>From the <em>phone.</em> Onto the Mac.</h1>
         <p class="lede">Download the Mac app, scan the code, send the file. No account. The file stays on your Wi‑Fi, not on a public server.</p>
         <div class="actions">
-          <a class="btn btn-primary" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download for Mac</a>
+          <a class="btn btn-primary" href="/api/download">Download for Mac</a>
           <a class="btn btn-ghost" href="#how">See how it works</a>
         </div>
+        <p class="download-stat" data-download-stat hidden aria-live="polite"></p>
         <p class="hero-note">Apple silicon and Intel. Drag to Applications, then right-click and choose Open the first time.</p>
       </div>
       <div class="hero-visual">
@@ -888,7 +897,7 @@
         <div class="faq">
           <details>
             <summary>Where do I download it?</summary>
-            <p>Use <a href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">the latest Mac disk image</a>. Drag SendToMac to Applications and right‑click → Open the first time.</p>
+            <p>Use <a href="/api/download">the latest Mac disk image</a>. Drag SendToMac to Applications and right‑click → Open the first time.</p>
           </details>
           <details>
             <summary>macOS says the app can’t be opened</summary>
@@ -913,9 +922,10 @@
         <h2>Ready to send from the phone?</h2>
         <p>Install the Mac app, scan once, and move the file across the room.</p>
         <div class="actions">
-          <a class="btn btn-primary" href="https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg">Download for Mac</a>
+          <a class="btn btn-primary" href="/api/download">Download for Mac</a>
           <a class="btn btn-ghost" href="privacy/">Privacy policy</a>
         </div>
+        <p class="download-stat" data-download-stat hidden aria-live="polite"></p>
       </section>
 
       <footer>
@@ -929,5 +939,27 @@
     </div>
   </main>
   <script src="theme.js?v=15"></script>
+  <script>
+    (function () {
+      var nodes = document.querySelectorAll("[data-download-stat]");
+      if (!nodes.length) return;
+      function label(n) {
+        var text = n === 1 ? "1 download" : n.toLocaleString() + " downloads";
+        return text + " so far";
+      }
+      fetch("/api/downloads")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var n = data && data.count;
+          if (n == null || n < 1) return;
+          var copy = label(n);
+          nodes.forEach(function (el) {
+            el.textContent = copy;
+            el.hidden = false;
+          });
+        })
+        .catch(function () {});
+    })();
+  </script>
 </body>
 </html>

@@ -9,6 +9,7 @@ dist-intel/
 .venv-intel/
 *.icns
 icon.iconset/
+web/node_modules/
 loadtest/node_modules/
 loadtest/test-results/
 loadtest/playwright-report/
