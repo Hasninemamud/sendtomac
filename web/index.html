@@ -223,13 +223,321 @@
       color: var(--ink);
     }
     .btn-ghost:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
-    .download-stat {
-      margin: 0;
-      font-size: 14px;
+    .nav-dl-count {
+      margin-left: 7px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--on-cta) 24%, transparent);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      vertical-align: middle;
+      display: inline-block;
+      transform-origin: center;
+    }
+    .nav-dl-count.is-live {
+      animation: nav-badge-pop 0.7s cubic-bezier(0.34, 1.45, 0.64, 1) both;
+    }
+    @keyframes nav-badge-pop {
+      0% { opacity: 0; transform: scale(0.2) rotate(-8deg); }
+      55% { transform: scale(1.18) rotate(2deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0); }
+    }
+    .dl-sticker {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      z-index: 2;
+      display: grid;
+      gap: 2px;
+      min-width: 72px;
+      padding: 10px 12px 9px;
+      border-radius: 14px;
+      background: linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--cta) 88%, white),
+        var(--cta) 55%,
+        color-mix(in srgb, var(--cta) 92%, black)
+      );
+      color: var(--on-cta);
+      text-align: center;
+      transform: rotate(7deg);
+      box-shadow:
+        0 10px 28px color-mix(in srgb, var(--cta) 45%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--on-cta) 12%, transparent) inset;
+      opacity: 0;
+    }
+    .dl-sticker::before {
+      content: "";
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      margin-left: -5px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--on-cta) 35%, var(--cta));
+      box-shadow: 0 1px 0 color-mix(in srgb, black 18%, transparent);
+    }
+    .dl-sticker::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(
+        115deg,
+        transparent 42%,
+        color-mix(in srgb, var(--on-cta) 35%, transparent) 50%,
+        transparent 58%
+      );
+      opacity: 0;
+      pointer-events: none;
+    }
+    .dl-sticker.is-live {
+      opacity: 1;
+      animation:
+        sticker-pop 0.85s 0.2s cubic-bezier(0.22, 1.25, 0.36, 1) both,
+        sticker-float 5s 1.05s ease-in-out infinite;
+    }
+    .dl-sticker.is-live::after {
+      animation: sticker-shine 3.2s 1.4s ease-in-out infinite;
+    }
+    .dl-sticker-orbit {
+      position: absolute;
+      inset: -14px;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .dl-sticker.is-live .dl-sticker-orbit {
+      opacity: 1;
+      animation: orbit-fade-in 0.5s 0.7s ease both;
+    }
+    .dl-sticker-orbit i {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      margin: -2px 0 0 -2px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+    }
+    .dl-sticker-orbit i:nth-child(1) { animation: orbit-dot 2.6s linear infinite; }
+    .dl-sticker-orbit i:nth-child(2) { animation: orbit-dot 2.6s -0.85s linear infinite; }
+    .dl-sticker-orbit i:nth-child(3) { animation: orbit-dot 2.6s -1.7s linear infinite; }
+    .dl-sticker-num {
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 28px;
       font-weight: 600;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      display: inline-block;
+      transform-origin: center;
+    }
+    .dl-sticker-num.is-landed {
+      animation: num-land 0.65s cubic-bezier(0.22, 1.2, 0.36, 1);
+    }
+    .dl-sticker-label {
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.92;
+    }
+    @keyframes sticker-pop {
+      0% { opacity: 0; transform: rotate(12deg) scale(0.55) translateY(18px); }
+      65% { opacity: 1; transform: rotate(4deg) scale(1.08) translateY(-4px); }
+      100% { opacity: 1; transform: rotate(7deg) scale(1) translateY(0); }
+    }
+    @keyframes sticker-float {
+      0%, 100% { transform: rotate(7deg) translateY(0); }
+      50% { transform: rotate(5deg) translateY(-6px); }
+    }
+    @keyframes sticker-shine {
+      0%, 72%, 100% { opacity: 0; transform: translateX(-30%); }
+      78% { opacity: 0.85; }
+      92% { opacity: 0; transform: translateX(30%); }
+    }
+    @keyframes orbit-fade-in {
+      from { opacity: 0; transform: scale(0.6); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes orbit-dot {
+      0% { transform: rotate(0deg) translateX(22px) scale(0.6); opacity: 0.35; }
+      50% { transform: rotate(180deg) translateX(26px) scale(1); opacity: 1; }
+      100% { transform: rotate(360deg) translateX(22px) scale(0.6); opacity: 0.35; }
+    }
+    @keyframes num-land {
+      0% { transform: scale(1); filter: brightness(1); }
+      35% { transform: scale(1.14); filter: brightness(1.08); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+    .download-toast {
+      position: fixed;
+      z-index: 80;
+      isolation: isolate;
+      right: max(20px, env(safe-area-inset-right, 0px));
+      bottom: max(20px, env(safe-area-inset-bottom, 0px));
+      width: min(360px, calc(100vw - 40px));
+      padding: 0;
+      border-radius: 24px;
+      background: transparent;
+      border: 0;
+      transform: translate3d(0, 130%, 0) scale(0.88) rotate(-1.5deg);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      filter: blur(6px);
+    }
+    .download-toast[hidden] {
+      display: none !important;
+    }
+    .download-toast::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: 25px;
+      padding: 1px;
+      background: linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--accent) 70%, transparent),
+        transparent 42%,
+        color-mix(in srgb, var(--accent) 45%, transparent) 68%,
+        transparent
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.85;
+      animation: toast-border-drift 5s linear infinite;
+      pointer-events: none;
+    }
+    .download-toast-inner {
+      position: relative;
+      overflow: hidden;
+      padding: 18px 18px 16px;
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--panel) 94%, var(--bg));
+      border: 1px solid var(--line);
+      box-shadow: 0 28px 70px color-mix(in srgb, var(--ink) 16%, transparent);
+    }
+    @keyframes toast-border-drift {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
+    }
+    .download-toast.is-open {
+      display: block;
+      animation: toast-spring-in 1s cubic-bezier(0.22, 1.18, 0.36, 1) forwards;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .download-toast.is-closing {
+      animation: toast-spring-out 0.5s cubic-bezier(0.45, 0, 0.75, 0.2) forwards;
+      pointer-events: none;
+    }
+    @keyframes toast-spring-in {
+      0% {
+        transform: translate3d(0, 130%, 0) scale(0.88) rotate(-1.5deg);
+        opacity: 0;
+        filter: blur(6px);
+      }
+      58% {
+        transform: translate3d(0, -8px, 0) scale(1.03) rotate(0.6deg);
+        opacity: 1;
+        filter: blur(0);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0);
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+    @keyframes toast-spring-out {
+      to {
+        transform: translate3d(0, 115%, 0) scale(0.9) rotate(1deg);
+        opacity: 0;
+        filter: blur(4px);
+      }
+    }
+    .download-toast.is-open .download-toast-kicker,
+    .download-toast.is-open .download-toast-head,
+    .download-toast.is-open .download-toast-actions {
+      animation: toast-piece-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .download-toast.is-open .download-toast-kicker { animation-delay: 0.12s; }
+    .download-toast.is-open .download-toast-head { animation-delay: 0.22s; }
+    .download-toast.is-open .download-toast-actions { animation-delay: 0.34s; }
+    @keyframes toast-piece-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+    .download-toast-kicker {
+      margin: 0 0 8px;
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
       color: var(--accent);
-      animation: rise 0.85s 0.19s ease both;
+    }
+    .download-toast-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .download-toast-num {
+      margin: 0;
+      flex: 0 0 auto;
+      min-width: 2.5ch;
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 52px;
+      font-weight: 500;
+      letter-spacing: -0.05em;
+      line-height: 0.92;
+      color: var(--ink);
+      display: inline-block;
+      transform-origin: left center;
+      font-variant-numeric: tabular-nums;
+    }
+    .download-toast-num.is-landed {
+      animation: num-land 0.7s cubic-bezier(0.22, 1.2, 0.36, 1);
+    }
+    .download-toast-copy {
+      margin: 4px 0 0;
+      font-size: 15px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .download-toast-copy strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    #downloadToastSubline { display: block; }
+    .download-toast-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .download-toast-actions .btn { min-height: 42px; flex: 1; font-size: 14px; }
+    .download-toast-dismiss {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .download-toast-dismiss:hover {
+      background: color-mix(in srgb, var(--ink) 6%, transparent);
+      color: var(--ink);
     }
     .hero-note {
       margin: 0;
@@ -246,6 +554,7 @@
       animation: rise 0.95s 0.18s ease both;
     }
     .hero-card {
+      position: relative;
       background: var(--panel);
       border-radius: 32px;
       padding: 40px 40px 32px;
@@ -718,6 +1027,19 @@
         font-size: 11px;
         padding: 6px 10px;
       }
+      .dl-sticker {
+        top: 14px;
+        right: 14px;
+        min-width: 64px;
+        padding: 8px 10px;
+      }
+      .dl-sticker-num { font-size: 24px; }
+      .download-toast {
+        left: max(20px, env(safe-area-inset-left, 0px));
+        right: max(20px, env(safe-area-inset-right, 0px));
+        width: auto;
+      }
+      .download-toast-num { font-size: 44px; }
 
       section { padding: 64px 0 0; }
       .section-title { max-width: none; font-size: clamp(30px, 9vw, 40px); }
@@ -754,7 +1076,17 @@
     @media (prefers-reduced-motion: reduce) {
       .hero-kicker, .hero h1, .lede, .actions, .hero-note, .hero-visual,
       .hero-transfer, .hero-art .arrow, .hero-art .arrow .chev,
-      .hero-art .file-chip { animation: none !important; }
+      .hero-art .file-chip, .dl-sticker, .dl-sticker.is-live, .dl-sticker-orbit i,
+      .download-toast, .download-toast.is-open, .download-toast.is-closing,
+      .nav-dl-count.is-live,
+      [data-dl-num].is-landed { animation: none !important; }
+      .download-toast.is-open,
+      .download-toast.is-closing {
+        filter: none;
+        transform: none;
+        opacity: 1;
+      }
+      .dl-sticker.is-live { opacity: 1; transform: rotate(7deg); }
       .hero-art .arrow-to-mac { opacity: 0.85; color: var(--accent); }
       .hero-art .arrow-to-phone { opacity: 0.35; }
       .hero-art .arrow .chev { opacity: 0.85; }
@@ -785,7 +1117,7 @@
           <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M5.2 18.8l1.6-1.6"/></g></svg></span>
           <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M15.2 2.8A8.8 8.8 0 1 0 21.2 16 7.4 7.4 0 0 1 15.2 2.8z"/></svg></span>
         </button>
-        <a class="nav-cta" href="/api/download">Download</a>
+        <a class="nav-cta" href="/api/download">Download<span class="nav-dl-count" data-nav-dl-count hidden></span></a>
       </div>
     </nav>
   </div>
@@ -800,11 +1132,15 @@
           <a class="btn btn-primary" href="/api/download">Download for Mac</a>
           <a class="btn btn-ghost" href="#how">See how it works</a>
         </div>
-        <p class="download-stat" data-download-stat hidden aria-live="polite"></p>
         <p class="hero-note">Apple silicon and Intel. Drag to Applications, then right-click and choose Open the first time.</p>
       </div>
       <div class="hero-visual">
         <aside class="hero-card" aria-label="Product preview">
+          <div class="dl-sticker" id="dlSticker" hidden aria-hidden="true">
+            <span class="dl-sticker-orbit" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="dl-sticker-num" data-dl-num>0</span>
+            <span class="dl-sticker-label">downloads</span>
+          </div>
           <h2>Connected in one scan.</h2>
           <p>Send either way on the same Wi‑Fi. Drop a file on the Mac, or pick one on the phone.</p>
           <div class="hero-art" aria-hidden="true">
@@ -925,7 +1261,6 @@
           <a class="btn btn-primary" href="/api/download">Download for Mac</a>
           <a class="btn btn-ghost" href="privacy/">Privacy policy</a>
         </div>
-        <p class="download-stat" data-download-stat hidden aria-live="polite"></p>
       </section>
 
       <footer>
@@ -938,27 +1273,201 @@
       </footer>
     </div>
   </main>
+
+  <div class="download-toast" id="downloadToast" role="dialog" aria-labelledby="downloadToastTitle" aria-hidden="true" hidden>
+    <div class="download-toast-inner">
+      <button class="download-toast-dismiss" type="button" id="downloadToastClose" aria-label="Dismiss">×</button>
+      <p class="download-toast-kicker">Live from GitHub</p>
+      <div class="download-toast-head">
+        <p class="download-toast-num" id="downloadToastNum" data-dl-num>0</p>
+        <p class="download-toast-copy" id="downloadToastTitle">
+          <strong id="downloadToastHeadline">People downloaded the Mac app</strong>
+          <span id="downloadToastSubline">Counted from the public disk image on GitHub — no accounts, no tracking cookies.</span>
+        </p>
+      </div>
+      <div class="download-toast-actions">
+        <a class="btn btn-primary" href="/api/download">Download for Mac</a>
+        <button class="btn btn-ghost" type="button" id="downloadToastLater">Not now</button>
+      </div>
+    </div>
+  </div>
+
   <script src="theme.js?v=15"></script>
   <script>
     (function () {
-      var nodes = document.querySelectorAll("[data-download-stat]");
-      if (!nodes.length) return;
-      function label(n) {
-        var text = n === 1 ? "1 download" : n.toLocaleString() + " downloads";
-        return text + " so far";
+      var TOAST_KEY = "sendtomac-dl-toast-dismissed-v2";
+      var GITHUB_RELEASE =
+        "https://api.github.com/repos/Hasninemamud/sendtomac/releases/latest";
+      var DMG_NAME = "SendToMac.dmg";
+      var toast = document.getElementById("downloadToast");
+      var toastHeadline = document.getElementById("downloadToastHeadline");
+      var sticker = document.getElementById("dlSticker");
+      var navBadge = document.querySelector("[data-nav-dl-count]");
+      var numNodes = document.querySelectorAll("[data-dl-num]");
+      var reduced = false;
+      try {
+        reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      } catch (e) {}
+
+      function format(n) {
+        return Number(n).toLocaleString();
       }
-      fetch("/api/downloads")
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          var n = data && data.count;
-          if (n == null || n < 1) return;
-          var copy = label(n);
-          nodes.forEach(function (el) {
-            el.textContent = copy;
-            el.hidden = false;
+
+      function parseCount(value) {
+        var n = Number(value);
+        return Number.isFinite(n) && n >= 0 ? Math.floor(n) : null;
+      }
+
+      function headlineFor(n) {
+        if (n === 1) return "1 person downloaded the Mac app";
+        return format(n) + " people downloaded the Mac app";
+      }
+
+      function updateHeadline(n) {
+        if (toastHeadline) toastHeadline.textContent = headlineFor(n);
+      }
+
+      function pulseLand() {
+        numNodes.forEach(function (el) {
+          el.classList.remove("is-landed");
+          void el.offsetWidth;
+          el.classList.add("is-landed");
+        });
+      }
+
+      function revealChrome() {
+        if (sticker) {
+          sticker.hidden = false;
+          sticker.setAttribute("aria-hidden", "false");
+          sticker.classList.add("is-live");
+        }
+        if (navBadge) {
+          navBadge.hidden = false;
+          navBadge.classList.add("is-live");
+        }
+      }
+
+      function paintCount(n, updateTitle) {
+        var text = format(n);
+        numNodes.forEach(function (el) {
+          el.textContent = text;
+        });
+        if (navBadge) navBadge.textContent = text;
+        if (updateTitle) updateHeadline(n);
+        revealChrome();
+      }
+
+      function setNums(n) {
+        paintCount(n, true);
+        pulseLand();
+      }
+
+      function animateNums(target, onDone) {
+        paintCount(0, false);
+        if (reduced || target < 2) {
+          setNums(target);
+          if (onDone) onDone();
+          return;
+        }
+        var duration = 1200;
+        var t0 = performance.now();
+        function tick(now) {
+          var p = Math.min(1, (now - t0) / duration);
+          var eased = 1 - Math.pow(1 - p, 4);
+          var current = Math.round(eased * target);
+          paintCount(current, false);
+          if (p < 1) requestAnimationFrame(tick);
+          else {
+            setNums(target);
+            if (onDone) onDone();
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+
+      function closeToast(persist) {
+        if (!toast) return;
+        toast.classList.remove("is-open");
+        toast.classList.add("is-closing");
+        toast.setAttribute("aria-hidden", "true");
+        if (persist) {
+          try { sessionStorage.setItem(TOAST_KEY, "1"); } catch (e) {}
+        }
+        window.setTimeout(function () {
+          toast.classList.remove("is-closing");
+          toast.hidden = true;
+        }, 520);
+      }
+
+      function openToast() {
+        if (!toast) return;
+        try {
+          if (sessionStorage.getItem(TOAST_KEY)) return;
+        } catch (e) {}
+        toast.hidden = false;
+        toast.setAttribute("aria-hidden", "false");
+        toast.classList.remove("is-closing");
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(function () {
+            toast.classList.add("is-open");
           });
+        });
+      }
+
+      function wireToast() {
+        var closeBtn = document.getElementById("downloadToastClose");
+        var laterBtn = document.getElementById("downloadToastLater");
+        if (closeBtn) closeBtn.addEventListener("click", function () { closeToast(true); });
+        if (laterBtn) laterBtn.addEventListener("click", function () { closeToast(true); });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && toast && toast.classList.contains("is-open")) {
+            closeToast(true);
+          }
+        });
+      }
+
+      function fetchGithubCount() {
+        return fetch(GITHUB_RELEASE, {
+          headers: {
+            Accept: "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
         })
-        .catch(function () {});
+          .then(function (r) {
+            if (!r.ok) throw new Error("github");
+            return r.json();
+          })
+          .then(function (release) {
+            var asset = (release.assets || []).find(function (a) {
+              return a.name === DMG_NAME;
+            });
+            return parseCount(asset && asset.download_count);
+          });
+      }
+
+      function fetchDownloadCount() {
+        return fetch("/api/downloads", { credentials: "same-origin" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("api");
+            return r.json();
+          })
+          .then(function (data) {
+            var n = parseCount(data && data.count);
+            if (n != null) return n;
+            return fetchGithubCount();
+          })
+          .catch(function () {
+            return fetchGithubCount();
+          });
+      }
+
+      wireToast();
+
+      fetchDownloadCount().then(function (n) {
+        if (n == null || n < 1) return;
+        openToast();
+        animateNums(n);
+      });
     })();
   </script>
 </body>

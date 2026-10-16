@@ -18,5 +18,7 @@ export async function fetchDmgDownloadCount() {
   }
   const release = await res.json();
   const asset = (release.assets || []).find((a) => a.name === DMG_ASSET);
-  return asset?.download_count ?? 0;
+  const count = asset?.download_count;
+  const n = Number(count);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
 }

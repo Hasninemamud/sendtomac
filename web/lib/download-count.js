@@ -14,11 +14,16 @@ export async function incrementDownloadCount() {
   await store.incr(KV_KEY);
 }
 
+function asCount(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+}
+
 export async function getPublicDownloadCount() {
   const github = await fetchDmgDownloadCount().catch(() => 0);
+  const githubN = asCount(github);
   const store = await kv();
-  if (!store) return github;
+  if (!store) return githubN;
   const tracked = await store.get(KV_KEY);
-  const n = typeof tracked === "number" ? tracked : 0;
-  return Math.max(n, github);
+  return Math.max(asCount(tracked), githubN);
 }
