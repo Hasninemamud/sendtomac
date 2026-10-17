@@ -110,7 +110,9 @@ SendToMac supports both Apple Silicon and Intel Macs.
 3. If macOS blocks the app: right-click it → **Open**, or go to **System Settings → Privacy & Security → Open Anyway**.
 4. Allow **Local Network** or incoming-connection permissions if macOS prompts for them.
 
-> **Note:** SendToMac is not yet notarized, so macOS may block it on first launch — this is expected.
+> **Note:** SendToMac is not yet notarized, so macOS may block it on first launch — this is expected. On macOS 26 (Tahoe) the app is ad-hoc signed inside-out (`scripts/codesign-macos-app.sh`); if it still reports "damaged", run `xattr -cr /Applications/SendToMac.app` and re-run **Install SendToMac.command**.
+>
+> Release check: `./scripts/test-codesign.sh` (signing, launcher layout, corner cases).
 
 ### Opening the app
 

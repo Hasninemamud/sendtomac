@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(*)",
+      "Write(*)",
+      "NotebookEdit(*)",
+      "Bash(python3 *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(pyinstaller *)",
+      "Bash(codesign *)",
+      "Bash(xattr *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(curl *)",
+      "Bash(make *)",
+      "Bash(./scripts/*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:sendtomac.vercel.app)"
+    ],
+    "deny": [],
+    "ask": [
+      "Bash(rm *)",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(git reset *)",
+      "Bash(dd *)",
+      "Bash(killall *)"
+    ]
+  },
+  "respectGitignore": true,
+  "enableAllProjectMcpServers": true,
+  "attribution": {
+    "commit": "Co-Authored-By: Claude <noreply@anthropic.com>",
+    "pr": "Generated with [Claude Code](https://claude.ai/code)"
+  }
+}

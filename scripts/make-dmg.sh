@@ -52,11 +52,12 @@ cat > "$PKG/Contents/Info.plist" <<EOF
 </plist>
 EOF
 
-echo "==> Ad-hoc sign (nested → outer)"
-# Copying nested apps breaks any previous seal; resign in order.
-codesign --force --deep --sign - "$PKG/Contents/Resources/AppleSilicon/SendToMac.app"
-codesign --force --deep --sign - "$PKG/Contents/Resources/Intel/SendToMac.app"
-codesign --force --deep --sign - "$PKG"
+echo "==> Ad-hoc sign inside-out (nested → outer; Tahoe-safe, no --deep)"
+# Copying nested apps breaks any previous seal; resign every Mach-O, then nested apps, then outer.
+"$ROOT/scripts/codesign-macos-app.sh" --strict \
+  "$PKG/Contents/Resources/AppleSilicon/SendToMac.app" \
+  "$PKG/Contents/Resources/Intel/SendToMac.app" \
+  "$PKG"
 codesign --verify --deep --strict "$PKG"
 echo "signature ok"
 

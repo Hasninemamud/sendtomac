@@ -19,14 +19,29 @@ rm -rf "$DEST"
 cp -R "$APP" "$DEST"
 
 # Gatekeeper "damaged" = quarantine and/or broken seal after download. Fix both.
-xattr -cr "$DEST" 2>/dev/null || true
-if [ -d "$DEST/Contents/Resources/AppleSilicon/SendToMac.app" ]; then
-  codesign --force --deep --sign - "$DEST/Contents/Resources/AppleSilicon/SendToMac.app" 2>/dev/null || true
+# Sign inside-out (Tahoe/macOS 26): nested Mach-O -> nested apps -> outer app. No --deep.
+# Keep in sync with scripts/codesign-macos-app.sh.
+sign_one() { codesign --force --sign - --timestamp=none "$1" >/dev/null 2>&1 || echo "codesign failed: $1" >&2; }
+sign_app() {
+  local app="${1%/}" main="${1%/}/Contents/MacOS/SendToMac"
+  [ -d "$app/Contents" ] || return 0
+  xattr -cr "$app" 2>/dev/null || true
+  while IFS= read -r f; do
+    [ "$f" = "$main" ] && continue
+    file -b "$f" 2>/dev/null | grep -q 'Mach-O' && sign_one "$f"
+  done < <(find "$app" -type f ! -type l | awk -F/ '{print NF "\t" $0}' | sort -rn | cut -f2-)
+  while IFS= read -r b; do
+    [ "$b" = "$app" ] || sign_one "$b"
+  done < <(find "$app" -type d \( -name '*.framework' -o -name '*.app' -o -name '*.appex' -o -name '*.xpc' \) | awk -F/ '{print NF "\t" $0}' | sort -rn | cut -f2-)
+  [ -f "$main" ] && sign_one "$main"
+  sign_one "$app"
+}
+sign_app "$DEST/Contents/Resources/AppleSilicon/SendToMac.app"
+sign_app "$DEST/Contents/Resources/Intel/SendToMac.app"
+sign_app "$DEST"
+if ! codesign --verify --strict "$DEST" 2>/dev/null; then
+  echo "warning: signature verification failed for $DEST" >&2
 fi
-if [ -d "$DEST/Contents/Resources/Intel/SendToMac.app" ]; then
-  codesign --force --deep --sign - "$DEST/Contents/Resources/Intel/SendToMac.app" 2>/dev/null || true
-fi
-codesign --force --deep --sign - "$DEST" 2>/dev/null || true
 
 open "$DEST"
 
