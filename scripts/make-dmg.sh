@@ -65,7 +65,7 @@ echo "==> Stage DMG contents"
 rm -rf "$STAGE"
 mkdir -p "$STAGE"
 cp -R "$PKG" "$STAGE/SendToMac.app"
-# Classic drag-to-Applications layout (no shell installer in the window).
+ln -sf /Applications "$STAGE/Applications"
 xattr -cr "$STAGE" 2>/dev/null || true
 
 echo "==> Build styled DMG"
@@ -80,12 +80,10 @@ if ! create-dmg \
   --icon-size 112 \
   --icon "SendToMac.app" 150 170 \
   --hide-extension "SendToMac.app" \
-  --app-drop-link 510 170 \
   --no-internet-enable \
   "$OUT" \
   "$STAGE"; then
   echo "create-dmg failed (often Finder AppleScript on newer macOS); using hdiutil fallback"
-  ln -sf /Applications "$STAGE/Applications"
   hdiutil create -volname "SendToMac" -srcfolder "$STAGE" -ov -format UDZO "$OUT"
 fi
 
