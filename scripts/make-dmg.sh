@@ -65,7 +65,6 @@ echo "==> Stage DMG contents"
 rm -rf "$STAGE"
 mkdir -p "$STAGE"
 cp -R "$PKG" "$STAGE/SendToMac.app"
-ln -sf /Applications "$STAGE/Applications"
 xattr -cr "$STAGE" 2>/dev/null || true
 
 echo "==> Build styled DMG"
@@ -80,11 +79,19 @@ if ! create-dmg \
   --icon-size 112 \
   --icon "SendToMac.app" 150 170 \
   --hide-extension "SendToMac.app" \
+  --app-drop-link 510 170 \
   --no-internet-enable \
   "$OUT" \
   "$STAGE"; then
-  echo "create-dmg failed (often Finder AppleScript on newer macOS); using hdiutil fallback"
-  hdiutil create -volname "SendToMac" -srcfolder "$STAGE" -ov -format UDZO "$OUT"
+  echo "create-dmg failed (Finder AppleScript on this macOS); using dmgbuild"
+  DMG_PY="$ROOT/.venv/bin/python3"
+  test -x "$DMG_PY" || DMG_PY="$(command -v python3)"
+  "$DMG_PY" -c "import dmgbuild" 2>/dev/null || {
+    echo "missing dmgbuild — run: $DMG_PY -m pip install dmgbuild"
+    exit 1
+  }
+  "$DMG_PY" -m dmgbuild -s "$ROOT/scripts/dmg-settings.py" \
+    -DROOT="$ROOT" -DSTAGE="$STAGE" SendToMac "$OUT"
 fi
 
 # create-dmg leaves the source folder as the app root; ensure Install is only once
