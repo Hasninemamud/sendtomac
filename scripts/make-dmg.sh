@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-VERSION="${SENDTOMAC_VERSION:-2.4.2}"
+VERSION="${SENDTOMAC_VERSION:-2.4.3}"
 PKG="$ROOT/dist/package/SendToMac.app"
 STAGE="$ROOT/dist/dmg-source"
 OUT="$ROOT/dist/SendToMac.dmg"
@@ -71,7 +71,7 @@ xattr -cr "$STAGE" 2>/dev/null || true
 echo "==> Build styled DMG"
 rm -f "$OUT"
 # Window 660×420; app left, Applications right.
-create-dmg \
+if ! create-dmg \
   --volname "SendToMac" \
   --volicon "$ROOT/icon.icns" \
   --background "$BG" \
@@ -83,7 +83,11 @@ create-dmg \
   --app-drop-link 510 170 \
   --no-internet-enable \
   "$OUT" \
-  "$STAGE"
+  "$STAGE"; then
+  echo "create-dmg failed (often Finder AppleScript on newer macOS); using hdiutil fallback"
+  ln -sf /Applications "$STAGE/Applications"
+  hdiutil create -volname "SendToMac" -srcfolder "$STAGE" -ov -format UDZO "$OUT"
+fi
 
 # create-dmg leaves the source folder as the app root; ensure Install is only once
 xattr -cr "$OUT" 2>/dev/null || true

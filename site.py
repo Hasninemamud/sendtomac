@@ -66,6 +66,7 @@ DMG_DOWNLOAD_URL = (
     "https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg"
 )
 DMG_ASSET_NAME = "SendToMac.dmg"
+APP_VERSION = os.environ.get("SENDTOMAC_VERSION", "2.4.3")
 MAX_FILE = 500 * 1024 * 1024
 MAX_TEXT = 20_000
 MAX_ROOMS = 64
@@ -108,6 +109,22 @@ ROOMS: dict[str, dict] = {}
 FILES: dict[str, dict] = {}
 TOKEN_PEER: dict[str, tuple[str, str]] = {}
 CREATE_HITS: dict[str, list[float]] = {}
+_UPDATE_CACHE: dict = {}
+_UPDATE_CACHE_TTL = 3600
+
+
+def runtime_app_version() -> str:
+    if getattr(sys, "frozen", False):
+        try:
+            from Foundation import NSBundle
+
+            info = NSBundle.mainBundle().infoDictionary() or {}
+            ver = info.get("CFBundleShortVersionString")
+            if ver:
+                return str(ver)
+        except Exception:
+            pass
+    return APP_VERSION
 
 
 def room_code() -> str:
@@ -434,7 +451,22 @@ def parse_multipart(content_type: str, body: bytes) -> tuple[dict, list]:
     return fields, files
 
 
-def github_dmg_download_count() -> int | None:
+def parse_semver(text: str) -> tuple[int, int, int]:
+    text = (text or "").strip().lstrip("vV")
+    nums: list[int] = []
+    for part in re.split(r"[.+_-]", text)[:3]:
+        m = re.match(r"(\d+)", part)
+        nums.append(int(m.group(1)) if m else 0)
+    while len(nums) < 3:
+        nums.append(0)
+    return tuple(nums[:3])
+
+
+def is_newer_version(latest: str, current: str) -> bool:
+    return parse_semver(latest) > parse_semver(current)
+
+
+def _github_latest_release_json() -> dict | None:
     try:
         req = urllib.request.Request(
             GITHUB_RELEASE_API,
@@ -445,13 +477,53 @@ def github_dmg_download_count() -> int | None:
             },
         )
         with urllib.request.urlopen(req, timeout=12) as resp:
-            data = json.loads(resp.read().decode())
-        for asset in data.get("assets") or []:
-            if asset.get("name") == DMG_ASSET_NAME:
-                return int(asset.get("download_count") or 0)
-        return 0
+            return json.loads(resp.read().decode())
     except Exception:
         return None
+
+
+def github_latest_release() -> dict | None:
+    data = _github_latest_release_json()
+    if not data:
+        return None
+    tag = (data.get("tag_name") or "").strip()
+    if not tag:
+        return None
+    return {
+        "version": tag.lstrip("vV"),
+        "download_url": DMG_DOWNLOAD_URL,
+        "page_url": data.get("html_url") or "",
+    }
+
+
+def update_status() -> dict:
+    now = time.time()
+    cached = _UPDATE_CACHE.get("payload")
+    if cached is not None and now - float(_UPDATE_CACHE.get("ts") or 0) < _UPDATE_CACHE_TTL:
+        return cached
+    current = runtime_app_version()
+    release = github_latest_release()
+    latest = release["version"] if release else None
+    available = bool(latest and is_newer_version(latest, current))
+    payload = {
+        "current": current,
+        "latest": latest,
+        "update_available": available,
+        "download_url": DMG_DOWNLOAD_URL if available else None,
+    }
+    _UPDATE_CACHE["payload"] = payload
+    _UPDATE_CACHE["ts"] = now
+    return payload
+
+
+def github_dmg_download_count() -> int | None:
+    data = _github_latest_release_json()
+    if not data:
+        return None
+    for asset in data.get("assets") or []:
+        if asset.get("name") == DMG_ASSET_NAME:
+            return int(asset.get("download_count") or 0)
+    return 0
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -537,10 +609,14 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/info":
             self.send_obj(200, {
                 "app": "sendtomac",
+                "version": runtime_app_version(),
                 "base": share_base(self.headers.get("Host", ""), self.server.server_address[1]),
                 "mode": transfer_mode(),
                 "host": host_device_name(),
             })
+            return
+        if parsed.path == "/api/update":
+            self.send_obj(200, update_status())
             return
         if parsed.path == "/api/download":
             self.send_redirect(DMG_DOWNLOAD_URL)
@@ -978,6 +1054,9 @@ def run_self_test() -> None:
     assert safe_name("note.html").endswith(".download")
     assert ensure_extension("clip", "video/mp4") == "clip.mp4"
     assert ensure_extension("clip.MOV", "video/quicktime") == "clip.MOV"
+    assert parse_semver("v2.4.3") == (2, 4, 3)
+    assert is_newer_version("2.4.3", "2.4.2")
+    assert not is_newer_version("2.4.2", "2.4.3")
     print("self-test ok")
 
 

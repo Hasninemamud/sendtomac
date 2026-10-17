@@ -626,6 +626,8 @@
     html[data-app="app"] .foot strong { font-size: 11px; }
     html[data-app="app"] .foot p { font-size: 10px; margin: 0; }
     html[data-app="app"] .tip { font-size: 11px; padding: 8px 10px; }
+    .update-tip { border-color: color-mix(in srgb, var(--ink) 22%, transparent); }
+    html[data-app="app"] .update-tip.show-app:not([hidden]) { display: block; }
     html[data-app="app"] .actions { flex-direction: row; }
     html[data-app="app"] .actions .ghost,
     html[data-app="app"] .actions .primary { flex: 1; width: auto; min-width: 0; }
@@ -662,6 +664,14 @@
       <div class="tip-row">
         <p id="tipText"></p>
         <button type="button" id="tipDismiss">Got it</button>
+      </div>
+    </div>
+
+    <div class="tip update-tip" id="updateBanner" hidden>
+      <div class="tip-row">
+        <p id="updateBannerText"></p>
+        <button type="button" id="updateInstallBtn">Install update</button>
+        <button type="button" id="updateLaterBtn">Later</button>
       </div>
     </div>
 
@@ -762,6 +772,44 @@
       document.getElementById("status").textContent =
         "Scan with the phone on the same Wi-Fi.";
     }
+
+    (function setupUpdateBanner() {
+      if (!inApp) return;
+      const banner = document.getElementById("updateBanner");
+      const text = document.getElementById("updateBannerText");
+      const installBtn = document.getElementById("updateInstallBtn");
+      const laterBtn = document.getElementById("updateLaterBtn");
+      fetch("/api/update")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (!data || !data.update_available || !data.latest) return;
+          const key = "sendtomac-dismiss-update-" + data.latest;
+          try {
+            if (localStorage.getItem(key) === "1") return;
+          } catch (e) {}
+          const current = data.current || "?";
+          const latest = data.latest;
+          text.innerHTML =
+            "<strong>Update available.</strong> You have " +
+            current +
+            ". Install version " +
+            latest +
+            " — open the disk image and move SendToMac into Applications.";
+          banner.hidden = false;
+          banner.classList.add("show-app");
+          installBtn.onclick = () => {
+            const url = data.download_url || "/api/download";
+            window.location.href = url;
+          };
+          laterBtn.onclick = () => {
+            banner.hidden = true;
+            try {
+              localStorage.setItem(key, "1");
+            } catch (e) {}
+          };
+        })
+        .catch(() => {});
+    })();
 
     (function setupTip() {
       const tip = document.getElementById("firstTip");

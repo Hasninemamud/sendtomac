@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import ctypes
 import json
+import os
 import sys
+import threading
 from ctypes import CFUNCTYPE, POINTER, Structure, byref, c_int32, c_uint32, c_uint64, c_void_p
 from pathlib import Path
 
 import objc
 from AppKit import (
+    NSAlert,
+    NSAlertFirstButtonReturn,
     NSApplication,
     NSApplicationActivationPolicyAccessory,
     NSDragOperationCopy,
@@ -55,6 +59,8 @@ CHORD_HOLD = 0.28
 PREF_LOGIN = "STMOpenAtLogin"
 PREF_SHORTCUT = "STMShortcutEnabled"
 PREF_SEEN_TIP = "STMSeenFirstTip"
+PREF_DISMISSED_UPDATE = "STMDismissedUpdateVersion"
+UPDATE_CHECK_DELAY = 3.0
 _AX = {}
 _CARBON_HANDLER = None
 _CARBON_OPEN_HANDLER = None
@@ -83,6 +89,28 @@ def pref_bool(key, default=False):
 def set_pref_bool(key, value):
     prefs().setBool_forKey_(bool(value), key)
     prefs().synchronize()
+
+
+def set_pref_string(key, value):
+    prefs().setObject_forKey_(value, key)
+    prefs().synchronize()
+
+
+def pref_string(key, default=""):
+    val = prefs().stringForKey_(key)
+    return str(val) if val is not None else default
+
+
+def bundle_version() -> str:
+    from site import runtime_app_version
+
+    return runtime_app_version()
+
+
+def should_check_updates() -> bool:
+    if getattr(sys, "frozen", False):
+        return True
+    return os.environ.get("SENDTOMAC_CHECK_UPDATES") == "1"
 
 
 class _EventTypeSpec(Structure):
@@ -440,6 +468,10 @@ class MenuApp(NSObject):
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
             0.15, self, "showPopover:", None, False
         )
+        if should_check_updates():
+            NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                UPDATE_CHECK_DELAY, self, "scheduledUpdateCheck:", None, False
+            )
 
     def applicationShouldHandleReopen_hasVisibleWindows_(self, _app, has_visible):
         # Dock icon click while already running.
@@ -594,6 +626,13 @@ class MenuApp(NSObject):
         menu.addItem_(login_item)
         menu.addItem_(NSMenuItem.separatorItem())
 
+        update_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            "Check for Updates…", "checkForUpdatesMenu:", ""
+        )
+        update_item.setTarget_(self)
+        menu.addItem_(update_item)
+        menu.addItem_(NSMenuItem.separatorItem())
+
         quit_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit SendToMac", "quit:", "q")
         quit_item.setKeyEquivalentModifierMask_(NSEventModifierFlagCommand)
         quit_item.setTarget_(self)
@@ -603,6 +642,80 @@ class MenuApp(NSObject):
         folder = Path.home() / "Downloads" / "SendToMac"
         folder.mkdir(parents=True, exist_ok=True)
         NSWorkspace.sharedWorkspace().openFile_(str(folder))
+
+    def scheduledUpdateCheck_(self, _sender):
+        self._start_update_check(force=False)
+
+    def checkForUpdatesMenu_(self, _sender):
+        self._start_update_check(force=True)
+
+    def _start_update_check(self, force: bool) -> None:
+        if not should_check_updates():
+            return
+
+        def work():
+            from site import github_latest_release, is_newer_version
+
+            current = bundle_version()
+            release = github_latest_release()
+            self._update_result = {
+                "force": force,
+                "current": current,
+                "release": release,
+                "error": release is None,
+            }
+            if release and is_newer_version(release["version"], current):
+                self._update_result["available"] = True
+            else:
+                self._update_result["available"] = False
+            self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                "finishUpdateCheck:", None, False
+            )
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def finishUpdateCheck_(self, _sender):
+        result = getattr(self, "_update_result", None)
+        if not result:
+            return
+        force = bool(result.get("force"))
+        current = result.get("current") or bundle_version()
+        release = result.get("release")
+        if release and result.get("available"):
+            latest = release["version"]
+            if not force and pref_string(PREF_DISMISSED_UPDATE) == latest:
+                return
+            self._show_update_alert(current, latest, release.get("download_url") or "")
+            return
+        if force:
+            self._show_up_to_date_alert(current, bool(result.get("error")))
+
+    def _show_update_alert(self, current: str, latest: str, download_url: str) -> None:
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_("Install the updated version")
+        alert.setInformativeText_(
+            f"You have SendToMac {current}. Version {latest} is ready.\n\n"
+            "Click Install Update to download the disk image, open it, and drag SendToMac "
+            "into Applications (replace the existing app when macOS asks)."
+        )
+        alert.addButtonWithTitle_("Install Update")
+        alert.addButtonWithTitle_("Later")
+        if alert.runModal() == NSAlertFirstButtonReturn:
+            if download_url:
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(download_url))
+        else:
+            set_pref_string(PREF_DISMISSED_UPDATE, latest)
+
+    def _show_up_to_date_alert(self, current: str, check_failed: bool) -> None:
+        alert = NSAlert.alloc().init()
+        if check_failed:
+            alert.setMessageText_("Could not check for updates")
+            alert.setInformativeText_("Check your internet connection and try again.")
+        else:
+            alert.setMessageText_("You're up to date")
+            alert.setInformativeText_(f"SendToMac {current} is the latest release.")
+        alert.addButtonWithTitle_("OK")
+        alert.runModal()
 
     def toggleShortcut_(self, _sender):
         if self.shortcut_on and pref_bool(PREF_SHORTCUT, False):
