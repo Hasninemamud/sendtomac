@@ -66,7 +66,7 @@ DMG_DOWNLOAD_URL = (
     "https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg"
 )
 DMG_ASSET_NAME = "SendToMac.dmg"
-APP_VERSION = os.environ.get("SENDTOMAC_VERSION", "2.4.3")
+APP_VERSION = os.environ.get("SENDTOMAC_VERSION", "2.4.4")
 MAX_FILE = 500 * 1024 * 1024
 MAX_TEXT = 20_000
 MAX_ROOMS = 64

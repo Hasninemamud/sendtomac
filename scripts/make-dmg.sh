@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-VERSION="${SENDTOMAC_VERSION:-2.4.3}"
+VERSION="${SENDTOMAC_VERSION:-2.4.4}"
 PKG="$ROOT/dist/package/SendToMac.app"
 STAGE="$ROOT/dist/dmg-source"
 OUT="$ROOT/dist/SendToMac.dmg"
