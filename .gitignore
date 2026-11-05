@@ -14,5 +14,3 @@ loadtest/node_modules/
 loadtest/test-results/
 loadtest/playwright-report/
 loadtest/package-lock.json
-.claude/settings.local.json
-.claude/agent-memory/

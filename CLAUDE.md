@@ -1,8 +1,6 @@
 # CLAUDE.md
 
-Guidance for [Claude Code](https://claude.ai/code) in this repository.
-
-Patterns follow [shanraisshan/claude-code-best-practice](https://github.com/shanraisshan/claude-code-best-practice) (Command → Agent → Skill, `.claude/rules/`, project settings). Optional full reference kit: `./scripts/install-claude-best-practice.sh`.
+Guidance for working on **SendToMac** in this repository.
 
 ## Product
 
@@ -19,33 +17,19 @@ SendToMac moves files between a phone (browser) and a Mac on the same Wi‑Fi. N
 
 Received files: `~/Downloads/SendToMac`. Max file **500 MB**, note **20,000** chars.
 
-## Commands to run
+## Commands
 
 ```bash
-# Transfer page / dev server (browser)
 python3 site.py
-
-# Self-check (site + helpers)
 python3 site.py --self-test
-
-# Build (after deps + icon.icns); see README
-# pyinstaller SendToMac.spec  (arm + intel builds, then scripts/make-dmg.sh)
+# Build: pyinstaller SendToMac.spec (arm + intel), then ./scripts/make-dmg.sh
 ```
 
-Do not commit secrets. Website download stats use GitHub Releases API (`web/lib/github-downloads.js`).
+Do not commit secrets. Download stats use GitHub Releases API (`web/lib/github-downloads.js`).
 
 ## Change discipline
 
-- **Surgical diffs** — match existing style in `site.py`, `menu_app.py`, and `web/`.
-- **Privacy** — no analytics, tracking cookies, or public upload paths unless explicitly requested.
-- **macOS** — min OS 11.0 in bundle; Tahoe (26+) needs inside-out ad-hoc signing (see `scripts/codesign-macos-app.sh`, `make-dmg.sh`).
-- **Tests** — prefer `python3 site.py --self-test` after server/protocol changes; load tests live under `loadtest/`.
-
-## Claude Code layout
-
-- `.claude/settings.json` — shared permissions and defaults
-- `.claude/settings.local.json` — personal overrides (gitignored)
-- `.claude/rules/` — always-on project rules
-- `.claude/commands/` — slash commands for this repo
-
-Use `/project-review` before large PRs and `/self-test` after server changes. For the upstream course demo (`/weather-orchestrator`, hooks, workflow agents), run `./scripts/install-claude-best-practice.sh`.
+- Surgical diffs — match style in `site.py`, `menu_app.py`, `web/`.
+- Privacy — no analytics or tracking cookies unless explicitly requested.
+- macOS min 11.0; Tahoe signing via `scripts/codesign-macos-app.sh` and `make-dmg.sh`.
+- After server/protocol changes: `python3 site.py --self-test`.

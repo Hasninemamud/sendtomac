@@ -1,0 +1,11 @@
+---
+description: SendToMac product scope and verification
+alwaysApply: true
+---
+
+# SendToMac
+
+- Menu-bar Mac app + local HTTP/WebSocket server + static site (`web/`). LAN only — no cloud upload, accounts, or analytics unless explicitly requested.
+- Python: `site.py`, `menu_app.py`, PyInstaller `SendToMac.spec`. Web: static + Vercel `web/api/`.
+- Respect `MAX_FILE`, `MAX_TEXT`, safe filenames in `site.py`. Signing: inside-out ad-hoc `codesign`; nested outer launcher → `Resources/{AppleSilicon,Intel}/SendToMac.app`.
+- After protocol changes: `python3 site.py --self-test`. Privacy copy must match `web/privacy/index.html`.
