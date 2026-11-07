@@ -18,11 +18,8 @@ command -v create-dmg >/dev/null || { echo "install create-dmg (brew install cre
 
 echo "==> Assemble dual-arch package ($VERSION)"
 mkdir -p "$PKG/Contents/MacOS" "$PKG/Contents/Resources/AppleSilicon" "$PKG/Contents/Resources/Intel"
-# Keep existing universal launcher if present; otherwise require it.
-test -x "$PKG/Contents/MacOS/SendToMac" || {
-  echo "missing launcher binary at $PKG/Contents/MacOS/SendToMac"
-  exit 1
-}
+# Always rebuild the launcher: without -mmacosx-version-min it inherits the SDK default (15.0) and won't start on macOS 11-14.
+cc -arch arm64 -arch x86_64 -mmacosx-version-min=11.0 -o "$PKG/Contents/MacOS/SendToMac" "$ROOT/launcher.c"
 rm -rf "$PKG/Contents/Resources/AppleSilicon/SendToMac.app" "$PKG/Contents/Resources/Intel/SendToMac.app"
 cp -R "$ROOT/dist/SendToMac.app" "$PKG/Contents/Resources/AppleSilicon/SendToMac.app"
 cp -R "$ROOT/dist-intel/SendToMac.app" "$PKG/Contents/Resources/Intel/SendToMac.app"

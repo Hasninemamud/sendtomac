@@ -88,6 +88,7 @@ for REAL in "$ROOT/dist/SendToMac.app" "$ROOT/dist-intel/SendToMac.app"; do
 done
 
 # --- installer script and make-dmg parse ---
+check "make-dmg.sh builds launcher with min macOS 11.0" 'grep -q -- "-mmacosx-version-min=11.0.*launcher.c" "$ROOT/scripts/make-dmg.sh"'
 check "make-dmg.sh syntax" 'bash -n "$ROOT/scripts/make-dmg.sh"'
 check "installer syntax" 'bash -n "$ROOT/Install SendToMac.command"'
 check "make-dmg.sh no longer uses --deep to sign" '! grep -E "codesign .*--force --deep" "$ROOT/scripts/make-dmg.sh"'
