@@ -695,16 +695,25 @@ class MenuApp(NSObject):
         alert.setMessageText_("Install the updated version")
         alert.setInformativeText_(
             f"You have SendToMac {current}. Version {latest} is ready.\n\n"
-            "Click Install Update to download the disk image, open it, and drag SendToMac "
-            "into Applications (replace the existing app when macOS asks)."
+            "Install Update downloads it and restarts SendToMac by itself. "
+            "No need to uninstall or reinstall."
         )
         alert.addButtonWithTitle_("Install Update")
         alert.addButtonWithTitle_("Later")
         if alert.runModal() == NSAlertFirstButtonReturn:
-            if download_url:
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(download_url))
+            threading.Thread(target=self._install_update, args=(download_url,), daemon=True).start()
         else:
             set_pref_string(PREF_DISMISSED_UPDATE, latest)
+
+    def _install_update(self, download_url: str) -> None:
+        from site import install_update
+
+        try:
+            install_update()
+        except RuntimeError:
+            # Could not update in place (permissions, network): fall back to the manual download.
+            if download_url:
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(download_url))
 
     def _show_up_to_date_alert(self, current: str, check_failed: bool) -> None:
         alert = NSAlert.alloc().init()

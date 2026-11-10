@@ -61,8 +61,8 @@ app = BUNDLE(
     info_plist={
         "CFBundleDisplayName": "SendToMac",
         "CFBundleName": "SendToMac",
-        "CFBundleShortVersionString": "2.4.4",
-        "CFBundleVersion": "2.4.4",
+        "CFBundleShortVersionString": "2.4.5",
+        "CFBundleVersion": "2.4.5",
         "NSHighResolutionCapable": True,
         "LSMinimumSystemVersion": "11.0",
         "LSUIElement": True,

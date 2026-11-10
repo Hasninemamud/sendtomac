@@ -792,14 +792,30 @@
           text.innerHTML =
             "<strong>Update available.</strong> You have " +
             current +
-            ". Install version " +
+            ". Version " +
             latest +
-            " — open the disk image and move SendToMac into Applications.";
+            " is ready — one click installs it and restarts SendToMac.";
           banner.hidden = false;
           banner.classList.add("show-app");
+          const downloadByHand = () => {
+            window.location.href = data.download_url || "/api/download";
+          };
           installBtn.onclick = () => {
-            const url = data.download_url || "/api/download";
-            window.location.href = url;
+            installBtn.disabled = true;
+            laterBtn.hidden = true;
+            text.textContent = "Downloading the update… SendToMac will restart by itself.";
+            fetch("/api/update/install", { method: "POST", headers: macHeaders() })
+              .then((r) => r.json())
+              .then((d) => {
+                if (!d.ok) throw new Error(d.error || "Update failed");
+                text.textContent = "Installing… SendToMac is restarting.";
+              })
+              .catch((err) => {
+                text.textContent = "Couldn’t update automatically (" + err.message + "). Download the new version instead.";
+                installBtn.textContent = "Download";
+                installBtn.disabled = false;
+                installBtn.onclick = downloadByHand;
+              });
           };
           laterBtn.onclick = () => {
             banner.hidden = true;
@@ -947,6 +963,15 @@
       document.body.classList.remove("is-connected");
       document.getElementById("title").textContent = "Same Wi-Fi";
       dropTitle.textContent = "Drop a file anywhere to queue it.";
+    }
+
+    function lostConnection(text) {
+      connected = false;
+      peerName = "";
+      setStatus(text, "bad");
+      shareEl.hidden = true;
+      pairEl.hidden = false;
+      setPairingChrome();
     }
 
     function showShare() {
@@ -1157,19 +1182,17 @@
           onPeer();
         }
         if (msg.type === "left") {
-          connected = false;
-          peerName = "";
-          setStatus("The other device left. Tap Reset for a new code, then scan again.", "bad");
-          shareEl.hidden = true;
-          pairEl.hidden = false;
-          setPairingChrome();
+          lostConnection("The other device left or lost Wi-Fi. Tap Reset for a new code, then scan again.");
         }
         if (msg.type === "text") showText(msg.text);
         if (msg.type === "file") downloadRelay(msg);
         if (msg.type === "signal") onSignal(msg.data);
       };
       ws.onclose = () => {
-        if (connected) return;
+        if (connected) {
+          if (mode === "relay") lostConnection("Disconnected — Wi-Fi dropped or the Mac app stopped. Tap Reset for a new code, then scan again.");
+          return;
+        }
         if (++socketTries > 2) {
           setStatus(
             wanted
@@ -1182,6 +1205,18 @@
         setTimeout(connectSocket, 1200);
       };
     }
+
+    // This device's own Wi-Fi drop: the browser knows at once. A short blip may recover, so don't tear down yet.
+    window.addEventListener("offline", () => {
+      if (!connected) return;
+      setStatus("Wi-Fi disconnected. Waiting for it to come back…", "bad");
+      showToast("Wi-Fi disconnected", "bad");
+    });
+    window.addEventListener("online", () => {
+      if (!connected || !ws || ws.readyState !== 1) return;
+      showShare();
+      showToast("Back online");
+    });
 
     function onPeer() {
       if (mode === "relay") {

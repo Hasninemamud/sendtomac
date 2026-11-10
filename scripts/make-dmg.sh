@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-VERSION="${SENDTOMAC_VERSION:-2.4.4}"
+VERSION="${SENDTOMAC_VERSION:-2.4.5}"
 PKG="$ROOT/dist/package/SendToMac.app"
 STAGE="$ROOT/dist/dmg-source"
 OUT="$ROOT/dist/SendToMac.dmg"
@@ -94,4 +94,5 @@ fi
 # create-dmg leaves the source folder as the app root; ensure Install is only once
 xattr -cr "$OUT" 2>/dev/null || true
 ls -lh "$OUT"
+"$ROOT/scripts/sign-update.sh" "$OUT" || echo "warning: no update signature — installed apps will refuse this DMG as an in-app update" >&2
 echo "==> Done: $OUT"

@@ -89,6 +89,8 @@ The server runs on the Mac (port `8790`) and is reachable from any device on the
 
 > SendToMac is not yet notarized, so macOS may block the first launch. This is expected.
 
+**Updating:** when a new version is out, SendToMac shows **Update available** — click **Install update** (or **Check for Updates…** in the menu-bar menu). It downloads the new version, checks it was signed by the SendToMac publisher key, replaces the app where it is installed and restarts itself; no uninstall or reinstall. If the in-place update can't run, it falls back to opening the download.
+
 **Opening the app:** click the menu-bar icon, or use **⌥ Option + ⌘ Command** (if enabled). You can turn on **Open at Login** from the icon's right-click menu.
 
 ## Usage
@@ -137,6 +139,7 @@ Full policy: [`web/privacy/index.html`](web/privacy/index.html), also published 
 python3 site.py              # run the transfer site/server from source (port 8790)
 python3 site.py --self-test  # quick protocol checks — run after server changes
 ./scripts/test-codesign.sh   # signing, launcher layout and corner cases
+./scripts/test-update.sh     # in-app updater, in a sandbox (fake DMG, nothing real touched)
 ```
 
 `site.py` serves the transfer page; it does not launch the menu-bar app. The downloadable app is a windowed build of the same server plus a menu-bar shell (`menu_app.py`).
@@ -147,6 +150,11 @@ python3 site.py --self-test  # quick protocol checks — run after server change
 2. Run `./scripts/make-dmg.sh`. It assembles the universal app, rebuilds the launcher for macOS 11+, signs it ad-hoc and writes `dist/SendToMac.dmg`.
 
 The DMG bundles both architectures; `launcher.c` starts whichever one matches the Mac.
+
+### Publish a release
+
+1. `./scripts/make-dmg.sh` also writes `dist/SendToMac.dmg.sig` (signed with `~/.sendtomac/update-signing-key.pem`, never in the repo — **back it up**: without it, installed apps can't accept another update).
+2. Upload **both** `SendToMac.dmg` and `SendToMac.dmg.sig` to the GitHub release. Without the `.sig`, apps refuse the in-app update and offer the manual download instead.
 
 ### Project structure
 

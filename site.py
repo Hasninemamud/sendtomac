@@ -16,6 +16,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import socket
 import struct
 import subprocess
@@ -66,7 +67,13 @@ DMG_DOWNLOAD_URL = (
     "https://github.com/Hasninemamud/sendtomac/releases/latest/download/SendToMac.dmg"
 )
 DMG_ASSET_NAME = "SendToMac.dmg"
-APP_VERSION = os.environ.get("SENDTOMAC_VERSION", "2.4.4")
+# Updates must be signed with the matching private key (scripts/sign-update.sh); it never ships in the repo.
+UPDATE_PUBKEY = """-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5Sglawva4878WL1zWPy1X45rAXC5
+V419WPgcOpKPwsBFVHHvLxAEt3QK7b5Z+eEm9KoFrjxJcN0tkjUtDxVh0Q==
+-----END PUBLIC KEY-----
+"""
+APP_VERSION = os.environ.get("SENDTOMAC_VERSION", "2.4.5")
 MAX_FILE = 500 * 1024 * 1024
 MAX_TEXT = 20_000
 MAX_ROOMS = 64
@@ -516,6 +523,76 @@ def update_status() -> dict:
     return payload
 
 
+# Runs detached after install_update() staged the new app: quit, swap (roll back if the swap fails), relaunch.
+_SWAP_SCRIPT = (
+    'sleep 1; killall SendToMac 2>/dev/null; sleep 1; rm -rf "$2.old"; '
+    'mv "$2" "$2.old" 2>/dev/null; '
+    'if mv "$1" "$2"; then rm -rf "$2.old"; else mv "$2.old" "$2"; fi; '
+    'rm -rf "$3"; open "$2"'
+)
+_UPDATE_LOCK = threading.Lock()
+
+
+def installed_app() -> Path:
+    """The outermost .app holding the running binary (the universal app wraps the nested arch app)."""
+    exe = Path(os.path.realpath(sys.executable))
+    app = next((p for p in reversed(exe.parents) if p.suffix == ".app"), None)
+    if app is None or app.parts[1:2] == ("Volumes",):
+        raise RuntimeError("Move SendToMac to Applications, then update.")
+    if not os.access(app.parent, os.W_OK):
+        raise RuntimeError(f"No permission to update the app in {app.parent}.")
+    return app
+
+
+def verify_update_signature(dmg: Path, sig: Path, work: Path) -> None:
+    key = work / "update.pub"
+    key.write_text(UPDATE_PUBKEY)
+    if subprocess.run(
+        ["/usr/bin/openssl", "dgst", "-sha256", "-verify", str(key), "-signature", str(sig), str(dmg)],
+        capture_output=True,
+    ).returncode != 0:
+        raise RuntimeError("The update's signature is not valid, so it was not installed.")
+
+
+def install_update() -> None:
+    """Download the latest DMG, check its signature, stage the new app; a detached helper swaps it in after we quit.
+
+    Everything that can fail happens here, before the old app is touched, so errors reach the UI.
+    """
+    if not getattr(sys, "frozen", False):
+        raise RuntimeError("Updates install only from the SendToMac app.")
+    dest = installed_app()
+    work = Path(tempfile.mkdtemp(prefix="sendtomac-update-"))
+    dmg, mnt = work / DMG_ASSET_NAME, work / "mnt"
+    sig = work / (DMG_ASSET_NAME + ".sig")
+    staged = dest.parent / ".SendToMac-update.app"
+    try:
+        for url, path in ((DMG_DOWNLOAD_URL, dmg), (DMG_DOWNLOAD_URL + ".sig", sig)):
+            req = urllib.request.Request(url, headers={"User-Agent": "SendToMac"})
+            with urllib.request.urlopen(req, timeout=60) as resp, open(path, "wb") as out:
+                shutil.copyfileobj(resp, out)
+        verify_update_signature(dmg, sig, work)  # before mounting: an untrusted image is never opened
+        mnt.mkdir()
+        run = lambda *a: subprocess.run(a, check=True, capture_output=True)  # noqa: E731
+        run("hdiutil", "attach", "-nobrowse", "-readonly", "-mountpoint", str(mnt), str(dmg))
+        try:
+            shutil.rmtree(staged, ignore_errors=True)
+            run("ditto", str(mnt / "SendToMac.app"), str(staged))
+        finally:
+            subprocess.run(["hdiutil", "detach", "-force", str(mnt)], capture_output=True)
+        run("xattr", "-cr", str(staged))
+        run("codesign", "--verify", "--strict", str(staged))  # catches a corrupt or partial copy
+    except Exception as exc:
+        shutil.rmtree(staged, ignore_errors=True)
+        shutil.rmtree(work, ignore_errors=True)
+        detail = exc.stderr.decode("utf-8", "replace").strip() if isinstance(exc, subprocess.CalledProcessError) else str(exc)
+        raise RuntimeError(detail or "Update failed") from exc
+    subprocess.Popen(
+        ["/bin/bash", "-c", _SWAP_SCRIPT, "sendtomac-swap", str(staged), str(dest), str(work)],
+        start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+
+
 def github_dmg_download_count() -> int | None:
     data = _github_latest_release_json()
     if not data:
@@ -691,6 +768,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/open-folder":
             self.handle_open_folder()
             return
+        if path == "/api/update/install":
+            self.handle_install_update()
+            return
         if path != "/api/upload":
             self.send_obj(404, {"ok": False, "error": "Not found"})
             return
@@ -774,6 +854,21 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, json.JSONDecodeError) as exc:
             self.send_obj(400, {"ok": False, "error": str(exc) or "Missing file"})
 
+    def handle_install_update(self) -> None:
+        if not self.local_ok():
+            self.send_obj(403, {"ok": False, "error": "Mac only"})
+            return
+        if not _UPDATE_LOCK.acquire(blocking=False):
+            self.send_obj(409, {"ok": False, "error": "Already updating"})
+            return
+        try:
+            install_update()
+            self.send_obj(200, {"ok": True})
+        except RuntimeError as exc:
+            self.send_obj(500, {"ok": False, "error": str(exc)})
+        finally:
+            _UPDATE_LOCK.release()
+
     def handle_open_folder(self) -> None:
         if not self.local_ok():
             self.send_obj(403, {"ok": False, "error": "Mac only"})
@@ -831,9 +926,30 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.flush()
         peer = None
         room_id = ""
+        last_seen = time.monotonic()
+        done = threading.Event()
+
+        def watchdog() -> None:
+            # A device that loses Wi-Fi never sends FIN. Ping on silence; after two silent periods
+            # close the socket so the read below ends and the other device gets "left".
+            # Browsers answer pings on their own, so idle but healthy pages stay paired.
+            # (A socket timeout on rfile would poison it for later reads, hence the thread.)
+            try:
+                while not done.wait(WS_IDLE):
+                    if time.monotonic() - last_seen > 2 * WS_IDLE:
+                        self.connection.shutdown(socket.SHUT_RDWR)
+                        return
+                    if peer:
+                        with peer["lock"]:
+                            write_frame(self.wfile, 9)
+            except OSError:
+                pass
+
+        threading.Thread(target=watchdog, daemon=True).start()
         try:
             while True:
                 frame = read_frame(self.rfile)
+                last_seen = time.monotonic()
                 if frame is None:
                     break
                 opcode, data = frame
@@ -861,6 +977,7 @@ class Handler(BaseHTTPRequestHandler):
         except (ConnectionError, json.JSONDecodeError, ValueError, OSError, KeyError):
             pass
         finally:
+            done.set()
             if peer and room_id:
                 drop_peer(room_id, peer["id"])
             self.close_connection = True
@@ -942,6 +1059,7 @@ def serve(port: int) -> Server:
 
 
 SAVE_DIR = Path.home() / "Downloads" / "SendToMac"
+WS_IDLE = 8  # seconds of WebSocket silence before a ping; two silent periods drop the peer (see handle_ws)
 
 
 def as_app() -> bool:
@@ -1057,6 +1175,33 @@ def run_self_test() -> None:
     assert parse_semver("v2.4.3") == (2, 4, 3)
     assert is_newer_version("2.4.3", "2.4.2")
     assert not is_newer_version("2.4.2", "2.4.3")
+    # A client that goes silent (Wi-Fi gone) gets pinged, then dropped by the server.
+    global WS_IDLE
+    WS_IDLE = 0.2
+    httpd = serve(0)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    sock = socket.create_connection(("127.0.0.1", httpd.server_address[1]), 3)
+    sock.sendall(b"GET /ws HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                 b"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+    hello = b'{"type":"create","name":"t"}'
+    sock.sendall(bytes([0x81, 0x80 | len(hello)]) + b"\0\0\0\0" + hello)  # zero mask = plain payload
+    pinged = False
+    sock.settimeout(0.1)
+    end = time.monotonic() + 5 * WS_IDLE  # a client that pongs must stay connected
+    while time.monotonic() < end:
+        try:
+            chunk = sock.recv(4096)
+        except TimeoutError:
+            continue
+        assert chunk, "server dropped a client that answers pings"
+        if b"\x89\x00" in chunk:
+            pinged = True
+            sock.sendall(b"\x8a\x80\0\0\0\0")  # pong
+    assert pinged, "server never pinged"
+    sock.settimeout(3)
+    while sock.recv(4096):  # now go silent: ends when the server closes the socket
+        pass
+    httpd.shutdown()
     print("self-test ok")
 
 
