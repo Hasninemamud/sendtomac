@@ -3,10 +3,12 @@ export const DMG_ASSET = "SendToMac.dmg";
 export const DMG_URL =
   `https://github.com/${GITHUB_REPO}/releases/latest/download/${DMG_ASSET}`;
 
-const RELEASE_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+// shortcut: first 100 releases only (the API's page cap), upgrade to pagination past 100 releases.
+const RELEASES_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`;
 
-export async function fetchDmgDownloadCount() {
-  const res = await fetch(RELEASE_URL, {
+// Downloads across every release. Old releases shipped a .zip, so count all assets except .sig signatures.
+export async function fetchTotalDownloadCount() {
+  const res = await fetch(RELEASES_URL, {
     headers: {
       Accept: "application/vnd.github+json",
       "User-Agent": "SendToMac-Website",
@@ -16,9 +18,13 @@ export async function fetchDmgDownloadCount() {
   if (!res.ok) {
     throw new Error(`GitHub API ${res.status}`);
   }
-  const release = await res.json();
-  const asset = (release.assets || []).find((a) => a.name === DMG_ASSET);
-  const count = asset?.download_count;
-  const n = Number(count);
-  return Number.isFinite(n) && n >= 0 ? n : 0;
+  const releases = await res.json();
+  let total = 0;
+  for (const release of releases) {
+    for (const asset of release.assets || []) {
+      const n = Number(asset.download_count);
+      if (!asset.name.endsWith(".sig") && Number.isFinite(n) && n > 0) total += n;
+    }
+  }
+  return total;
 }

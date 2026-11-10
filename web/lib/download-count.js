@@ -1,4 +1,4 @@
-import { fetchDmgDownloadCount } from "./github-downloads.js";
+import { fetchTotalDownloadCount } from "./github-downloads.js";
 
 const KV_KEY = "sendtomac:downloads";
 
@@ -20,7 +20,7 @@ function asCount(value) {
 }
 
 export async function getPublicDownloadCount() {
-  const github = await fetchDmgDownloadCount().catch(() => 0);
+  const github = await fetchTotalDownloadCount().catch(() => 0);
   const githubN = asCount(github);
   const store = await kv();
   if (!store) return githubN;

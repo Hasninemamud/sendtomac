@@ -1286,7 +1286,7 @@
         <p class="download-toast-num" id="downloadToastNum" data-dl-num>0</p>
         <p class="download-toast-copy" id="downloadToastTitle">
           <strong id="downloadToastHeadline">People downloaded the Mac app</strong>
-          <span id="downloadToastSubline">Counted from the public disk image on GitHub — no accounts, no tracking cookies.</span>
+          <span id="downloadToastSubline">Counted across every release on GitHub — no accounts, no tracking cookies.</span>
         </p>
       </div>
       <div class="download-toast-actions">
@@ -1300,9 +1300,8 @@
   <script>
     (function () {
       var TOAST_KEY = "sendtomac-dl-toast-dismissed-v2";
-      var GITHUB_RELEASE =
-        "https://api.github.com/repos/Hasninemamud/sendtomac/releases/latest";
-      var DMG_NAME = "SendToMac.dmg";
+      var GITHUB_RELEASES =
+        "https://api.github.com/repos/Hasninemamud/sendtomac/releases?per_page=100";
       var toast = document.getElementById("downloadToast");
       var toastHeadline = document.getElementById("downloadToastHeadline");
       var sticker = document.getElementById("dlSticker");
@@ -1318,7 +1317,7 @@
       }
 
       function parseCount(value) {
-        var n = Number(value);
+        var n = value == null ? NaN : Number(value); // Number(null) is 0, which would hide a failed API call
         return Number.isFinite(n) && n >= 0 ? Math.floor(n) : null;
       }
 
@@ -1430,8 +1429,9 @@
         });
       }
 
+      // Same rule as the server: every release, every asset except .sig signatures.
       function fetchGithubCount() {
-        return fetch(GITHUB_RELEASE, {
+        return fetch(GITHUB_RELEASES, {
           headers: {
             Accept: "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
@@ -1441,11 +1441,14 @@
             if (!r.ok) throw new Error("github");
             return r.json();
           })
-          .then(function (release) {
-            var asset = (release.assets || []).find(function (a) {
-              return a.name === DMG_NAME;
+          .then(function (releases) {
+            var total = 0;
+            releases.forEach(function (release) {
+              (release.assets || []).forEach(function (a) {
+                if (!/\.sig$/.test(a.name)) total += parseCount(a.download_count) || 0;
+              });
             });
-            return parseCount(asset && asset.download_count);
+            return total;
           });
       }
 

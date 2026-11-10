@@ -594,13 +594,21 @@ def install_update() -> None:
 
 
 def github_dmg_download_count() -> int | None:
-    data = _github_latest_release_json()
-    if not data:
+    """Downloads across every release (old ones shipped a .zip), ignoring .sig signature files."""
+    try:
+        req = urllib.request.Request(
+            GITHUB_RELEASE_API.removesuffix("/latest") + "?per_page=100",
+            headers={"Accept": "application/vnd.github+json", "User-Agent": "SendToMac", "X-GitHub-Api-Version": "2022-11-28"},
+        )
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            releases = json.loads(resp.read().decode())
+    except Exception:
         return None
-    for asset in data.get("assets") or []:
-        if asset.get("name") == DMG_ASSET_NAME:
-            return int(asset.get("download_count") or 0)
-    return 0
+    return sum(
+        int(a.get("download_count") or 0)
+        for r in releases for a in r.get("assets") or []
+        if not str(a.get("name")).endswith(".sig")
+    )
 
 
 class Handler(BaseHTTPRequestHandler):
